@@ -1,0 +1,8 @@
+server\data\fonts
+server\data\tables
+server\__pycache__
+server\static\jquery.min.js
+server\static\jquery-ui.js
+server\static\bootstrap-min.css
+server\static\note.md
+server\templates\index_old.html

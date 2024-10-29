@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documentation</title>
+    <link rel="stylesheet" href="../static/bootstrap-min.css">
+    <style>
+        .custom-download {
+            background-color: #f8f9fa;
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            margin: auto;
+        }
+
+        .custom-download h2 {
+            color: #343a40;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .custom-download .form-label {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #495057;
+        }
+
+        .custom-download .form-select {
+            border: 2px solid #007bff;
+            border-radius: 5px;
+            padding: 10px;
+            transition: border-color 0.3s;
+        }
+
+        .custom-download .form-select:focus {
+            border-color: #0056b3;
+            box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+        }
+
+        .custom-download #downloadButton {
+            width: 100%;
+            margin-top: 20px;
+            background-color: #007bff;
+            border: none;
+            border-radius: 5px;
+            padding: 10px;
+            color: white;
+            font-weight: bold;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+
+        .custom-download #downloadButton:hover {
+            background-color: #0056b3;
+            transform: translateY(-2px);
+        }
+    </style>
+    <script src="../static/download.js"></script>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container">
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/documentation">Documentation</a>
+                    </li>
+                </ul>
+                <a class="navbar-brand">Download</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container custom-download mt-4">
+        <h2>Select Modification and Download Option</h2>
+        
+        <div class="mb-3">
+            <label for="ptmSelect" class="form-label">Select PTM:</label>
+            <select id="ptmSelect" class="form-select">
+                <option>Acetylation</option>
+                <option>ADP-ribosylation</option>
+                <option>Amidation</option>
+                <option>AMPylation</option>
+                <option>Biotinylation</option>
+                <option>Blocked amino end</option>
+                <option>Butyrylation</option>
+                <option>C-linked Glycosylation</option>
+                <option>Carbamidation</option>
+                <option>Carboxyethylation</option>
+                <option>Carboxylation</option>
+                <option>Cholesterol ester</option>
+                <option>Citrullination</option>
+                <option>Crotonylation</option>
+                <option>D-glucuronoylation</option>
+                <option>Deamidation</option>
+                <option>Deamination</option>
+                <option>Decanoylation</option>
+                <option>Decarboxylation</option>
+                <option>Dephosphorylation</option>
+                <option>Disulfide bond</option>
+                <option>Farnesylation</option>
+                <option>Formation of an isopeptide bond</option>
+                <option>Formylation</option>
+                <option>Gamma-carboxyglutamic acid</option>
+                <option>Geranylgeranylation</option>
+                <option>Glutarylation</option>
+                <option>Glutathionylation</option>
+                <option>GPI-anchor</option>
+                <option>Hydroxyceramide ester</option>
+                <option>Hydroxylation</option>
+                <option>Iodination</option>
+                <option>Lactoylation</option>
+                <option>Lactylation</option>
+                <option>Lipoylation</option>
+                <option>Malonylation</option>
+                <option>Methylation</option>
+                <option>Myristoylation</option>
+                <option>N-carbamoylation</option>
+                <option>N-linked Glycosylation</option>
+                <option>N-palmitoylation</option>
+                <option>Neddylation</option>
+                <option>Nitration</option>
+                <option>O-linked Glycosylation</option>
+                <option>O-palmitoleoylation</option>
+                <option>O-palmitoylation</option>
+                <option>Octanoylation</option>
+                <option>Oxidation</option>
+                <option>Phosphatidylethanolamine amidation</option>
+                <option>Phosphorylation</option>
+                <option>Propionylation</option>
+                <option>Pyrrolidone carboxylic acid</option>
+                <option>Pyrrolylation</option>
+                <option>Pyruvate</option>
+                <option>S-archaeol</option>
+                <option>S-carbamoylation</option>
+                <option>S-Cyanation</option>
+                <option>S-cysteinylation</option>
+                <option>S-diacylglycerol</option>
+                <option>S-linked Glycosylation</option>
+                <option>S-nitrosylation</option>
+                <option>S-palmitoylation</option>
+                <option>Serotonylation</option>
+                <option>Stearoylation</option>
+                <option>Succinylation</option>
+                <option>Sulfation</option>
+                <option>Sulfhydration</option>
+                <option>Sulfoxidation</option>
+                <option>Sumoylation</option>
+                <option>Thiocarboxylation</option>
+                <option>Ubiquitination</option>
+                <option>UMPylation</option>
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label for="downloadSelect" class="form-label">Select Download Option:</label>
+            <select id="downloadSelect" class="form-select">
+                <option>PNG</option>
+                <option>PDF</option>
+                <option>SVG</option>
+                <option>JSON</option>
+                <option>CSV</option>
+            </select>
+        </div>
+
+        <button id="downloadButton" class="btn btn-primary" onclick="saveFile()">Download</button>
+    </div>
+</body>
+</html>

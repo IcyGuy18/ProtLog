@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home Page</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style ></style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container">
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <a class="navbar-brand">Home</a>
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/documentation">Documentation</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-8 custom-container text-center">
+                <h3 style="font-family: monospace">ProtLOG</h3>
+                <h5>
+                    This website provides log-odd values (not just log odds soon!) of protein sequences undergoing Post-Translational Modification (PTM) through GUI and API interfaces.
+                    The log-odd values are calculated from all available protein sequences provided for all PTM types in the dbPTM 2022 dataset.
+                </h5>
+            </div>
+        </div>
+    </div>
+
+    <div class="container-fluid mt-5">
+        <div class="form-group">
+            <label for="ptmSelect" align-items: center;>Select a Post Translational Modification Table</label>
+            <select class="form-control" id="ptmSelect" style="width: 350px; align-items: center;"></select>
+        </div>
+        <button class="btn btn-primary" id="loadFile">Load Data</button>
+
+        <div class="form-group" id="downloader"></div>
+    
+        <div id="dataContainer" style="margin-top: 20px;">
+            <div style="display: flex; align-items: center;">
+                <div id="ylabel" style="transform: rotate(270deg); display: inline-block; margin-right: -70px;">
+                    <!-- <strong>Y Axis Label</strong> -->
+                </div>
+                <div>
+                    <h3 id="title" style="text-align: center;"></h3> <!-- Add this line -->
+                    <div id="xlabel" style="margin-bottom: 10px; text-align: center;">
+                        <!-- <strong>X Axis Label</strong> -->
+                    </div>
+                    <table class="table table-bordered table-responsive th td" id="dataTable" style="display: none; font-family: 'Courier New', Courier, monospace;  text-align: center;">
+                        <thead id="tableHead">
+                        </thead>
+                        <tbody id="tableBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../static/index.js" defer></script>
+</body>
+</html>
