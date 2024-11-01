@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Home Page</title>
     <link rel="stylesheet" href="../static/bootstrap-min.css">
+    <!-- <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script> -->
+    <script id="MathJax-script" async src="../static/tex-mml-chtml.js"></script>
     <!-- <link rel="stylesheet" href="styles.css"> -->
     <script src="../static/jquery.min.js"></script>
     <script src="../static/jquery-ui.js"></script>
@@ -118,7 +120,7 @@
             text-align: center;
             font-size: smaller;
         }
-        
+
         .table th, .table td {
             border: 1px solid #ccc; /* Adds a light gray border to cells */
             padding: 8px; /* Adds some padding inside the cells */
@@ -132,9 +134,15 @@
         }
 
         .table td.value {
-            width: 80%; /* Set width for value column */
+            width: 40%; /* Adjust width for value column */
             text-align: left; /* Left align text in value column */
             font-size: medium;
+        }
+
+        .table td.notes {
+            width: 40%; /* Set width for notes column */
+            text-align: left; /* Left align text in notes column */
+            font-size: large;
         }
 
         @font-face {
@@ -345,7 +353,8 @@
                 </tbody>
             </table>
             <h3>PTM Vector Data</h3>
-            <table class="table table-bordered table-responsive th td" id="dataVector" style="display: none; font-family: 'Courier New', Courier, monospace; width: 50%; margin: 0 auto;">
+            <p>This vector data is used to calculate scores mentioned above (substitute the values in the equations).</p>
+            <table class="table table-bordered table-responsive th td" id="dataVector" style="display: none; font-family: 'Courier New', Courier, monospace; width: 60%; margin: 0 auto;">
                 <thead id="vectorHead" style="text-align: center"></thead>
                 <tbody id="vectorBody" style="text-align: center"></tbody>
             </table>

@@ -14,7 +14,8 @@ import json
 #### Only use one at a time though
 # from mongo_ptm import fetch_identifiers, search_identifier
 from local_ptm import fetch_identifiers, search_identifier
-####
+from calculator import additive_calculator, multiplicative_calculator
+from response_fetcher import fetch_response
 
 app = FastAPI()
 templates = Jinja2Templates(directory='templates/')
@@ -95,226 +96,7 @@ async def get_uniprot_info(request: Request):
     # This is necessary for web scraping purposes
     # OR we can just use the REST API to fetch the necessary information
     # without worrying about the type of ID
-    return_response = dict.fromkeys(
-        [
-            'uniProtID',
-            'uniProtAC',
-            'proteinName',
-            'geneName',
-            'organism',
-            'sequenceLength',
-            'proteinFunction',
-            'proteinSequence',
-            'message'
-        ],
-        ''
-    )
-    try:
-        response = requests.get(
-            f"https://rest.uniprot.org/uniprotkb/{prot_id}",
-            headers={
-                'Accept': 'application/json'
-            }
-        )
-        if response.ok:
-            try:
-                response: dict = response.json()
-                # Handle demerged/deleted problems first.
-                if 'inactiveReason' in response.keys():
-                    inactive_reason = response['inactiveReason']['inactiveReasonType']
-
-                    # For DELETED
-                    if 'DELETED' in inactive_reason:
-                        prot_id = response['extraAttributes']['uniParcId']
-                        response = requests.get(
-                            f'https://rest.uniprot.org/uniparc/{prot_id}',
-                            headers={
-                                'Accept': 'application/json'
-                            }
-                        )
-                        # This is processed a LOT differently
-                        try:
-                            return_response['uniProtAC'] = response['uniParcCrossReferences'][0]['id']
-                        except:
-                            print(traceback.format_exc())
-                            return_response['uniProtAC'] = ''
-                        try:
-                            return_response['proteinName'] = response['uniParcCrossReferences'][0]['proteinName']
-                        except:
-                            print(traceback.format_exc())
-                            return_response['proteinName'] = ''
-                        try:
-                            return_response['geneName'] = response['uniParcCrossReferences'][0]['geneName']
-                        except:
-                            print(traceback.format_exc())
-                            return_response['geneName'] = ''
-                        try:
-                            return_response['organism'] = (
-                                f"{response['uniParcCrossReferences'][0]['organism']['scientificName']}"
-                                f" ({response['uniParcCrossReferences'][0]['organism']['commonName']})"
-                            )
-                        except:
-                            print(traceback.format_exc())
-                            return_response['organism'] = ''
-                        try:
-                            return_response['sequenceLength'] = response['sequence']['length']
-                        except:
-                            print(traceback.format_exc())
-                            return_response['sequenceLength'] = ''
-                        try:
-                            return_response['proteinSequence'] = response['sequence']['value']
-                        except:
-                            print(traceback.format_exc())
-                            return_response['proteinSequence'] = ''
-
-                        # UniParc doesn't hold UniProtID and Protein function, which is a shame,
-                        # because this will be the THIRD call to the UniProt API
-                        response = requests.get(
-                            f"https://rest.uniprot.org/uniprotkb/{return_response['uniProtAC']}",
-                            headers={
-                                'Accept': 'application/json'
-                            }
-                        )
-                        response: dict = response.json()
-                        # And now we resume.
-                        try:
-                            return_response['proteinFunction'] = ''.join(
-                                i['texts'][0]['value'] for i in response['comments']
-                                if 'FUNCTION' in i['commentType']
-                            )
-                        except:
-                            print(traceback.format_exc())
-                            return_response['proteinFunction'] = ''
-                        try:
-                            return_response['uniProtID'] = response['uniProtkbId']
-                        except:
-                            print(traceback.format_exc())
-                            return_response['uniProtID'] = ''
-                    
-                    # For DEMERGED
-                    elif 'DEMERGED' in inactive_reason:
-                        prot_id = response['inactiveReason']['mergeDemergeTo'][0]
-                        response = requests.get(
-                            f"https://rest.uniprot.org/uniprotkb/{prot_id}",
-                            headers={
-                                'Accept': 'application/json'
-                            }
-                        )
-                        # And this is also processed the same way as the original response
-                        try:
-                            return_response['uniProtID'] = response['uniProtkbId']
-                        except:
-                            print(traceback.format_exc())
-                            return_response['uniProtID'] = ''
-                        try:
-                            return_response['uniProtAC'] = response['primaryAccession']
-                        except:
-                            print(traceback.format_exc())
-                            return_response['uniProtAC'] = ''
-                        try:
-                            return_response['proteinName'] = (
-                                response['proteinDescription']['recommendedName']['fullName']['value'] # Wow
-                            )
-                        except:
-                            try:
-                                return_response['proteinName'] = (
-                                    response['proteinDescription']['submissionNames'][0]['fullName']['value'] # Wow
-                                )
-                            except:
-                                print(traceback.format_exc())
-                                return_response['proteinName'] = ''
-                        try:
-                            return_response['geneName'] = response['genes'][0]['geneName']['value']
-                        except:
-                            print(traceback.format_exc())
-                            return_response['geneName'] = ''
-                        try:
-                            return_response['organism'] = (
-                                f"{response['organism']['scientificName']} ({response['organism']['commonName']})"
-                            )
-                        except:
-                            print(traceback.format_exc())
-                            return_response['organism'] = ''
-                        try:
-                            return_response['sequenceLength'] = response['sequence']['length']
-                        except:
-                            print(traceback.format_exc())
-                            return_response['sequenceLength'] = ''
-                        try:
-                            return_response['proteinFunction'] = ''.join(
-                                i['texts'][0]['value'] for i in response['comments']
-                                if 'FUNCTION' in i['commentType']
-                            )
-                        except:
-                            print(traceback.format_exc())
-                            return_response['proteinFunction'] = ''
-                        try:
-                            return_response['proteinSequence'] = response['sequence']['value']
-                        except:
-                            print(traceback.format_exc())
-                            return_response['proteinSequence'] = ''
-
-                # Otherwise just process as usual.
-                else:
-                    # Populate the dictionary with the values acquired from the API
-                    try:
-                        return_response['uniProtID'] = response['uniProtkbId']
-                    except:
-                        print(traceback.format_exc())
-                        return_response['uniProtID'] = ''
-                    try:
-                        return_response['uniProtAC'] = response['primaryAccession']
-                    except:
-                        print(traceback.format_exc())
-                        return_response['uniProtAC'] = ''
-                    try:
-                        return_response['proteinName'] = (
-                            response['proteinDescription']['recommendedName']['fullName']['value'] # Wow
-                        )
-                    except:
-                        try:
-                            return_response['proteinName'] = (
-                                response['proteinDescription']['submissionNames'][0]['fullName']['value'] # Wow
-                            )
-                        except:
-                            print(traceback.format_exc())
-                            return_response['proteinName'] = ''
-                    try:
-                        return_response['geneName'] = response['genes'][0]['geneName']['value']
-                    except:
-                        print(traceback.format_exc())
-                        return_response['geneName'] = ''
-                    try:
-                        return_response['organism'] = (
-                            f"{response['organism']['scientificName']} ({response['organism']['commonName']})"
-                        )
-                    except:
-                        print(traceback.format_exc())
-                        return_response['organism'] = ''
-                    try:
-                        return_response['sequenceLength'] = response['sequence']['length']
-                    except:
-                        print(traceback.format_exc())
-                        return_response['sequenceLength'] = ''
-                    try:
-                        return_response['proteinFunction'] = ''.join(
-                            i['texts'][0]['value'] for i in response['comments']
-                            if 'FUNCTION' in i['commentType']
-                        )
-                    except:
-                        print(traceback.format_exc())
-                        return_response['proteinFunction'] = ''
-                    try:
-                        return_response['proteinSequence'] = response['sequence']['value']
-                    except:
-                        print(traceback.format_exc())
-                        return_response['proteinSequence'] = ''
-            except Exception as e:
-                print(traceback.format_exc())
-                return_response['message'] = f"Error: {e}"
-    except Exception as e:
-        print(traceback.format_exc())
-        return_response['message'] = f"Error: {e}"
+    return_response = fetch_response(prot_id)
 
     return return_response
 
@@ -397,7 +179,24 @@ async def download(request: Request):
         media_type=return_header[format]
     )
 
+# This function is a separate call
+@app.post('/ptmkb/get_protein_log')
+async def get_log_value(request: Request):
+    data: dict = await request.json()
+    data = dict(sorted(data.items(), key=lambda item: int(item[0])))
+    vector = [list(v.values())[0] for _, v in data.items()]
+    # Use the above vector to calculate additive and multiplicative scores
+    a_score, m_scores = additive_calculator(vector), multiplicative_calculator(vector)
+    m_score = m_scores[1]['multiplicative_score']
+    asterisk_m_score = m_scores[1]['adjusted_multiplicative_score']
+    return {
+        'a_score': round(a_score, 3),
+        'm_score': round(m_score, 3),
+        '*_m_score': round(asterisk_m_score, 3)
+    }
+
 ######## API CALLS ########
+
 
 @app.get("/ptmkb/api/proteins")
 def get_protein(request: Request, upid: str = None, upac: str = None):

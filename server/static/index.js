@@ -76,10 +76,8 @@ function colorPTMs(e) {
         // Check for all spans
         if (sequences[i].title) { // check if a title is assigned first
             if (sequences[i].style.color === 'green') {
-                console.log("Check 1");
                 const ptmType = document.getElementById(sequences[i].getAttribute('data-ptm'));
                 if (e.value === ptmType.value) {
-                    console.log("Check 2");
                     document.getElementById('ptmSiteInfo').style.display = 'none';
                     sequences[i].style.color = 'black';
                 }
@@ -115,20 +113,7 @@ function populateCheckboxes() {
             `;
             
             checkboxContainer.appendChild(checkboxWrapper);
-
-            // Add change event listener for the checkbox
-            checkboxWrapper.querySelector('input').addEventListener('change', function() {
-                if (this.checked) {
-                    console.log(`${this.value} is checked`);
-                    // Your JavaScript function for when the checkbox is checked
-                } else {
-                    console.log(`${this.value} is unchecked`);
-                    // Your JavaScript function for when the checkbox is unchecked
-                }
-            });
         }
-        console.log("Dividing...");
-        console.log(checkboxContainer);
     });
 }
 
@@ -259,6 +244,7 @@ async function search() {
                                 isMouseDown = true;
                                 startX = e.pageX - highlightableText.offsetLeft;
                                 scrollLeft = highlightableText.scrollLeft;
+                                // console.log(startX, scrollLeft);
                             });
 
                             highlightableText.addEventListener('mouseleave', () => {
@@ -355,12 +341,15 @@ async function search() {
                                         }
                                     });
                                 }
+                                else {
+                                    // Handle every other case (we still show log odd scores and whatnot... maybe?)
+                                }
                                 highlightableText.appendChild(span);
                             }
                             document.getElementById('scrollableTextContainer').setAttribute('style', "display: block;");
                             document.getElementById('iframeData').textContent = "Protein Info";
                             document.getElementById('iframeData2').textContent = "Modification Sites";
-                            document.getElementById('iframeData2Info').textContent = "Hover on a highlighted amino acid to view the PTM; click on a highlighted amino acid to view details of the PTM."
+                            document.getElementById('iframeData2Info').textContent = "Hover on a highlighted amino acid to view the PTM; click on a highlighted amino acid to view details of the PTM below."
                             document.getElementById('iframeData3').textContent = "You can click on the boxes below to highlight certain PTMs in the above sequence. They are all enabled by default.";
                             document.getElementById('foundProtein').style.display = 'block';
                             document.getElementById('checkboxContainer').style.display = 'block';
@@ -401,7 +390,25 @@ async function loadFile(subsequence, matched) {
     }
 }
 
-function displayVector(data, subsequence, result) {
+async function fetch_ptm_scores(vectorData, result, middle) {
+    let scores = {};
+    try {
+        const response = await fetch('/ptmkb/get_protein_log', {
+            method: "POST",
+            headers: {
+                "Accept": "application/json",
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(vectorData)
+        });
+        scores = await response.json();
+    } catch (err) {
+        scores = {};
+    }
+    return scores
+}
+
+async function displayVector(data, subsequence, result) {
     const KEYS = Object.keys(data);
     var values = new Array();
     KEYS.sort((l, s) => {
@@ -417,15 +424,9 @@ function displayVector(data, subsequence, result) {
             values.push('-inf');
     });
 
-    const middle = values[10]
+    const middle = values[10];
     // That was easy - Now comes the hard part
     // HTML manupulation...
-    var json = {
-        "modificationType": result[1],
-        "modificationPosition": result[0],
-        "evidence": result[2],
-        "logOddAtModificationPosition": middle,
-    }
 
     // Display the vector first so I can get over this
     var vectorData = new Object();
@@ -455,12 +456,30 @@ function displayVector(data, subsequence, result) {
         vectorHead.appendChild(header);
     });
 
+    // Now let's calculate the additive and multiplicative scores
+    // here...
+    // I know, this is a bad idea. I should make an API out of this.
+    var scores = await fetch_ptm_scores(vectorData, result, middle)
+                .then(json => {
+                    return json;
+                });
+    var json = {
+        "modificationType": result[1],
+        "modificationPosition": result[0],
+        "evidence": result[2],
+        "logOddAtModificationPosition": middle,
+        "additiveScore": scores['a_score'],
+        "multiplicativeScore": scores['m_score'],
+        "*-MultiplicativeScore": scores['*_m_score']
+    }
+
     // Now I'll work on the general info on the PTM
     const table = document.getElementById('ptmInfo');
     table.innerHTML = '';
     for (var [key, value] of Object.entries(json)) {
         const row = document.createElement('tr');
         const keyCell = document.createElement('td');
+        keyCell.style.fontWeight = 1000;
         const valueCell = document.createElement('td');
         keyCell.textContent = key
                                 .replace(/([a-z](?=[A-Z]))/g, '$1 ')
@@ -468,7 +487,7 @@ function displayVector(data, subsequence, result) {
         keyCell.className = 'key';
         valueCell.className = 'value';
         if (key !== "evidence") {
-            valueCell.textContent = json[key];
+            valueCell.textContent = value;
         } else {
             splits = json[key].split(';').map(item => "PubMed:" + item.trim());
             var totalText = new String();
@@ -478,6 +497,27 @@ function displayVector(data, subsequence, result) {
         }
         row.appendChild(keyCell);
         row.appendChild(valueCell);
+        const notes = document.createElement('td');
+        notes.className = 'notes';
+
+        if (key === "additiveScore" || key === "multiplicativeScore" || key === "*-MultiplicativeScore") {
+            // Make notes
+            var tag = new String();
+            if (key === "additiveScore") {
+                tag = "<math><munderover><mo>∑</mo><mn>i=1</mn><mi>n</mi></munderover><mtext>, where i</mtext><mo>≠</mo><mtext>'-inf'</mtext></math>";
+            }
+            else if (key === "multiplicativeScore") {
+                tag = "<math><munderover><mo>∏</mo><mi>i=1</mi><mn>n</mn></munderover><mi>i</mi><mtext>, where i</mtext><mo>≠</mo><mtext>'-inf' and i</mtext><mo>≠</mo><mtext>0</mtext></math>";
+            }
+            else {
+                tag = "<math><mrow><mo>ln</mo><mo>(</mo><mfrac><mn>1</mn><mrow><mrow><mn>-1</mn><mo>×</mo></mrow><munderover><mo>∏</mo><mi>i=1</mi><mn>n</mn></munderover><mi>i</mi></mrow></mfrac><mo>)</mo></mrow><mtext>, where i</mtext><mo>≠</mo><mtext>'-inf' and i</mtext><mo>≠</mo><mtext>0</mtext></math>";
+            }
+            notes.innerHTML = tag;
+            row.appendChild(notes);
+        } else {
+            notes.innerHTML = '';
+            row.appendChild(notes);
+        }
         table.appendChild(row);
     }
 

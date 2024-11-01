@@ -1,4 +1,5 @@
 """We're going to define values' calculations here."""
+import numpy as np
 
 def get_longest_centered_array(values) -> list[float]:
     left_count, right_count = 0, 0
@@ -37,4 +38,5 @@ def multiplicative_calculator(vector: list[float | str]) -> tuple[bool, dict]:
         if value == float(0) or value == '-inf':
             return False, {'message': "Vector contains 0 or negative infinity!", 'multiplicative_score': 'NIL'}
         multiplicative_score *= value
-    return True, {'multiplicative_score': multiplicative_score}
+    adjusted_multiplicative_score = np.log(1 / (-1 * multiplicative_score))
+    return True, {'multiplicative_score': multiplicative_score, 'adjusted_multiplicative_score': adjusted_multiplicative_score}
