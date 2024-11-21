@@ -54,6 +54,12 @@ def download_page(request: Request):
         "download.html", context={"request": request}
     )
 
+@app.get("/integration")
+def integration_page(request: Request):
+    return templates.TemplateResponse(
+        "integration.html", context={"request": request}
+    )
+
 ######## PAGE REQUESTS ########
 
 @app.get('/ptmkb/autofill')
@@ -142,13 +148,15 @@ def save_image(df: pd.DataFrame, format: str, ptm: str) -> bytes:
 
 def save_data(df: pd.DataFrame, format: str) -> bytes:
     if format == "CSV":
-        df.to_csv('./temp.csv')
+        # Simple fix for CSV
+        df = df.astype(str)
+        df.to_csv(f'./temp.csv')
     elif format == "JSON":
         df.to_json('./temp.json')
-
     with open(f'./temp.{format.lower()}', 'rb') as f:
         raw_data = f.read()
     os.remove(f'./temp.{format.lower()}')
+    print(raw_data)
     return raw_data
 
 @app.post('/ptmkb/download')
@@ -190,9 +198,9 @@ async def get_log_value(request: Request):
     m_score = m_scores[1]['multiplicative_score']
     asterisk_m_score = m_scores[1]['adjusted_multiplicative_score']
     return {
-        'a_score': round(a_score, 3),
-        'm_score': round(m_score, 3),
-        '*_m_score': round(asterisk_m_score, 3)
+        'a_score': round(a_score, 3) if not isinstance(a_score, str) else a_score,
+        'm_score': round(m_score, 3) if not isinstance(m_score, str) else m_score,
+        '*_m_score': round(asterisk_m_score, 3) if not isinstance(asterisk_m_score, str) else asterisk_m_score
     }
 
 ######## API CALLS ########
@@ -211,20 +219,39 @@ def get_protein(request: Request, upid: str = None, upac: str = None):
 
 @app.get("/ptmkb/api/ptms")
 async def get_options():
-    options = [i.split('\\')[-1].split('.')[0] for i in glob.glob('./data/tables/*.json')]
+    options = [i.split("\\")[-1] for i in glob.glob(r'data\tables\*')]
     return {'ptms': options}
 
 @app.get("/ptmkb/api/data")
-async def get_data(request: Request, selection: str = None):
+async def get_data(request: Request, selection: str = None, aa: str = None):
     if not selection:
-        files = glob.glob('./data/tables/*.json')
-        response = {}
-        for file in files:
-            with open(file, 'r', encoding='utf-8') as f:
-                response[file.split('\\')[-1].split('.')[0]] = json.load(f)
+        ptms = [i.split("\\")[-1] for i in glob.glob(r'data\tables\*')]
+        response = {ptm: [] for ptm in ptms}
+        for ptm in ptms:
+            # Pick out all AAs in that folder
+            AAs = [i.split("\\")[-1].split('.')[0] for i in glob.glob(f'data/tables/{ptm}/log-e/*.json')]
+            for aa in AAs:
+                with open(f"data/tables/{ptm}/log-e/{aa}.json", 'r', encoding='utf-8') as f:
+                    response[ptm].append(
+                        {
+                            aa: json.load(f)
+                        }
+                    )
         return response
-    return FileResponse(
-        './data/tables/{selection}.json'.format(
-            selection=selection
+    elif not aa:
+        response = {selection: []}
+        AAs = [i.split("\\")[-1].split('.')[0] for i in glob.glob(f'data/tables/{selection}/log-e/*.json')]
+        for aa in AAs:
+            with open(f"data/tables/{selection}/log-e/{aa}.json", 'r', encoding='utf-8') as f:
+                response[selection].append(
+                    {
+                        aa: json.load(f)
+                    }
+                )
+    else:
+        print(f'./data/tables/{selection}/log-e/{aa}.json')
+        return FileResponse(
+            './data/tables/{selection}/log-e/{aa}.json'.format(
+                selection=selection, aa=aa
+            )
         )
-    )

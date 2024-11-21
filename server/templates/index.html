@@ -11,311 +11,53 @@
     <script src="../static/jquery.min.js"></script>
     <script src="../static/jquery-ui.js"></script>
     <script src="../static/index.js" defer></script>
-    <style>
-        .suggestions-box {
-            display: none; /* Hidden by default */
-            position: absolute; /* Positioning relative to the input group */
-            top: calc(100% + 5px); /* Position just below the input */
-            left: 0; /* Align to the left */
-            width: 100%; /* Full width of the input */
-            background: white; /* White background for contrast */
-            border: 1px solid #ccc; /* Border for better visibility */
-            border-radius: 4px; /* Rounded corners */
-            max-height: 150px; /* Max height */
-            overflow-y: auto; /* Scroll if needed */
-            z-index: 1000; /* Ensure it appears on top */
-        }
-        .suggestion-item {
-            padding: 10px; /* Space for each suggestion */
-            cursor: pointer; /* Pointer cursor on hover */
-        }
-        .suggestion-item:hover {
-            background-color: #007bff; /* Highlight on hover */
-            color: white; /* Change text color on hover */
-        }
-
-        .iframe-container {
-            display: none; /* Initially hide the iframe */
-            text-align: center; /* Center content */
-            margin-top: 40px; /* Add top margin to separate from search bar */
-            padding: 20px; /* Add padding around the iframe */
-        }
-
-        iframe {
-            width: 80%; /* Set iframe width */
-            height: 600px; /* Set iframe height */
-            border: none; /* Remove border */
-            border-radius: 8px; /* Add rounded corners */
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Add shadow for depth */
-        }
-
-        .alert {
-            border-radius: 8px; /* Add rounded corners to the alert */
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
-        }
-
-        .navbar {
-            margin-bottom: 20px; /* Add bottom margin to navbar */
-        }
-
-        .custom-container {
-            margin-top: 20px; /* Add margin to the title container */
-        }
-
-        .nav-link:hover {
-            color: #0056b3; /* Change color on hover */
-        }
-
-        .btn-primary {
-            transition: background-color 0.3s; /* Smooth transition for button */
-        }
-
-        .btn-primary:hover {
-            background-color: #004085; /* Darker shade on hover */
-        }
-
-        .lds-dual-ring {
-            color: #1c4c5b
-        }
-        .lds-dual-ring,
-        .lds-dual-ring:after {
-            box-sizing: border-box;
-        }
-        .lds-dual-ring {
-            display: inline-block;
-            width: 80px;
-            height: 80px;
-        }
-        .lds-dual-ring:after {
-            content: " ";
-            display: block;
-            width: 64px;
-            height: 64px;
-            margin: 8px;
-            border-radius: 50%;
-            border: 6.4px solid currentColor;
-            border-color: currentColor transparent currentColor transparent;
-            animation: lds-dual-ring 1.2s linear infinite;
-        }
-        @keyframes lds-dual-ring {
-            0% {
-                transform: rotate(0deg);
-            }
-            100% {
-                transform: rotate(360deg);
-            }
-        }
-
-        .table {
-            table-layout: fixed; /* Ensures the table layout is fixed */
-            width: 100%; /* Set to 100% or a specific width */
-            border-collapse: collapse; /* Collapses borders to avoid double borders */
-            font-family: "Verdana, Geneva, Tahoma, sans-serif";
-        }
-
-        .table td {
-            overflow-wrap: break-word; /* Allows breaking long words */
-            word-wrap: break-word; /* Older support for breaking long words */
-            white-space: normal; /* Ensures that text can wrap onto new lines */
-            text-align: center;
-            font-size: smaller;
-        }
-
-        .table th, .table td {
-            border: 1px solid #ccc; /* Adds a light gray border to cells */
-            padding: 8px; /* Adds some padding inside the cells */
-            font-size: small;
-        }
-
-        .table td.key {
-            width: 20%; /* Set width for key column */
-            text-align: center; /* Center text in key column */
-            font-size: medium;
-        }
-
-        .table td.value {
-            width: 40%; /* Adjust width for value column */
-            text-align: left; /* Left align text in value column */
-            font-size: medium;
-        }
-
-        .table td.notes {
-            width: 40%; /* Set width for notes column */
-            text-align: left; /* Left align text in notes column */
-            font-size: large;
-        }
-
-        @font-face {
-            font-family: 'perfectDOSVGA';
-            src: url('../data/fonts/perfect_dos_vga.ttf') format('truetype'),
-                url('../data/fonts/perfect_dos_vga.woff') format('woff'),
-                url('../data/fonts/perfect_dos_vga.woff2') format('woff2');
-        }
-
-        .scrollable-text-container {
-            position: relative; /* Position relative for the pseudo-element */
-            overflow-x: auto; 
-            white-space: nowrap; 
-            border: 1px solid #ccc; 
-            padding: 10px 50%; /* Vertical padding */
-            width: 80%;
-            margin: 0 auto;
-            display: flex; /* Use flexbox for alignment */
-            align-items: flex-end; /* Align items at the bottom */
-            font-weight: bolder;
-            font-size: x-large;
-            box-sizing: border-box; /* Include padding and border in total height */
-            scroll-snap-type: x mandatory; /* Enable scroll snap */
-        }
-
-        .scrollable-text-container span {
-            scroll-snap-align: center; /* Snap to the center of the container */
-            display: inline-block; /* Ensure each character is treated as a block */
-            min-width: 1ch; /* Make each character's minimum width equal to its size */
-            position: relative; /* Position relative for z-index stacking */
-            z-index: 2; /* Ensure spans are above the pseudo-element */
-        }
-
-        /* For WebKit browsers (Chrome, Safari) */
-        .scrollable-text-container::-webkit-scrollbar {
-            width: 12px; /* Width of the scrollbar */
-        }
-
-        .scrollable-text-container::-webkit-scrollbar-track {
-            background: #f1f1f1; /* Track color */
-            border-radius: 10px; /* Rounded corners */
-        }
-
-        .scrollable-text-container::-webkit-scrollbar-thumb {
-            background: #888; /* Thumb color */
-            border-radius: 10px; /* Rounded corners */
-        }
-
-        .scrollable-text-container::-webkit-scrollbar-thumb:hover {
-            background: #555; /* Thumb color on hover */
-        }
-        
-        .highlightable-text {
-            cursor: default; 
-            font-size: inherit; /* Ensure it inherits font size from the parent */
-            user-select: none;
-            display: inline-block; /* change back to inline if issues persist */
-            position: relative;
-        }
-
-        .highlighted {
-            color: red; /* Change to your desired text color */
-        }
-
-        .tooltip:hover {
-            display:block;
-        }
-
-        .highlightable-text:hover .tooltip {
-            visibility: visible;
-            opacity: 1;
-        }
-
-        .tooltip {
-            visibility: hidden;
-            width: 120px; /* Adjust width as needed */
-            background-color: black;
-            color: #fff;
-            text-align: center;
-            border-radius: 5px;
-            padding: 5px;
-            position: absolute;
-            z-index: 1;
-            bottom: 100%; /* Position above the text */
-            left: 50%;
-            transform: translateX(-50%);
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
-
-        .overlay-line {
-            position: absolute;
-            top: 0; /* Start at the top of the container */
-            left: 50%; /* Center the line horizontally */
-            margin-left: 1px;
-            width: 10px; /* Thickness of the line */
-            height: 100%; /* Extend the line to the full height of the container */
-            background-color: #ccc; /* Color of the line */
-            transform: translateX(-50%); /* Center the line */
-            pointer-events: none; /* Let clicks pass through the line */
-        }
-
-        .checkbox-container {
-            display: flex;
-            flex-wrap: wrap;
-            margin-bottom: 5px;
-            padding: 5px;
-            font-size: smaller;
-        }
-
-        .checkbox-container ul {
-            padding: 0;
-            margin: 0;
-            clear: both;
-        }
-
-        .checkbox-container li{
-            list-style-type: none;
-            list-style-position: outside;
-            padding: 2px;
-            float: left;
-        }
-
-        .checkbox-container input[type="checkbox"]:not(:checked), input[type="checkbox"]:checked {
-            position: absolute;
-            left: -9999%;
-        }
-
-        .checkbox-container input[type="checkbox"] + label {
-            display: inline-block;
-            padding: 10px;
-            cursor: pointer;
-            border: 1px solid black;
-            color: black;
-            background-color: white;
-            margin-bottom: 10px;
-        }
-
-        .checkbox-container input[type="checkbox"]:checked + label {
-            border: 1px solid white;
-            color: white;
-            background-color: black;
-        }
-
-    </style>
+    <script src="../static/bootstrap-min.js"></script>
+    <script src="../static/popper.js" defer></script>
+    <link rel="stylesheet" href="../static/styles.css">
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm">
         <div class="container">
+            <a class="navbar-brand">Search</a>
+
+            <hr class="navbar-separator">
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
             <div class="collapse navbar-collapse" id="navbarNav">
-                <a class="navbar-brand">Home</a>
-                <ul class="navbar-nav">
+                <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="/documentation">Documentation</a>
+                        <a class="nav-link" href="/documentation" id="documentationLink">Documentation</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/download">Download</a>
+                        <a class="nav-link" href="/integration" id="integrationLink">Integration</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/download" id="downloadLink">Download</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/contactUs" id="contactLink">Contact Us</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/about" id="aboutLink">About</a>
                     </li>
                 </ul>
             </div>
         </div>
     </nav>
 
-    <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-md-8 custom-container text-center">
-                <h3 style="font-family: monospace">PTM KB</h3>
+    <div class="container-fluid mt-5" style="width: 80%; align-content: center;">
+        <div class="container" style="width: 80%; align-content: center;">
+            <div class="row justify-content-center">
+                <div class="col-md-8 custom-container text-center">
+                    <h3 style="font-family: monospace">PTM KB</h3>
+                </div>
             </div>
         </div>
-    </div>
 
-    <div class="container-fluid mt-5">
-        <div class="alert alert-info text-center" style="width: 70%; margin: 0 auto;">
+        <div class="alert alert-info text-center">
             <i class="fa fa-search fa-small"></i>&nbsp;<label>Search</label>&nbsp;(Enter Protein Identifier or a UniProt Accession Number)
             <div class="input-group position-relative">
                 <input class="form-control" id="form_value" type="text" placeholder="Enter UniProt ID or UniProt AC">
@@ -325,50 +67,69 @@
                 <div id="suggestions" class="suggestions-box" style="display: none;"></div>
             </div>
         </div>
-    </div>
 
-    <div class="iframe-container" id="iframeContainer">
-        <div id="iframeLoader"></div> <!-- Loader class here -->
-        <h4 id="iframeData"></h4>
-        <div class="container mt-4">
-            <table class="table table-striped mx-auto">
-                <tbody class="thead-light" id="proteinInfo">
-                </tbody>
-            </table>
-        </div>
-        <h4 id="iframeData2"></h4>
-        <p id="iframeData2Info"></p>
-        <div id="foundProtein" style="position: relative; display: none;">
-            <div class="scrollable-text-container" id="scrollableTextContainer"></div>
-            <div class="overlay-line"></div>
-        </div>
-        <p id="iframeData3"></p>
-        <div class="checkbox-container">
-            <ul id="checkboxContainer"></ul>
-        </div>
-        <div id="ptmSiteInfo" style="display: none;">
-            <h3>PTM Info</h3>
-            <table class="table table-striped mx-auto">
-                <tbody class="thead-light" id="ptmInfo">
-                </tbody>
-            </table>
-            <h3>PTM Vector Data</h3>
-            <p>This vector data is used to calculate scores mentioned above (substitute the values in the equations).</p>
-            <table class="table table-bordered table-responsive th td" id="dataVector" style="display: none; font-family: 'Courier New', Courier, monospace; width: 60%; margin: 0 auto;">
-                <thead id="vectorHead" style="text-align: center"></thead>
-                <tbody id="vectorBody" style="text-align: center"></tbody>
-            </table>
-            
-            <div style="display: flex; align-items: center;">
-                <div>
-                    <div id="xlabel" style="margin-bottom: 10px; text-align: center;"></div>
-                    <table class="table table-bordered table-responsive th td" id="dataTable" style="display: none; font-family: 'Courier New', Courier, monospace;  text-align: center;">
-                        <thead id="tableHead"></thead>
-                        <tbody id="tableBody"></tbody>
-                    </table>
+        <div class="iframe-container main-content" id="iframeContainer">
+            <div id="iframeLoader"></div> <!-- Loader class here -->
+            <h4 id="iframeData"></h4>
+            <!-- <div> class="container mt-4"> -->
+            <div>
+                <table class="table table-striped mx-auto">
+                    <tbody class="thead-light" id="proteinInfo">
+                    </tbody>
+                </table>
+            </div>
+            <h4 id="iframeData2"></h4>
+            <p id="iframeData2Info"></p>
+            <div id="foundProtein" style="position: relative; display: none;">
+
+                <p id="iframeData3"></p>
+                <div id="ptmSearch">
+                    <input type="text" id="searchBox" placeholder="Search for PTM to show/hide" oninput="filterCheckboxes()" />
+                </div>
+                <div id="giantCheckboxContainer" class="checkbox-container">
+                    <ul id="checkboxContainer"></ul>
+                </div>
+
+                <div class="protein-container">
+                    <div class="sequence-displayer" id="sequenceDisplayer"></div>
+                    <div id="detailsPanel" class="details-panel">
+                        <!-- This will display detailed information about the hovered chunk -->
+                        <h3>Chunk Details</h3>
+                        <p id="chunkDetails">Hover over a chunk to see details.</p>
+                    </div>
+                </div>
+            </div>
+            <div id="ptmSiteInfo" style="display: none; align-content: center;">
+                <h3>PTM Info</h3>
+                <table class="table table-striped mx-auto">
+                    <tbody class="thead-light" id="ptmInfo">
+                    </tbody>
+                </table>
+                <h3>PTM Vector Data</h3>
+                <p>This vector data is used to calculate scores mentioned above (substitute the values in the equations).</p>
+                <table class="table table-bordered table-responsive th td" id="dataVector" style="display: none; font-family: 'Courier New', Courier, monospace; margin: 0 auto">
+                    <thead id="vectorHead" style="text-align: center"></thead>
+                    <tbody id="vectorBody" style="text-align: center"></tbody>
+                </table>
+                
+                <div style="display: flex; width: 110%;">
+                    <div>
+                        <div id="xlabel" style="margin-bottom: 10px; text-align: center;"></div>
+                        <table class="table table-bordered table-responsive th td" id="dataTable" style="display: none; font-family: 'Courier New', Courier, monospace;  text-align: center;">
+                            <thead id="tableHead"></thead>
+                            <tbody id="tableBody"></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
+    <div class="main-content"></div>
+    <footer class="footer bg-light py-3">
+        <div class="container text-center">
+            <p class="mb-0"> This website is open for everyone to use. For more information, please contact us.</p>
+            <p class="mb-0"><a href="http://biolabs.lums.edu.pk/birl">© 2024 Biomedical Informatics & Engineering Research Laboratory (BIRL)</a></p>
+        </div>
+    </footer>
 </body>
 </html>

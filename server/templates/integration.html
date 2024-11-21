@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documentation</title>
+    <link rel="stylesheet" href="../static/bootstrap-min.css">
+    <style>
+        #markdown {
+            background-color: #f9f9f9;
+            /* Light background */
+            border: 1px solid #ddd;
+            /* Light border */
+            border-radius: 8px;
+            /* Rounded corners */
+            padding: 20px;
+            /* Spacing inside the box */
+            margin: 20px auto;
+            /* Centering the box */
+            max-width: 70%;
+            /* Maximum width */
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            /* Subtle shadow */
+            font-family: Arial, sans-serif;
+            /* Font style */
+            line-height: 1.6;
+            /* Line spacing */
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="../static/bootstrap-min.js"></script>
+    <script src="../static/popper.js" defer></script>
+    <link rel="stylesheet" href="../static/styles.css">
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm">
+        <div class="container">
+            <!-- Navbar Brand (Home) -->
+            <a class="navbar-brand navbar-nav">Integration</a>
+            
+            <hr class="navbar-separator">
+            
+            <!-- Navbar Toggle Button (for mobile view) -->
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <!-- Navbar Links (collapse on small screens) -->
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <!-- Documentation Link -->
+                    <li class="nav-item">
+                        <a class="nav-link" href="/" id="searchLink">Search</a>
+                    </li>
+                    <!-- Download Link -->
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/documentation" id="integrationLink">Documentation</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/download" id="downloadLink">Download</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/contactUs" id="contactLink">Contact Us</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/about" id="aboutLink">About</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-5">
+        <h1>Integration</h1>
+        <p>This portion covers how to programmatically access information for your work.</p>
+    </div>
+    <div id="markdown">
+
+        <p>For starters, you can fetch the list of available PTMs by calling this URL with a GET request:</p>
+        <pre><code style="font-weight: 1000;"><span class="hljs-regexp">/ptmkb/</span>api<span class="hljs-regexp">/ptms</span>
+</code></pre>
+        <h2 id="proteins">Proteins</h2>
+        <p>To gather information on a protein whose PTMs you wish to identify, you can make a GET request to this URL,
+            with either the <code>upid</code> (UniProt ID) or the <code>upac</code> (UniProt Accession Number) required.
+            Note that if both are provided, <code>upid</code> will take preference:</p>
+        <pre><code style="font-weight: 1000;"><span class="hljs-regexp">/ptmkb/</span>api<span class="hljs-regexp">/proteins</span>
+</code></pre>
+        <p>For instance, if you wish to gather information on <code>O14746</code>, you must invoke a GET request to the
+            URL like so:</p>
+        <pre><code style="font-weight: 1000;"><span class="hljs-regexp">/ptmkb/</span>api<span class="hljs-regexp">/proteins?upac=O14746</span>
+</code></pre>
+        <h2 id="fetching-ptm-table">Fetching PTM Table</h2>
+        <p>Besides the availability to download the tables through the website, you can also programmatically fetch the
+            table for your work.</p>
+        <p>The values calculated for a protein sequence are log-odd frequencies over the entire available sequences in
+            dbPTM. If you wish to use a table for your purposes, that can also be fetched using a GET request.</p>
+        <p>For fetching a PTM&#39;s table, make a request at the following URL:</p>
+        <pre><code style="font-weight: 1000;">/ptmkb/api/<span class="hljs-class"><span class="hljs-keyword">data</span></span>
+</code></pre>
+        <p>This will fetch all tables available in our database.
+            The tables are kept in JSON format for usability and storage.</p>
+        <p>For a specific table, pass the name of the PTM to <code>selection</code>. As an example, for Phosphorylation,
+            the URL would be:</p>
+        <pre><code style="font-weight: 1000;">/ptmkb/api/<span class="hljs-class"><span class="hljs-keyword">data</span>?selection=<span class="hljs-type">Phosphorylation</span></span>
+</code></pre>
+        <p>For C-linked Glycosylation, it would be:</p>
+        <pre><code style="font-weight: 1000;">/ptmkb/api/<span class="hljs-class"><span class="hljs-keyword">data</span>?selection=<span class="hljs-type">C</span>-linked%20Glycosylation</span>
+</code></pre>
+        <p>A list of all possible selections are listed below for your convenience. Please keep in mind that the PTM
+            names are <strong>case-sensitive</strong>! The list will be updated with more PTM types as they are readily
+            available.</p>
+
+    </div>
+    <script src="../static/docs.js"></script>
+
+    <div class="main-content"></div>
+
+    <footer class="footer bg-light py-3">
+        <div class="container text-center">
+            <p class="mb-0"> This website is open for everyone to use. For more information, please contact us.</p>
+            <p class="mb-0"><a href="http://biolabs.lums.edu.pk/birl">© 2024 Biomedical Informatics & Engineering Research Laboratory (BIRL)</a></p>
+        </div>
+    </footer>
+</body>
+
+</html>

@@ -59,24 +59,42 @@
         }
     </style>
     <script src="../static/download.js"></script>
+    <link rel="stylesheet" href="../static/styles.css">
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm">
         <div class="container">
+            <!-- Navbar Brand (Home) -->
+            <a class="navbar-brand navbar-nav">Download</a>
+            
+            <hr class="navbar-separator">
+            
+            <!-- Navbar Toggle Button (for mobile view) -->
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav">
+                <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="/">Home</a>
+                        <a class="nav-link" href="/" id="searchLink">Search</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/documentation">Documentation</a>
+                        <a class="nav-link" href="/documentation" id="documentationLink">Documentation</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/integration" id="integrationLink">Integration</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/contactUs" id="contactLink">Contact Us</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/about" id="aboutLink">About</a>
                     </li>
                 </ul>
-                <a class="navbar-brand">Download</a>
             </div>
         </div>
     </nav>
-
     <div class="container custom-download mt-4">
         <h2>Select Modification and Download Option</h2>
         
@@ -171,5 +189,12 @@
 
         <button id="downloadButton" class="btn btn-primary" onclick="saveFile()">Download</button>
     </div>
+
+    <footer class="footer bg-light py-3">
+        <div class="container text-center">
+            <p class="mb-0"> This website is open for everyone to use. For more information, please contact us.</p>
+            <p class="mb-0"><a href="http://biolabs.lums.edu.pk/birl">© 2024 Biomedical Informatics & Engineering Research Laboratory (BIRL)</a></p>
+        </div>
+    </footer>
 </body>
 </html>

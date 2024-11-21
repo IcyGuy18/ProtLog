@@ -1,4 +1,86 @@
+// Some contants - don't ask me why I'm declaring here.
+
 var ptmSites = null;
+var currentSequence = null;
+
+const ptmColorMapping = {
+    // Classical colors for more commonly occurring PTMs
+    "Acetylation": "#D94F37",  // Slightly darker Tomato
+    "Phosphorylation": "#1A7EC7",  // Slightly darker Dodger Blue
+    "Ubiquitination": "#2A8B2A",  // Slightly darker Lime Green
+    "Methylation": "#D33600",  // Slightly darker Orange Red
+    "Oxidation": "#D10000",  // Slightly darker Red
+    "Sumoylation": "#1E6B1E",  // Slightly darker Forest Green
+    "Dephosphorylation": "#6A1DB0",  // Slightly darker Blue Violet
+
+    // Lighter, pastel-like colors for others
+    "ADP-ribosylation": "#F28C9D",  // Slightly darker Light Pink
+    "Amidation": "#F13E9C",  // Slightly darker Hot Pink
+    "AMPylation": "#E4007D",  // Slightly darker Deep Pink
+    "Biotinylation": "#C085C7",  // Slightly darker Plum
+    "Blocked amino end": "#D16ED2",  // Slightly darker Violet
+    "Butyrylation": "#C155C0",  // Slightly darker Orchid
+    "C-linked Glycosylation": "#A850C0",  // Slightly darker Medium Orchid
+    "Carbamidation": "#8826B9",  // Slightly darker Dark Orchid
+    "Carboxyethylation": "#7326B0",  // Slightly darker Blue Violet
+    "Carboxylation": "#6A4FD5",  // Slightly darker Medium Slate Blue
+    "Cholesterol ester": "#3A5BAE",  // Slightly darker Royal Blue
+    "Citrullination": "#6FA8D7",  // Slightly darker Sky Blue
+    "Crotonylation": "#96BFE7",  // Slightly darker Light Blue
+    "D-glucuronoylation": "#A2C8D9",  // Slightly darker Powder Blue
+    "Deamidation": "#9BDBDB",  // Slightly darker Pale Turquoise
+    "Deamination": "#00B0A5",  // Slightly darker Dark Turquoise
+    "Decanoylation": "#34D0BD",  // Slightly darker Turquoise
+    "Decarboxylation": "#3EACB2",  // Slightly darker Medium Turquoise
+    "Disulfide bond": "#00BFBF",  // Slightly darker Aqua
+    "Farnesylation": "#00E466",  // Slightly darker Spring Green
+    "Formation of an isopeptide bond": "#72E700",  // Slightly darker Chartreuse
+    "Formylation": "#9BEB2F",  // Slightly darker Green Yellow
+    "Gamma-carboxyglutamic acid": "#8CEB8C",  // Slightly darker Pale Green
+    "Geranylgeranylation": "#7ADA7A",  // Slightly darker Light Green
+    "Glutarylation": "#00D98D",  // Slightly darker Medium Spring Green
+    "Glutathionylation": "#2FB932",  // Slightly darker Lime Green
+    "GPI-anchor": "#329756",  // Slightly darker Medium Sea Green
+    "Hydroxyceramide ester": "#58B69E",  // Slightly darker Medium Aquamarine
+    "Hydroxylation": "#1B9C91",  // Slightly darker Light Sea Green
+    "Iodination": "#7C9B86",  // Slightly darker Light Olive Green
+    "Lactoylation": "#D1F2D1",  // Slightly darker Honeydew
+    "Lactylation": "#D9F8F3",  // Slightly darker Mint Cream
+    "Lipoylation": "#C2FFFF",  // Slightly darker Light Cyan
+    "Malonylation": "#D1E8FF",  // Slightly darker Alice Blue
+    "Myristoylation": "#E4E4E4",  // Slightly darker White Smoke
+    "N-carbamoylation": "#FFE3F0",  // Slightly darker Lavender Blush
+    "N-linked Glycosylation": "#F0C9D0",  // Slightly darker Misty Rose
+    "N-palmitoylation": "#F7E68A",  // Slightly darker Lemon Chiffon
+    "Neddylation": "#F6E497",  // Slightly darker Light Goldenrod Yellow
+    "Nitration": "#FFFFB3",  // Slightly darker Light Yellow
+    "O-linked Glycosylation": "#E2C300",  // Slightly darker Gold
+    "O-palmitoleoylation": "#E1D45A",  // Slightly darker Khaki
+    "O-palmitoylation": "#E2C300",  // Slightly darker Gold
+    "Octanoylation": "#F2D093",  // Slightly darker Moccasin
+    "Phosphatidylethanolamine amidation": "#F7E1DD",  // Slightly darker Seashell
+    "Propionylation": "#F7D0D0",  // Slightly darker Pink Lavender
+    "Pyrrolidone carboxylic acid": "#E8C08D",  // Slightly darker Wheat
+    "Pyrrolylation": "#F1C397",  // Slightly darker Navajo White
+    "Pyruvate": "#F4D0A9",  // Slightly darker Blanched Almond
+    "S-archaeol": "#D1E8FF",  // Slightly darker Alice Blue
+    "S-carbamoylation": "#E1D45A",  // Slightly darker Khaki
+    "S-Cyanation": "#C9A7D9",  // Slightly darker Thistle
+    "S-cysteinylation": "#D1C9E6",  // Slightly darker Lavender
+    "S-diacylglycerol": "#B8B8B8",  // Slightly darker Light Gray
+    "S-linked Glycosylation": "#A1B7D1",  // Slightly darker Light Steel Blue
+    "S-nitrosylation": "#A3A3A3",  // Slightly darker Gray
+    "S-palmitoylation": "#A8A8A8",  // Slightly darker Silver
+    "Serotonylation": "#C7C7C7",  // Slightly darker Gainsboro
+    "Stearoylation": "#F2F2F2",  // Slightly darker Ghost White
+    "Succinylation": "#E5E5E5",  // Slightly darker Very Light Gray
+    "Sulfation": "#A7C8D9",  // Slightly darker Powder Blue
+    "Sulfhydration": "#C7C7C7",  // Slightly darker Gainsboro
+    "Sulfoxidation": "#B8B8B8",  // Slightly darker Light Gray
+    "Thiocarboxylation": "#D9F8F3",  // Slightly darker Mint Cream
+    "Ubiquitination": "#2A8B2A",  // Slightly darker Lime Green
+    "UMPylation": "#A3A3A3"  // Slightly darker Gray
+};
 
 document.addEventListener("DOMContentLoaded", () => {
     // Populate checkboxes.
@@ -55,65 +137,258 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 });
 
-// Required for highlighting PTMs
-function isEnabled(ptm) {
-    const checkboxContainer = document.getElementById('checkboxContainer');
-    inputs = checkboxContainer.querySelectorAll('input')
-    for (i = 0; i < inputs.length; i++) {
-        if (ptm == inputs[i].value && inputs[i].checked) {
-            return true;
-        }
+// Split the sequence like it is done in UniProt
+function splitSequence(sequence) {
+    const splits = [];
+    for (let i = 0; i < sequence.length; i += 10) {
+        splits.push(sequence.slice(i, i + 10));
     }
-    return false;
+    let total = 0;
+    const response = splits.map(split => {
+        total += split.length;
+        const result = [split, total];
+        return result;
+    });
+    return response;
 }
 
-// We color those amino acids here which can be clicked on
-// This function will be called very frequenctly due to its
-// extreme dependency
-function colorPTMs(e) {
-    const sequences = document.getElementById('scrollableTextContainer').getElementsByTagName('span')
-    for (i = 0; i < sequences.length; i++) {
-        // Check for all spans
-        if (sequences[i].title) { // check if a title is assigned first
-            if (sequences[i].style.color === 'green') {
-                const ptmType = document.getElementById(sequences[i].getAttribute('data-ptm'));
-                if (e.value === ptmType.value) {
-                    document.getElementById('ptmSiteInfo').style.display = 'none';
-                    sequences[i].style.color = 'black';
+// Function to display additional details about the clicked block
+function displayBlockDetails(event) {
+    // Get the clicked block element
+    const clickedBlock = event.target.closest('.sequence-block'); // Closest ensures we get the right parent div if the span is clicked
+
+    // Retrieve the sequence chunk and block number from the clicked block
+    const sequenceText = clickedBlock.querySelector('.sequence-text').textContent;
+    const blockNumber = clickedBlock.querySelector('.block-number').textContent;
+
+    // Get additional details for the chunk if available (example: could be fetched from an API or a database)
+    const details = `Block Number: ${blockNumber}\nSequence: ${sequenceText}`;
+
+    // Update the content inside the details panel
+    const chunkDetailsPanel = document.getElementById('chunkDetails');
+    chunkDetailsPanel.textContent = details; // Update the panel with details about the clicked block
+
+    // Show the details panel
+    document.getElementById('detailsPanel').style.display = 'block';
+
+    // Remove the 'clicked' class from all blocks
+    const allBlocks = document.querySelectorAll('.sequence-block');
+    allBlocks.forEach(block => {
+        block.classList.remove('clicked');
+    });
+
+    // Add the 'clicked' class to the currently clicked block
+    clickedBlock.classList.add('clicked');
+}
+
+// Function to initialize the sequence blocks and attach event listeners
+function initializeBlockClickListeners() {
+    const blocks = document.querySelectorAll('.sequence-block');
+
+    // Attach the click event listener to each sequence block
+    blocks.forEach(block => {
+        block.addEventListener('click', displayBlockDetails);
+    });
+}
+
+// Function to display the protein sequence with color-coded PTM highlights
+function displayProteinSequence(sequence, modificationData) {
+    const container = document.getElementById("sequenceDisplayer");
+
+    // Clear any previous content in the container
+    container.innerHTML = "";
+
+    // Split the sequence into blocks of 10 characters
+    let blocks = splitSequence(sequence);
+
+    // Iterate over each block in the sequence
+    blocks.forEach((block, blockIndex) => {
+        // Create a block div for each individual block
+        const blockDiv = document.createElement("div");
+        blockDiv.classList.add("sequence-block");
+
+        // Create a span for each character in the block
+        let sequenceText = document.createElement("span");
+        sequenceText.classList.add("sequence-text");
+
+        // Iterate over the characters in the block
+        block[0].split('').forEach((char, index) => {
+            // Create a span for each character
+            const charSpan = document.createElement("span");
+            charSpan.textContent = char;
+
+            // Get the global 0-indexed position of this character
+            const charIndex = blockIndex * 10 + index;  // Global 0-indexed position
+
+            // Look for a matching modification data entry (first element is index, second is PTM)
+            const modification = modificationData.find(mod => mod[0] === charIndex + 1); // Convert to 1-indexed
+
+            if (modification) {
+                const ptmType = modification[1];  // PTM type (e.g., 'Acetylation')
+
+                // Store PTM data in the span (this is done regardless of checkbox status)
+                charSpan.setAttribute('data-ptm', ptmType);
+
+                // Check if the corresponding checkbox for this PTM is checked
+                const checkbox = document.getElementById(ptmType);
+                if (checkbox && checkbox.checked && !checkbox.disabled) {
+                    // Add highlight class if checkbox is checked
+                    charSpan.classList.add("highlighted");
+
+                    // Apply the PTM color from the mapping
+                    const color = ptmColorMapping[ptmType] || '#f39c12';  // Default color if PTM not in map
+                    charSpan.style.backgroundColor = color;  // Apply the color
                 }
-            } else {
-                // Fetch the input tag
-                const ptmType = document.getElementById(sequences[i].getAttribute('data-ptm'));
-                if (ptmType.checked) { // Now use that input tag to check if it's enabled
-                    sequences[i].style.color = 'red';
-                } else {
-                    sequences[i].style.color = 'black';
-                }
+
+                // Add a hover event to show the custom tooltip
+                charSpan.addEventListener("mouseenter", (e) => {
+                    // Only show the tooltip if the checkbox is checked and enabled
+                    const checkbox = document.getElementById(ptmType);
+                    if (checkbox && checkbox.checked && !checkbox.disabled) {
+                        // Create a tooltip element
+                        const tooltip = document.createElement("div");
+                        tooltip.classList.add("custom-tooltip");
+                        tooltip.textContent = ptmType;  // PTM description
+
+                        // Append the tooltip to the body
+                        document.body.appendChild(tooltip);
+
+                        // Position the tooltip near the character
+                        const rect = e.target.getBoundingClientRect(); // Get the character's position
+                        tooltip.style.position = "absolute";
+                        tooltip.style.left = `${rect.left + window.scrollX}px`; // Adjust for any page scroll
+                        tooltip.style.top = `${rect.top + window.scrollY - 30}px`; // Position above the character
+                        tooltip.style.zIndex = 10; // Ensure it's above other content
+
+                        // Add the 'visible' class to the tooltip to show it
+                        setTimeout(() => {
+                            tooltip.classList.add("visible");
+                        }, 10); // Small delay for the transition to kick in
+
+                        // Store tooltip for later removal
+                        e.target.tooltip = tooltip;
+                    }
+                });
+
+                // Add mouseleave event to remove the tooltip
+                charSpan.addEventListener("mouseleave", (e) => {
+                    const tooltip = e.target.tooltip;
+                    if (tooltip) {
+                        tooltip.remove(); // Remove the tooltip when the mouse leaves
+                        delete e.target.tooltip; // Clean up the tooltip reference
+                    }
+                });
+            }
+
+            // Append the character span to the sequence text span
+            sequenceText.appendChild(charSpan);
+        });
+
+        // Set the block number
+        const blockNumber = document.createElement("span");
+        blockNumber.classList.add("block-number");
+        blockNumber.textContent = block[1]; // The block number (block[1])
+
+        // Append both the sequence chunk and the block number to the block div
+        blockDiv.appendChild(sequenceText);
+        blockDiv.appendChild(blockNumber);
+
+        // Append the block div to the main container
+        container.appendChild(blockDiv);
+    });
+
+    // After blocks are created, initialize the click event listeners
+    initializeBlockClickListeners();
+}
+
+// Function to handle PTM highlighting (this is where you can remove highlights if unchecked)
+function colorPTMs(checkbox) {
+    const ptmType = checkbox.value;  // PTM type from the checkbox value
+    const isChecked = checkbox.checked;
+
+    // Find all highlighted spans in the sequence
+    const highlightedSpans = document.getElementById('sequenceDisplayer').querySelectorAll('span');
+
+    highlightedSpans.forEach(span => {
+        // Check if the span has the corresponding PTM type
+        if (span.getAttribute('data-ptm') === ptmType) {
+            // If unchecked, remove the highlight
+            if (!isChecked) {
+                span.style.backgroundColor = '';  // Remove the background color (or reset it)
+                span.classList.remove('highlighted');  // Remove the 'highlighted' class
+            } else if (isChecked) {
+                span.style.backgroundColor = ptmColorMapping[ptmType] || '#f39c12';
+                span.classList.add('highlighted');  // Add the 'highlighted' class
             }
         }
-    }
+    });
 }
 
-// Here to popular checkboxes.
+// Function to populate checkboxes
 function populateCheckboxes() {
     fetch('/ptmkb/api/ptms').then(res => {
         return res.json();
     }).then(data => {
         const checkboxContainer = document.getElementById('checkboxContainer');
-        var arr = data['ptms'];
-        ptmSites = arr;
-        for (i = 0; i < arr.length; i++) {
+        const searchBox = document.getElementById('searchBox');
+        const arr = data['ptms'];
+
+        const checkboxList = [];
+
+        // For each PTM, create a checkbox
+        for (let i = 0; i < arr.length; i++) {
+            const ptm = arr[i];
             const checkboxWrapper = document.createElement('label');
-            checkboxWrapper.htmlFor = arr[i];
+            checkboxWrapper.htmlFor = ptm;
             checkboxWrapper.innerHTML = `
                 <li>
-                    <input type="checkbox" id="${arr[i]}" name="${arr[i]}" value="${arr[i]}" checked="true" onchange="colorPTMs(this)">
-                    <label for="${arr[i]}">${arr[i]}</label>
+                    <input type="checkbox" id="${ptm}" name="${ptm}" value="${ptm}" checked="true">
+                    <label for="${ptm}">${ptm}</label>
                 </li>
             `;
-            
+
+            const color = ptmColorMapping[ptm] || "#FFFFFF";
+            const checkboxLabel = checkboxWrapper.querySelector('label');
+            checkboxLabel.style.border = `2px solid ${color}`;
+            checkboxLabel.style.padding = '5px';
+            checkboxLabel.style.marginBottom = '10px';
+            checkboxLabel.style.display = 'inline-block';
+            checkboxLabel.style.backgroundColor = 'black';
+            checkboxLabel.style.color = 'white';
+
+            // Event listener for checkbox change
+            checkboxWrapper.querySelector('input').addEventListener('change', (e) => {
+                if (e.target.checked) {
+                    checkboxLabel.style.backgroundColor = 'black';
+                    checkboxLabel.style.color = 'white';
+                } else {
+                    checkboxLabel.style.backgroundColor = 'white';
+                    checkboxLabel.style.color = 'black';
+                }
+
+                // Call colorPTMs function to update the highlights based on checked boxes
+                colorPTMs(e.target);
+            });
+
+            checkboxList.push(checkboxWrapper);
             checkboxContainer.appendChild(checkboxWrapper);
         }
+
+        // Filter checkboxes based on search query
+        function filterCheckboxes() {
+            const query = searchBox.value.toLowerCase();
+            checkboxList.forEach(wrapper => {
+                const labelText = wrapper.innerText.toLowerCase();
+                if (labelText.includes(query)) {
+                    wrapper.style.display = ''; // Show if it matches
+                } else {
+                    wrapper.style.display = 'none'; // Hide if it doesn't match
+                }
+            });
+        }
+
+        searchBox.addEventListener('input', filterCheckboxes);
+        filterCheckboxes();
     });
 }
 
@@ -164,6 +439,8 @@ function convertPubMedReferences(text) {
 async function search() {
     const id = document.getElementById('form_value').value;
     if (id) {
+        document.getElementById('ptmSearch').style.display = 'none';
+        document.getElementById('giantCheckboxContainer').style.display = 'none';
         document.getElementById('form_submit').disabled = true;
         const table = document.getElementById('proteinInfo');
         table.innerHTML = ''
@@ -171,8 +448,8 @@ async function search() {
         document.getElementById('checkboxContainer').style.display = 'none';
         document.getElementById('iframeContainer').setAttribute('style', "display: block;");
         document.getElementById('iframeLoader').setAttribute('class', 'lds-dual-ring');
-        document.getElementById('scrollableTextContainer').style.display = "none";
-        document.getElementById('scrollableTextContainer').innerHTML = '';
+        document.getElementById('sequenceDisplayer').style.display = "none";
+        document.getElementById('sequenceDisplayer').innerHTML = '';
         document.getElementById("tableHead").innerHTML = '';
         document.getElementById("tableBody").innerHTML = '';
         document.getElementById("xlabel").innerHTML = "";
@@ -232,127 +509,133 @@ async function search() {
                                     table.appendChild(row);
                                 }
                             }
+                            currentSequence = json.proteinSequence;
                             // Now highlight the protein text in the new page
 
                             // Script for drag-text
-                            highlightableText = document.getElementById('scrollableTextContainer');
+                            // highlightableText = document.getElementById('scrollableTextContainer');
 
-                            let isMouseDown = false;
-                            let startX, scrollLeft;
+                            // let isMouseDown = false;
+                            // let startX, scrollLeft;
 
-                            highlightableText.addEventListener('mousedown', (e) => {
-                                isMouseDown = true;
-                                startX = e.pageX - highlightableText.offsetLeft;
-                                scrollLeft = highlightableText.scrollLeft;
-                                // console.log(startX, scrollLeft);
-                            });
+                            // highlightableText.addEventListener('mousedown', (e) => {
+                            //     isMouseDown = true;
+                            //     startX = e.pageX - highlightableText.offsetLeft;
+                            //     scrollLeft = highlightableText.scrollLeft;
+                            //     // console.log(startX, scrollLeft);
+                            // });
 
-                            highlightableText.addEventListener('mouseleave', () => {
-                                isMouseDown = false;
-                            });
+                            // highlightableText.addEventListener('mouseleave', () => {
+                            //     isMouseDown = false;
+                            // });
 
-                            highlightableText.addEventListener('mouseup', () => {
-                                isMouseDown = false;
-                            });
+                            // highlightableText.addEventListener('mouseup', () => {
+                            //     isMouseDown = false;
+                            // });
 
-                            highlightableText.addEventListener('mousemove', (e) => {
-                                if (!isMouseDown) return; // Stop the fn from running
-                                e.preventDefault(); // Prevent text selection
-                                const x = e.pageX - highlightableText.offsetLeft;
-                                const walk = (x - startX) * 1; // Scroll-fast
-                                highlightableText.scrollLeft = scrollLeft - walk;
-                            });
+                            // highlightableText.addEventListener('mousemove', (e) => {
+                            //     if (!isMouseDown) return; // Stop the fn from running
+                            //     e.preventDefault(); // Prevent text selection
+                            //     const x = e.pageX - highlightableText.offsetLeft;
+                            //     const walk = (x - startX) * 1; // Scroll-fast
+                            //     highlightableText.scrollLeft = scrollLeft - walk;
+                            // });
 
-                            // And code for highlighting text
-                            for (let index = 0; index < json.proteinSequence.length; index++) {
-                                const char = json.proteinSequence[index];
-                                const span = document.createElement('span');
-                                span.textContent = char;
-                                span.className = 'highlightable-text';
-                                span.style.fontFamily = 'monospace'
+                            // // And code for highlighting text
+                            // for (let index = 0; index < json.proteinSequence.length; index++) {
+                            //     const char = json.proteinSequence[index];
+                            //     const span = document.createElement('span');
+                            //     span.textContent = char;
+                            //     span.className = 'highlightable-text';
+                            //     span.style.fontFamily = 'monospace'
 
-                                // Check if the index is equal to any of the PTM modification positions
-                                const matched = ptmSites.find(i => i[0] === (index+1))
-                                // If the value is matched, well time to highlight that text~
-                                if (matched) {
-                                    if (isEnabled(matched[1]))
-                                        span.style.color = 'red';
-                                    else
-                                        span.style.color = 'black';
-                                    span.title = `${matched[1]}; Position ${matched[0]}`;
-                                    span.setAttribute('data-ptm', matched[1]);
-                                    // This is where the magic happens
-                                    span.addEventListener('click', (e) => {
-                                        // This works - time to add a new popup window
-                                        // Remove the previous highlighted blue one
-                                        // And assign the selected amino acid the color blue
-                                        // If you click on it again, it becomes red
-                                        // Important since I will show another HTML subpage
-                                        // if an amino acid's color is changed
-                                        const s = e.currentTarget
-                                        // This is very stupid logic, yeah
-                                        ptm = s.title.split(';')[0];
-                                        if (isEnabled(ptm)) {
-                                            if (s.style.color === 'red') {
-                                                // First, remove any green text
-                                                const sequences = document.getElementById('scrollableTextContainer').getElementsByTagName('span')
-                                                for (i = 0; i < sequences.length; i++) {
-                                                    if (sequences[i].style.color === 'green')
-                                                        sequences[i].style.color = 'red'
-                                                }
-                                                // now assign that color haha
-                                                s.style.color = 'green';
-                                                // First, fill up the Vector table
-                                                // Logic's going to be a bit complex for the above stuff
-                                                var sequenceArray = [];
-                                                for (i = 0; i < sequences.length; i++)
-                                                    sequenceArray.push(sequences[i].textContent);
-                                                var subsequence = sliceWithPadding(sequenceArray, index);
-                                                // Okay I guess not too complex.
+                            //     // Check if the index is equal to any of the PTM modification positions
+                            //     const matched = ptmSites.find(i => i[0] === (index+1))
+                            //     // If the value is matched, well time to highlight that text~
+                            //     if (matched) {
+                            //         if (isEnabled(matched[1]))
+                            //             span.style.color = 'red';
+                            //         else
+                            //             span.style.color = 'black';
+                            //         span.title = `${matched[1]}; Position ${matched[0]}`;
+                            //         span.setAttribute('data-ptm', matched[1]);
+                            //         // This is where the magic happens
+                            //         span.addEventListener('click', (e) => {
+                            //             // This works - time to add a new popup window
+                            //             // Remove the previous highlighted blue one
+                            //             // And assign the selected amino acid the color blue
+                            //             // If you click on it again, it becomes red
+                            //             // Important since I will show another HTML subpage
+                            //             // if an amino acid's color is changed
+                            //             const s = e.currentTarget
+                            //             // This is very stupid logic, yeah
+                            //             ptm = s.title.split(';')[0];
+                            //             if (isEnabled(ptm)) {
+                            //                 if (s.style.color === 'red') {
+                            //                     // First, remove any green text
+                            //                     const sequences = document.getElementById('scrollableTextContainer').getElementsByTagName('span')
+                            //                     for (i = 0; i < sequences.length; i++) {
+                            //                         if (sequences[i].style.color === 'green')
+                            //                             sequences[i].style.color = 'red'
+                            //                     }
+                            //                     // now assign that color haha
+                            //                     s.style.color = 'green';
+                            //                     // First, fill up the Vector table
+                            //                     // Logic's going to be a bit complex for the above stuff
+                            //                     var sequenceArray = [];
+                            //                     for (i = 0; i < sequences.length; i++)
+                            //                         sequenceArray.push(sequences[i].textContent);
+                            //                     var subsequence = sliceWithPadding(sequenceArray, index);
+                            //                     var aa = subsequence[10];
+                            //                     // Okay I guess not too complex.
 
-                                                // Then the reference data table (whose function is already made!)
-                                                loadFile(subsequence, matched);
-                                                // highlightableText.querySelectorAll('span').forEach((cs) => {
-                                                //     if (cs.style.color === 'green') {
-                                                //         cs.style.color = 'red';
-                                                //     }
-                                                // });
-                                                // s.style.color = 'green';
-                                                // // console.log(ptm, index);
+                            //                     // Then the reference data table (whose function is already made!)
+                            //                     loadFile(subsequence, matched, aa);
+                            //                     // highlightableText.querySelectorAll('span').forEach((cs) => {
+                            //                     //     if (cs.style.color === 'green') {
+                            //                     //         cs.style.color = 'red';
+                            //                     //     }
+                            //                     // });
+                            //                     // s.style.color = 'green';
+                            //                     // // console.log(ptm, index);
 
-                                                // also going to center that text
-                                                const containerRect = highlightableText.getBoundingClientRect();
-                                                const spanRect = s.getBoundingClientRect();
+                            //                     // also going to center that text
+                            //                     const containerRect = highlightableText.getBoundingClientRect();
+                            //                     const spanRect = s.getBoundingClientRect();
 
-                                                // Calculate the scroll position to center the clicked character
-                                                const scrollPosition = spanRect.left - containerRect.left + highlightableText.scrollLeft - (containerRect.width / 2) + (spanRect.width / 2);
+                            //                     // Calculate the scroll position to center the clicked character
+                            //                     const scrollPosition = spanRect.left - containerRect.left + highlightableText.scrollLeft - (containerRect.width / 2) + (spanRect.width / 2);
                                                 
-                                                // Scroll the container
-                                                highlightableText.scrollTo({
-                                                    left: scrollPosition,
-                                                    behavior: 'smooth'
-                                                });
-                                                document.getElementById('ptmSiteInfo').style.display = 'block';
-                                            } else {
-                                                s.style.color = 'red';
-                                                document.getElementById('ptmSiteInfo').style.display = 'none';
-                                            }
-                                            index = (s.title.match(/\d+$/)[0]) - 1;   
-                                        }
-                                    });
-                                }
-                                else {
-                                    // Handle every other case (we still show log odd scores and whatnot... maybe?)
-                                }
-                                highlightableText.appendChild(span);
-                            }
-                            document.getElementById('scrollableTextContainer').setAttribute('style', "display: block;");
+                            //                     // Scroll the container
+                            //                     highlightableText.scrollTo({
+                            //                         left: scrollPosition,
+                            //                         behavior: 'smooth'
+                            //                     });
+                            //                     document.getElementById('ptmSiteInfo').style.display = 'block';
+                            //                 } else {
+                            //                     s.style.color = 'red';
+                            //                     document.getElementById('ptmSiteInfo').style.display = 'none';
+                            //                 }
+                            //                 index = (s.title.match(/\d+$/)[0]) - 1;   
+                            //             }
+                            //         });
+                            //     }
+                            //     else {
+                            //         // Handle every other case (we still show log odd scores and whatnot... maybe?)
+                            //     }
+                            //     highlightableText.appendChild(span);
+                            // }
+
+                            displayProteinSequence(json.proteinSequence, data.result.PTMs);
+                            document.getElementById('sequenceDisplayer').setAttribute('style', "display: block;");
                             document.getElementById('iframeData').textContent = "Protein Info";
                             document.getElementById('iframeData2').textContent = "Modification Sites";
                             document.getElementById('iframeData2Info').textContent = "Hover on a highlighted amino acid to view the PTM; click on a highlighted amino acid to view details of the PTM below."
                             document.getElementById('iframeData3').textContent = "You can click on the boxes below to highlight certain PTMs in the above sequence. They are all enabled by default.";
                             document.getElementById('foundProtein').style.display = 'block';
                             document.getElementById('checkboxContainer').style.display = 'block';
+                            document.getElementById('giantCheckboxContainer').style.display = 'block';
+                            document.getElementById('ptmSearch').style.display = 'block';
                         }
                         else {
                             alert(json.message);
@@ -376,8 +659,9 @@ async function search() {
     document.getElementById('iframeLoader').setAttribute('class', '');
 }
 
-async function loadFile(subsequence, matched) {
-    const response = await fetch("/ptmkb/api/data?selection=" + matched[1], {
+async function loadFile(subsequence, matched, aa) {
+    console.log(matched[1], aa);
+    const response = await fetch("/ptmkb/api/data?selection=" + matched[1] + "&aa=" + aa, {
         method: 'GET'
     });
 
@@ -467,7 +751,6 @@ async function displayVector(data, subsequence, result) {
         "modificationType": result[1],
         "modificationPosition": result[0],
         "evidence": result[2],
-        "logOddAtModificationPosition": middle,
         "additiveScore": scores['a_score'],
         "multiplicativeScore": scores['m_score'],
         "*-MultiplicativeScore": scores['*_m_score']
@@ -504,13 +787,13 @@ async function displayVector(data, subsequence, result) {
             // Make notes
             var tag = new String();
             if (key === "additiveScore") {
-                tag = "<math><munderover><mo>∑</mo><mn>i=1</mn><mi>n</mi></munderover><mtext>, where i</mtext><mo>≠</mo><mtext>'-inf'</mtext></math>";
+                tag = "<math><munderover><mo>∑</mo><mn>i=1</mn><mi>n</mi></munderover><msub><mi>x</mi><mi>i</mi></msub><mtext>, where&nbsp;</mtext><msub><mi>x</mi><mi>i</mi></msub><mo>≠</mo><mtext>'-inf'</mtext></math>";
             }
             else if (key === "multiplicativeScore") {
-                tag = "<math><munderover><mo>∏</mo><mi>i=1</mi><mn>n</mn></munderover><mi>i</mi><mtext>, where i</mtext><mo>≠</mo><mtext>'-inf' and i</mtext><mo>≠</mo><mtext>0</mtext></math>";
+                tag = "<math><munderover><mo>∏</mo><mi>i=1</mi><mn>n</mn></munderover><msub><mi>x</mi><mi>i</mi></msub><mtext>, where&nbsp;</mtext><msub><mi>x</mi><mi>i</mi></msub><mo>≠</mo><mtext>'-inf' and&nbsp;</mtext><msub><mi>x</mi><mi>i</mi></msub><mo>≠</mo><mtext>0</mtext></math>";
             }
             else {
-                tag = "<math><mrow><mo>ln</mo><mo>(</mo><mfrac><mn>1</mn><mrow><mrow><mn>-1</mn><mo>×</mo></mrow><munderover><mo>∏</mo><mi>i=1</mi><mn>n</mn></munderover><mi>i</mi></mrow></mfrac><mo>)</mo></mrow><mtext>, where i</mtext><mo>≠</mo><mtext>'-inf' and i</mtext><mo>≠</mo><mtext>0</mtext></math>";
+                tag = "<math><mrow><mo>ln</mo><mo>(</mo><mfrac><mn>1</mn><mrow><mrow><mn>-1</mn><mo>×</mo></mrow><munderover><mo>∏</mo><mi>i=1</mi><mn>n</mn></munderover><msub><mi>x</mi><mi>i</mi></msub></mrow></mfrac><mo>)</mo></mrow><mtext>, where&nbsp;</mtext><msub><mi>x</mi><mi>i</mi></msub><mo>≠</mo><mtext>'-inf' and&nbsp;</mtext><msub><mi>x</mi><mi>i</mi></msub><mo>≠</mo><mtext>0</mtext></math>";
             }
             notes.innerHTML = tag;
             row.appendChild(notes);
@@ -605,6 +888,7 @@ function displayTable(data, ptm) {
                 cell.style.borderRight = "2px solid black";
                 cell.style.borderLeft = "2px solid black";
             }
+            cell.style.fontWeight = 700;
             aaHeader.appendChild(cell);
         })
     });

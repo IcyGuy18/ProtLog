@@ -1,0 +1,447 @@
+html, body {
+    height: 100%; /* This ensures the body takes up at least 100% of the viewport height */
+    margin: 0;    /* Remove default margin to prevent any unexpected behavior */
+}
+
+/* Use Flexbox to lay out the body */
+body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh; /* Ensures the body takes up at least the full height of the viewport */
+}
+
+/* Main content will take up all the available space between the navbar and footer */
+.main-content {
+    flex: 1; /* This ensures that the content grows to fill any remaining space */
+    /* width: 1920px; */
+}
+
+/* Footer Styles */
+.footer {
+    background-color: #f8f9fa;
+    text-align: center;
+    padding: 20px 0;
+}
+
+.container {
+    width: 150%;
+    /* padding: 20px; */
+    /* border: 2px solid transparent; No border by default */
+    /* box-sizing: border-box; */
+}
+
+.suggestions-box {
+    display: none; /* Hidden by default */
+    position: absolute; /* Positioning relative to the input group */
+    top: calc(100% + 5px); /* Position just below the input */
+    left: 0; /* Align to the left */
+    width: 100%; /* Full width of the input */
+    background: white; /* White background for contrast */
+    border: 1px solid #ccc; /* Border for better visibility */
+    border-radius: 4px; /* Rounded corners */
+    max-height: 150px; /* Max height */
+    overflow-y: auto; /* Scroll if needed */
+    z-index: 1000; /* Ensure it appears on top */
+}
+.suggestion-item {
+    padding: 10px; /* Space for each suggestion */
+    cursor: pointer; /* Pointer cursor on hover */
+}
+.suggestion-item:hover {
+    background-color: #007bff; /* Highlight on hover */
+    color: white; /* Change text color on hover */
+}
+
+.iframe-container {
+    display: none; /* Initially hide the iframe */
+    text-align: center; /* Center content */
+    margin-top: 40px; /* Add top margin to separate from search bar */
+    padding: 20px; /* Add padding around the iframe */
+    width: 100%; /* Set iframe width */
+}
+
+iframe {
+    /* width: 100%; Set iframe width */
+    height: 600px; /* Set iframe height */
+    border: none; /* Remove border */
+    border-radius: 8px; /* Add rounded corners */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Add shadow for depth */
+}
+
+.alert {
+    border-radius: 8px; /* Add rounded corners to the alert */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+}
+
+.custom-container {
+    margin-top: 20px; /* Add margin to the title container */
+}
+
+.navbar {
+    margin-bottom: 20px; /* Add bottom margin to navbar */
+}
+
+.navbar-nav .nav-link.active {
+    color: #007bff !important; /* Change color to make it stand out */
+    font-weight: bold; /* Make the active link bold */
+}
+
+.navbar-separator {
+    border-left: 1px solid #ddd; /* Light gray separator line */
+    height: 40px; /* Match the height of the navbar */
+    margin: 0 15px; /* Spacing between the brand and the options */
+}
+
+/* Hide the separator line when the navbar is collapsed (small screens) */
+@media (max-width: 991px) { /* Bootstrap’s breakpoint for medium devices */
+    .navbar-separator {
+        display: none;
+    }
+}
+
+.navbar-nav .nav-link:hover {
+    color: #0056b3; /* Hover effect color */
+}
+
+.btn-primary {
+    transition: background-color 0.3s; /* Smooth transition for button */
+}
+
+.btn-primary:hover {
+    background-color: #004085; /* Darker shade on hover */
+}
+
+.lds-dual-ring {
+    color: #297fff
+}
+.lds-dual-ring,
+.lds-dual-ring:after {
+    box-sizing: border-box;
+}
+.lds-dual-ring {
+    display: inline-block;
+    width: 80px;
+    height: 80px;
+}
+.lds-dual-ring:after {
+    content: " ";
+    display: block;
+    width: 64px;
+    height: 64px;
+    margin: 8px;
+    border-radius: 50%;
+    border: 6.4px solid currentColor;
+    border-color: currentColor transparent currentColor transparent;
+    animation: lds-dual-ring 1.2s linear infinite;
+}
+@keyframes lds-dual-ring {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.table {
+    table-layout: fixed; /* Ensures the table layout is fixed */
+    /* width: 100%; Set to 100% or a specific width */
+    border-collapse: collapse; /* Collapses borders to avoid double borders */
+    font-family: "Verdana, Geneva, Tahoma, sans-serif";
+}
+
+.table td {
+    overflow-wrap: break-word; /* Allows breaking long words */
+    word-wrap: break-word; /* Older support for breaking long words */
+    white-space: normal; /* Ensures that text can wrap onto new lines */
+    text-align: center;
+    font-size: small;
+}
+
+.table th, .table td {
+    border: 1px solid #ccc; /* Adds a light gray border to cells */
+    padding: 8px; /* Adds some padding inside the cells */
+    font-size: small;
+}
+
+.table td.key {
+    width: 20%; /* Set width for key column */
+    text-align: center; /* Center text in key column */
+    font-size: medium;
+    font-weight: 700;
+}
+
+.table td.value {
+    width: 40%; /* Adjust width for value column */
+    text-align: left; /* Left align text in value column */
+    font-size: medium;
+}
+
+.table td.notes {
+    width: 40%; /* Set width for notes column */
+    text-align: left; /* Left align text in notes column */
+    font-size: large;
+}
+
+@font-face {
+    font-family: 'perfectDOSVGA';
+    src: url('../data/fonts/perfect_dos_vga.ttf') format('truetype'),
+        url('../data/fonts/perfect_dos_vga.woff') format('woff'),
+        url('../data/fonts/perfect_dos_vga.woff2') format('woff2');
+}
+
+/* Container for sequence blocks */
+#sequenceDisplayer {
+    display: inline-block;      /* Use flexbox for horizontal layout */
+    flex-wrap: wrap;            /* Allow wrapping of blocks to the next line */
+    border-color:rgb(0, 0, 0);
+    border-width: 4px;
+    gap: 20px;                  /* Gap between blocks */
+    padding: 20px;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    background: linear-gradient(135deg, #f7f7f7 0%, #dbdbdb 100%); /* Subtle gradient from light gray to slightly lighter gray */
+    border-radius: 10px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    flex-grow: 1;               /* Ensures the sequenceDisplayer container grows within flex context */
+    width: 100%;                /* Use full width of parent container */
+    box-sizing: border-box;     /* Include padding and margin in the container's width */
+    justify-items: center;
+}
+
+/* Each individual block of sequence */
+.sequence-block {
+    background-color: #f4f4f4;
+    border-color:rgb(0, 0, 0);
+    border-width: 2px;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 1px;
+    font-size: 20px;
+    font-weight: 700;
+    font-family: 'Courier New', Courier, monospace;
+    position: relative;
+    transition: all 0.2s ease;
+    margin-bottom: 15px;
+    margin-top: 15px;
+    margin-left: 10px;
+    margin-right: 10px;
+    display: inline-block;      /* Use flexbox to arrange items horizontally within each block */
+    justify-content: space-between; /* Space between the sequence and the block number */
+    align-items: center;           /* Vertically center the content */
+    width: 180px;                  /* Set block width to fit 3 blocks per row */
+    box-sizing: border-box;        /* Ensure padding and margin are included in width calculation */
+}
+
+/* Styling for the sequence chunk */
+.sequence-text {
+    flex-grow: 1;                    /* Allow sequence text to take up available space */
+    white-space: nowrap;             /* Prevent text from wrapping inside the block */
+    font-weight: 400;
+    text-align: center;              /* Center the sequence text */
+}
+
+/* Styling for the block number */
+.block-number {
+    font-size: 12px;                 /* Smaller font size for the number */
+    font-weight: bold;
+    background-color: rgba(0, 0, 0, 0.1);
+    padding: 2px 5px;
+    border-radius: 3px;
+    margin-left: 10px;               /* Add space between sequence text and the block number */
+    user-select: none;               /* Prevent selection of the number */
+    pointer-events: none;            /* Prevent interaction with the number */
+}
+
+/* When a block is clicked, it gets this style */
+.sequence-block.clicked {
+    background-color: #cce7ff; /* Light blue background for selected block */
+    border-color: #007bff;     /* Change border color to blue */
+    transform: scale(1.05);     /* Slightly enlarge the clicked block */
+    box-shadow: 0 4px 10px rgba(0, 123, 255, 0.3); /* Subtle shadow effect */
+}
+
+/* Optional: Hover effect for non-clicked blocks */
+.sequence-block:hover {
+    background-color: #f0f8ff; /* Light background color on hover */
+    cursor: pointer;           /* Change the cursor to indicate clickability */
+}
+
+.details-panel {
+    padding: 20px;
+    background-color: #f1f1f1;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    margin-top: 20px;
+}
+
+#chunkDetails {
+    font-size: 14px;
+    line-height: 1.5;
+    white-space: pre-wrap; /* To preserve line breaks */
+}
+
+.highlightable-text {
+    cursor: default; 
+    font-size: inherit; /* Ensure it inherits font size from the parent */
+    user-select: none;
+    display: inline-block; /* change back to inline if issues persist */
+    position: relative;
+}
+
+.highlighted {
+    background-color: #f1c40f;  /* Soft gold/yellow */
+    font-weight: 1000;
+    color: #2c3e50;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.highlighted:hover {
+    transform: scale(1.1);  /* Subtle grow effect on hover */
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.3);  /* Soft shadow for emphasis */
+}
+.custom-tooltip {
+    background-color: #333;
+    text-align: center;
+    color: white;
+    padding: 5px;
+    font-size: 12px;
+    border-radius: 3px;
+    position: absolute;
+    z-index: 10;
+    white-space: nowrap;
+    pointer-events: none; /* Make sure the tooltip does not interfere with mouse events */
+    opacity: 0.8; /* Slight transparency */
+}
+/* When the tooltip becomes visible */
+.custom-tooltip.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.tooltip:hover {
+    display:block;
+}
+
+.highlightable-text:hover .tooltip {
+    visibility: visible;
+    opacity: 1;
+}
+
+.tooltip {
+    visibility: hidden;
+    width: 120px; /* Adjust width as needed */
+    background-color: black;
+    color: #fff;
+    text-align: center;
+    border-radius: 5px;
+    padding: 5px;
+    position: absolute;
+    z-index: 1;
+    bottom: 100%; /* Position above the text */
+    left: 50%;
+    transform: translateX(-50%);
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.overlay-line {
+    position: absolute;
+    top: 0; /* Start at the top of the container */
+    left: 50%; /* Center the line horizontally */
+    margin-left: 1px;
+    width: 10px; /* Thickness of the line */
+    height: 100%; /* Extend the line to the full height of the container */
+    background-color: #ccc; /* Color of the line */
+    transform: translateX(-50%); /* Center the line */
+    pointer-events: none; /* Let clicks pass through the line */
+}
+
+.checkbox-container {
+    display: flex;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+    padding: 10px;
+    font-size: smaller;
+    gap: 15px;  /* Add some space between the checkboxes */
+    max-height: 300px;  /* Set a maximum height for the container */
+    overflow-y: auto;   /* Enable vertical scrolling if content exceeds max height */
+    overflow-x: hidden; /* Prevent horizontal scrolling */
+    border: 1px solid #ccc; /* Optional: Border around the container */
+    border-radius: 5px; /* Optional: Rounded corners */
+}
+
+.checkbox-container ul {
+    padding: 0;
+    margin: 0;
+    clear: both;
+}
+
+.checkbox-container li {
+    list-style-type: none;
+    list-style-position: outside;
+    padding: 5px;
+    display: inline-block;  /* Ensure each item is on a new line */
+    margin-right: 10px;
+}
+
+.checkbox-container input[type="checkbox"] {
+    position: absolute;
+    left: -9999%; /* Keep it hidden, but functional */
+}
+
+.checkbox-container input[type="checkbox"] + label {
+    display: inline-block;
+    padding: 10px;
+    cursor: pointer;
+    border: 1px solid black;
+    color: black;
+    background-color: white;
+    margin-bottom: 10px;
+    border-radius: 5px;  /* Slightly round corners for better UX */
+    transition: background-color 0.3s, border-color 0.3s; /* Smooth transition */
+}
+
+.checkbox-container input[type="checkbox"]:not(:checked) + label:hover,
+.checkbox-container input[type="checkbox"]:checked + label {
+    border: 2px solid white; /* Border stays the same when checked */
+    color: white;
+    background-color: black;
+}
+
+.checkbox-container input[type="checkbox"]:checked + label:hover {
+    background-color: #f0f0f0;
+    border-color: #999; /* Subtle hover effect */
+}
+
+.checkbox-container input[type="checkbox"]:focus + label {
+    outline: 2px solid #0056b3; /* Add a visible focus outline for accessibility */
+}
+
+.checkbox-container label {
+    user-select: none;  /* Prevent text selection */
+    border-radius: 5px; /* Ensure rounded borders */
+    display: inline-block;
+}
+
+
+#searchBox {
+    width: 50%;               /* Set the width to 50% (you can adjust this value) */
+    max-width: 400px;         /* Ensure it doesn't grow too wide */
+    padding: 10px;
+    margin: 0 auto 10px auto; /* Center it horizontally by using auto margins */
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 14px;
+    box-sizing: border-box;   /* Ensures padding doesn't affect width */
+    display: block;           /* Make the search box a block element to take full width */
+}
+
+#searchBox:focus {
+    border-color: #0056b3; /* Change border color on focus */
+    outline: none; /* Remove default outline */
+}

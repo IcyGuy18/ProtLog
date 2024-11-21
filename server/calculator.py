@@ -33,10 +33,13 @@ def multiplicative_calculator(vector: list[float | str]) -> tuple[bool, dict]:
     # If not, it's NIL.
     # If so, calculate only up to the point it can be allowed.
     vector = get_longest_centered_array(vector)
+    if len(vector) < 13:
+        return False, {'message': "Not enough upstream/downstream amino acids to make accurate calculation!", 'multiplicative_score': 'NIL', 'adjusted_multiplicative_score': 'NIL'}
     multiplicative_score = 1
-    for value in vector:
-        if value == float(0) or value == '-inf':
-            return False, {'message': "Vector contains 0 or negative infinity!", 'multiplicative_score': 'NIL'}
-        multiplicative_score *= value
-    adjusted_multiplicative_score = np.log(1 / (-1 * multiplicative_score))
+    for idx, value in enumerate(vector):
+        if (idx != (len(vector) // 2)) and (value == float(0) or value == '-inf'):
+            return False, {'message': "Vector contains 0 or negative infinity!", 'multiplicative_score': 'NIL', 'adjusted_multiplicative_score': 'NIL'}
+        if (idx != (len(vector) // 2)): # Skip over the center value.
+            multiplicative_score *= value
+    adjusted_multiplicative_score = np.log(abs(1 / (-1 * multiplicative_score)))
     return True, {'multiplicative_score': multiplicative_score, 'adjusted_multiplicative_score': adjusted_multiplicative_score}
