@@ -60,6 +60,12 @@ def integration_page(request: Request):
         "integration.html", context={"request": request}
     )
 
+@app.get("/about")
+def integration_page(request: Request):
+    return templates.TemplateResponse(
+        "about.html", context={"request": request}
+    )
+
 ######## PAGE REQUESTS ########
 
 @app.get('/ptmkb/autofill')

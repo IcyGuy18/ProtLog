@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documentation</title>
+    <link rel="stylesheet" href="../static/bootstrap-min.css">
+    <style>
+        html, body {
+            height: 100%; /* Ensures the body takes up at least 100% of the viewport height */
+            margin: 0;    /* Remove default margin to prevent any unexpected behavior */
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh; /* Ensures the body takes up at least the full height of the viewport */
+        }
+
+        .container {
+            flex-grow: 1; /* Allow the container to grow and take up available space */
+        }
+
+        .footer {
+            margin-top: auto; /* Push the footer to the bottom of the page */
+        }
+
+        .team-member {
+            margin-bottom: 30px;
+        }
+
+        .team-member img {
+            border-radius: 50%;
+            width: 120px;
+            height: 120px;
+            object-fit: cover;
+            margin-top: 15px;
+        }
+
+        .team-member .card {
+            border: none;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .team-member .card-body {
+            text-align: center;
+        }
+
+        .team-member h4 {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .team-member p {
+            font-size: 1rem;
+            color: #555;
+        }
+
+        .team-member a {
+            font-size: 1rem;
+            color: #007bff;
+            text-decoration: none;
+        }
+
+        .team-member a:hover {
+            text-decoration: underline;
+        }
+
+        .team-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            padding: 20px;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="../static/bootstrap-min.js"></script>
+    <script src="../static/popper.js" defer></script>
+    <link rel="stylesheet" href="../static/styles.css">
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm">
+        <div class="container">
+            <!-- Navbar Brand (Home) -->
+            <a class="navbar-brand navbar-nav">About</a>
+            
+            <hr class="navbar-separator">
+            
+            <!-- Navbar Toggle Button (for mobile view) -->
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <!-- Navbar Links (collapse on small screens) -->
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/" id="searchLink">Search</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/" id="searchLink">Documentation</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/integration" id="integrationLink">Integration</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/download" id="downloadLink">Download</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/contactUs" id="contactLink">Contact Us</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container my-5">
+
+        <!-- Team Section -->
+        <section>
+            <h2 class="text-center mb-5">Meet Our BIRL Team</h2>
+            <div class="team-container">
+                <!-- Team Member 1 -->
+                <div class="team-member">
+                    <div class="card">
+                        <img src="https://lums.edu.pk/sites/default/files/styles/faculty_image/public/faculty_images/00003846.jpg" alt="Team Member 1" class="card-img-top mx-auto">
+                        <div class="card-body">
+                            <h4>Safee Ullah Chaudary</h4>
+                            <p>Lead Researcher at BIRL. Expertise in computational proteomics, systems biology, and mobile health.</p>
+                            <p><b>safeeullah@lums.edu.pk</b></p>
+                            <a href="mailto:safeeullah@lums.edu.pk">Contact Safee</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Team Member 2 -->
+                <div class="team-member">
+                    <div class="card">
+                        <img src="https://via.placeholder.com/150" alt="Team Member 2" class="card-img-top mx-auto">
+                        <div class="card-body">
+                            <h4>Abdullah Bin Faiz</h4>
+                            <p>Intern at BIRL.</p>
+                            <p><b>abdullah.faiz.dev@gmail.com</b></p>
+                            <a href="mailto:abdullah.faiz.dev@gmail.com">Contact Abdullah</a>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+    </div>
+
+    <div></div>
+
+    <footer class="footer bg-light py-3">
+        <div class="container text-center">
+            <p class="mb-0">This website is open for everyone to use. For more information, please contact us.</p>
+            <p class="mb-0"><a href="http://biolabs.lums.edu.pk/birl">© 2024 Biomedical Informatics & Engineering Research Laboratory (BIRL)</a></p>
+        </div>
+    </footer>
+</body>
+
+</html>
