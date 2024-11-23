@@ -84,7 +84,8 @@ const ptmColorMapping = {
 
 document.addEventListener("DOMContentLoaded", () => {
     // Populate checkboxes.
-    populateCheckboxes();
+    // populateCheckboxes();
+    // populateCheckboxesExpanded();
     // Set up an autocomplete function
     $('#form_value').on('input', async function() {
         const requestTerm = $(this).val();
@@ -211,6 +212,9 @@ function displayProteinSequence(sequence, modificationData) {
         let sequenceText = document.createElement("span");
         sequenceText.classList.add("sequence-text");
 
+        // Create an object to track PTMs at each position
+        const ptmsAtPositions = {};
+
         // Iterate over the characters in the block
         block[0].split('').forEach((char, index) => {
             // Create a span for each character
@@ -220,65 +224,115 @@ function displayProteinSequence(sequence, modificationData) {
             // Get the global 0-indexed position of this character
             const charIndex = blockIndex * 10 + index;  // Global 0-indexed position
 
-            // Look for a matching modification data entry (first element is index, second is PTM)
-            const modification = modificationData.find(mod => mod[0] === charIndex + 1); // Convert to 1-indexed
+            // Look for all matching modification data entries (first element is index, second is PTM)
+            modificationData.forEach((mod, index) => {
+                if (mod[0] === charIndex + 1) { // Convert to 1-indexed
 
-            if (modification) {
-                const ptmType = modification[1];  // PTM type (e.g., 'Acetylation')
+                    // Add PTM to the object if it's not already added for this position
+                    if (!ptmsAtPositions[charIndex]) {
+                        ptmsAtPositions[charIndex] = [];
+                    }
+                    ptmsAtPositions[charIndex].push(mod[1]);
 
-                // Store PTM data in the span (this is done regardless of checkbox status)
-                charSpan.setAttribute('data-ptm', ptmType);
+                    // Get the current 'data-ptm' value from the dataset (if exists)
+                    let existingPtms = charSpan.getAttribute('data-ptm') || ''; // Retrieve data-ptm from the dataset
 
-                // Check if the corresponding checkbox for this PTM is checked
-                const checkbox = document.getElementById(ptmType);
-                if (checkbox && checkbox.checked && !checkbox.disabled) {
-                    // Add highlight class if checkbox is checked
-                    charSpan.classList.add("highlighted");
-
-                    // Apply the PTM color from the mapping
-                    const color = ptmColorMapping[ptmType] || '#f39c12';  // Default color if PTM not in map
-                    charSpan.style.backgroundColor = color;  // Apply the color
+                    // If there are already PTMs, append the new PTM (separate by a semicolon)
+                    if (existingPtms !== '') {
+                        // Append the new PTM, ensuring no duplicates (separated by semicolons)
+                        if (!existingPtms.split(';').includes(mod[1])) {
+                            existingPtms += `;${mod[1]}`;
+                        }
+                        charSpan.setAttribute('data-ptm', existingPtms);
+                    } else {
+                        // Otherwise, just set the current PTM type
+                        charSpan.setAttribute('data-ptm', mod[1]);
+                    }
                 }
+            });
 
-                // Add a hover event to show the custom tooltip
-                charSpan.addEventListener("mouseenter", (e) => {
-                    // Only show the tooltip if the checkbox is checked and enabled
-                    const checkbox = document.getElementById(ptmType);
-                    if (checkbox && checkbox.checked && !checkbox.disabled) {
-                        // Create a tooltip element
-                        const tooltip = document.createElement("div");
-                        tooltip.classList.add("custom-tooltip");
-                        tooltip.textContent = ptmType;  // PTM description
+            // // After collecting all PTMs for the character, handle highlighting
+            // const ptmsForThisPosition = ptmsAtPositions[charIndex] || [];
 
-                        // Append the tooltip to the body
-                        document.body.appendChild(tooltip);
+            // ptmsForThisPosition.forEach(ptmType => {
+            //     const checkbox = document.getElementById(ptmType);
+            //     if (checkbox && checkbox.checked && !checkbox.disabled) {
+            //         // Add highlight class if checkbox is checked
+            //         charSpan.classList.add("highlighted");
 
-                        // Position the tooltip near the character
-                        const rect = e.target.getBoundingClientRect(); // Get the character's position
-                        tooltip.style.position = "absolute";
-                        tooltip.style.left = `${rect.left + window.scrollX}px`; // Adjust for any page scroll
-                        tooltip.style.top = `${rect.top + window.scrollY - 30}px`; // Position above the character
-                        tooltip.style.zIndex = 10; // Ensure it's above other content
+            //         // Apply the PTM color from the mapping (multiple PTMs will stack their background)
+            //         const color = ptmColorMapping[ptmType] || '#f39c12';  // Default color if PTM not in map
+            //         charSpan.style.backgroundColor = color;  // Apply the color
+            //     }
+            // });
 
-                        // Add the 'visible' class to the tooltip to show it
-                        setTimeout(() => {
-                            tooltip.classList.add("visible");
-                        }, 10); // Small delay for the transition to kick in
+            // After collecting all PTMs for the character, handle highlighting
+            const ptmsForThisPosition = ptmsAtPositions[charIndex] || [];
 
-                        // Store tooltip for later removal
-                        e.target.tooltip = tooltip;
-                    }
-                });
+            // Handle multiple PTMs at the same position (apply gradient background)
+            if (ptmsForThisPosition.length > 0) {
+                // Get colors from ptmColorMapping
+                const ptmColors = ptmsForThisPosition.map(ptmType => ptmColorMapping[ptmType] || '#f39c12');
 
-                // Add mouseleave event to remove the tooltip
-                charSpan.addEventListener("mouseleave", (e) => {
-                    const tooltip = e.target.tooltip;
-                    if (tooltip) {
-                        tooltip.remove(); // Remove the tooltip when the mouse leaves
-                        delete e.target.tooltip; // Clean up the tooltip reference
-                    }
-                });
+                // Add 'highlighted' class for styling (always add this class)
+                charSpan.classList.add("highlighted");
+
+                // If there are multiple PTMs, apply the gradient background class
+                if (ptmColors.length > 1) {
+                    // Create the gradient using the colors from ptmColorMapping
+                    const gradient = ptmColors
+                        .map((color, idx) => `${color} ${idx * (100 / ptmColors.length)}%`)
+                        .join(', ');
+
+                    // Apply the gradient as a style to the charSpan
+                    charSpan.style.background = `linear-gradient(to bottom, ${gradient})`;
+                    charSpan.style.backgroundSize = '100% 100%'; // Ensure the gradient covers the entire span
+
+                    // Add the gradient-bg class to indicate that this span has a gradient
+                    // charSpan.classList.add("gradient-bg");
+                } else {
+                    // If only one PTM, apply the single PTM color class
+                    charSpan.style.backgroundColor = ptmColors[0];
+                }
             }
+
+            // Add a hover event to show the custom tooltip
+            charSpan.addEventListener("mouseenter", (e) => {
+                const ptmsForThisChar = ptmsAtPositions[charIndex] || [];
+                if (ptmsForThisChar.length > 0) {
+                    // Create a tooltip element
+                    const tooltip = document.createElement("div");
+                    tooltip.classList.add("custom-tooltip");
+                    tooltip.textContent = ptmsForThisChar.join(", ");  // Display all PTMs for this position
+
+                    // Append the tooltip to the body
+                    document.body.appendChild(tooltip);
+
+                    // Position the tooltip near the character
+                    const rect = e.target.getBoundingClientRect(); // Get the character's position
+                    tooltip.style.position = "absolute";
+                    tooltip.style.left = `${rect.left + window.scrollX}px`; // Adjust for any page scroll
+                    tooltip.style.top = `${rect.top + window.scrollY - 30}px`; // Position above the character
+                    tooltip.style.zIndex = 10; // Ensure it's above other content
+
+                    // Add the 'visible' class to the tooltip to show it
+                    setTimeout(() => {
+                        tooltip.classList.add("visible");
+                    }, 10); // Small delay for the transition to kick in
+
+                    // Store tooltip for later removal
+                    e.target.tooltip = tooltip;
+                }
+            });
+
+            // Add mouseleave event to remove the tooltip
+            charSpan.addEventListener("mouseleave", (e) => {
+                const tooltip = e.target.tooltip;
+                if (tooltip) {
+                    tooltip.remove(); // Remove the tooltip when the mouse leaves
+                    delete e.target.tooltip; // Clean up the tooltip reference
+                }
+            });
 
             // Append the character span to the sequence text span
             sequenceText.appendChild(charSpan);
@@ -301,6 +355,23 @@ function displayProteinSequence(sequence, modificationData) {
     initializeBlockClickListeners();
 }
 
+function updateStats(ptmData) {
+    const totalSites = ptmData.length;
+    const uniquePTMs = new Set(ptmData.map(ptm => ptm[1])); // Extract unique PTM types
+    
+    // Count all string values from the third element (semicolon-separated)
+    let totalStrings = 0;
+    ptmData.forEach(ptm => {
+        const strings = ptm[2].split(';'); // Split the third element by semicolon
+        totalStrings += strings.length; // Count the number of strings in this list
+    });
+
+    // Populate the HTML with the calculated values
+    document.getElementById('total-sites').textContent = `${totalSites}`;
+    document.getElementById('unique-ptms').textContent = `${uniquePTMs.size}`;
+    document.getElementById('experimentally-verified').textContent = `${totalStrings}`;
+}
+
 // Function to handle PTM highlighting (this is where you can remove highlights if unchecked)
 function colorPTMs(checkbox) {
     const ptmType = checkbox.value;  // PTM type from the checkbox value
@@ -310,86 +381,178 @@ function colorPTMs(checkbox) {
     const highlightedSpans = document.getElementById('sequenceDisplayer').querySelectorAll('span');
 
     highlightedSpans.forEach(span => {
+        // Get the list of PTMs applied to the current span (separated by semicolons)
+        const ptmsForThisChar = span.getAttribute('data-ptm') ? span.getAttribute('data-ptm').split(';') : [];
+
         // Check if the span has the corresponding PTM type
-        if (span.getAttribute('data-ptm') === ptmType) {
-            // If unchecked, remove the highlight
+        if (ptmsForThisChar.includes(ptmType)) {
+            // If unchecked, we need to check if all associated PTM checkboxes are unchecked
             if (!isChecked) {
-                span.style.backgroundColor = '';  // Remove the background color (or reset it)
-                span.classList.remove('highlighted');  // Remove the 'highlighted' class
+                // Check if all PTMs for this span are unchecked
+                const allOtherPTMUnchecked = ptmsForThisChar.every(ptm => {
+                    const checkbox = document.getElementById(ptm);
+                    return checkbox && !checkbox.checked;  // Return true if the PTM checkbox is unchecked
+                });
+
+                if (allOtherPTMUnchecked) {
+                    // Remove the highlight if all PTMs are unchecked
+                    span.style.backgroundColor = '';  // Remove the background color (or reset it)
+                    span.classList.remove('highlighted');  // Remove the 'highlighted' class
+                    span.style.background = '';  // Remove the gradient
+                    span.style.backgroundSize = '';  // Remove the background size
+                }
             } else if (isChecked) {
-                span.style.backgroundColor = ptmColorMapping[ptmType] || '#f39c12';
+                // If the checkbox is checked, add the highlight and handle gradient
+                // Check if there are multiple PTMs and apply a gradient
+                const ptmsForThisChar = span.getAttribute('data-ptm').split(';');
+                if (ptmsForThisChar.length > 1) {
+                    const ptmColors = ptmsForThisChar.map(ptm => ptmColorMapping[ptm] || '#f39c12');
+                    const gradient = ptmColors
+                        .map((color, idx) => `${color} ${idx * (100 / ptmColors.length)}%`)
+                        .join(', ');
+
+                    // Apply the gradient as a style to the charSpan
+                    span.style.background = `linear-gradient(to bottom, ${gradient})`;
+                    span.style.backgroundSize = '100% 100%'; // Ensure the gradient covers the entire span
+                } else {
+                    // If only one PTM, apply the single PTM color
+                    span.style.backgroundColor = ptmColorMapping[ptmType] || '#f39c12';
+                }
                 span.classList.add('highlighted');  // Add the 'highlighted' class
             }
         }
     });
 }
 
-// Function to populate checkboxes
-function populateCheckboxes() {
-    fetch('/ptmkb/api/ptms').then(res => {
-        return res.json();
-    }).then(data => {
-        const checkboxContainer = document.getElementById('checkboxContainer');
-        const searchBox = document.getElementById('searchBox');
-        const arr = data['ptms'];
+// Function to fetch the PDB file from AlphaFold and render it inside the specified div
+async function fetchProteinStructure(uniprotAccession) {
+    document.getElementById('protein3DStructure').classList.add('lds-dual-ring')
+    const apiUrl = `https://alphafold.ebi.ac.uk/api/prediction/${uniprotAccession}`;
 
-        const checkboxList = [];
-
-        // For each PTM, create a checkbox
-        for (let i = 0; i < arr.length; i++) {
-            const ptm = arr[i];
-            const checkboxWrapper = document.createElement('label');
-            checkboxWrapper.htmlFor = ptm;
-            checkboxWrapper.innerHTML = `
-                <li>
-                    <input type="checkbox" id="${ptm}" name="${ptm}" value="${ptm}" checked="true">
-                    <label for="${ptm}">${ptm}</label>
-                </li>
-            `;
-
-            const color = ptmColorMapping[ptm] || "#FFFFFF";
-            const checkboxLabel = checkboxWrapper.querySelector('label');
-            checkboxLabel.style.border = `2px solid ${color}`;
-            checkboxLabel.style.padding = '5px';
-            checkboxLabel.style.marginBottom = '10px';
-            checkboxLabel.style.display = 'inline-block';
-            checkboxLabel.style.backgroundColor = 'black';
-            checkboxLabel.style.color = 'white';
-
-            // Event listener for checkbox change
-            checkboxWrapper.querySelector('input').addEventListener('change', (e) => {
-                if (e.target.checked) {
-                    checkboxLabel.style.backgroundColor = 'black';
-                    checkboxLabel.style.color = 'white';
-                } else {
-                    checkboxLabel.style.backgroundColor = 'white';
-                    checkboxLabel.style.color = 'black';
-                }
-
-                // Call colorPTMs function to update the highlights based on checked boxes
-                colorPTMs(e.target);
-            });
-
-            checkboxList.push(checkboxWrapper);
-            checkboxContainer.appendChild(checkboxWrapper);
+    try {
+        // Fetch the list of JSON objects with prediction data
+        const response = await fetch(apiUrl);
+        if (!response.ok) {
+            throw new Error(`Failed to fetch prediction data: ${response.statusText}`);
         }
 
-        // Filter checkboxes based on search query
-        function filterCheckboxes() {
-            const query = searchBox.value.toLowerCase();
-            checkboxList.forEach(wrapper => {
-                const labelText = wrapper.innerText.toLowerCase();
-                if (labelText.includes(query)) {
-                    wrapper.style.display = ''; // Show if it matches
-                } else {
-                    wrapper.style.display = 'none'; // Hide if it doesn't match
-                }
-            });
+        const data = await response.json();
+
+        // If the response contains multiple entries, you can iterate over them
+        for (let entry of data) {
+            // Check if the 'pdbUrl' exists in the response entry
+            if (entry.pdbUrl) {
+                // Fetch the raw PDB file from the pdbUrl
+                await fetchAndRenderPDB(entry.pdbUrl);
+                break; // Assuming we want to display the first model with a valid pdbUrl
+            }
         }
 
-        searchBox.addEventListener('input', filterCheckboxes);
-        filterCheckboxes();
-    });
+    } catch (error) {
+        console.error("Error fetching protein structure:", error);
+    }
+}
+
+async function fetchAndRenderPDB(pdbUrl) {
+    try {
+        // Fetch the raw PDB file as bytes
+        const response = await fetch(pdbUrl);
+        if (!response.ok) {
+            throw new Error(`Failed to fetch PDB file: ${response.statusText}`);
+        }
+
+        const pdbData = await response.text();  // Read as text (PDB format)
+
+        // Remove the loading spinner if present
+        document.getElementById('protein3DStructure').classList.remove('lds-dual-ring');
+
+        // Create the viewer inside the #protein3DStructure div
+        const viewer = $3Dmol.createViewer("protein3DStructure", { defaultcolors: $3Dmol.rasmolElementColors });
+
+        // Add the model to the viewer
+        viewer.addModel(pdbData, "pdb");
+
+        // Apply the visualization style (cartoon representation with color spectrum)
+        viewer.setStyle({}, { cartoon: { color: 'spectrum' } });
+
+        // Zoom and render the model
+        viewer.zoomTo();
+        viewer.render();
+        viewer.zoom(1.2, 1000);
+
+        // Access the canvas element created by 3Dmol.js
+        const canvas = viewer.getCanvas();
+
+        // Assign a CSS class to the canvas
+        canvas.classList.add('top-right-window');  // Add a custom class to the canvas
+
+    } catch (error) {
+        console.error("Error rendering PDB file:", error);
+    }
+}
+
+// USE THIS to populate ONLY APPLICABLE CHECKBOXES
+function populateCheckboxesFromResult(data) {
+    console.log(data);
+    const uniquePTMs = new Set(data.map(ptm => ptm[1]));
+    const checkboxContainer = document.getElementById('checkboxContainer');
+    // const arr = data['ptms'];
+
+    const checkboxList = [];
+
+    // For each PTM, create a checkbox
+    for (let ptm of uniquePTMs.values()) {
+        const checkboxWrapper = document.createElement('label');
+        checkboxWrapper.htmlFor = ptm;
+        checkboxWrapper.innerHTML = `
+            <li>
+                <input type="checkbox" id="${ptm}" name="${ptm}" value="${ptm}" checked="true">
+                <label for="${ptm}">${ptm}</label>
+            </li>
+        `;
+
+        const color = ptmColorMapping[ptm] || "#FFFFFF";
+        const checkboxLabel = checkboxWrapper.querySelector('label');
+        checkboxLabel.style.border = `2px solid ${color}`;
+        checkboxLabel.style.padding = '5px';
+        checkboxLabel.style.marginBottom = '10px';
+        checkboxLabel.style.display = 'inline-block';
+        checkboxLabel.style.backgroundColor = 'black';
+        checkboxLabel.style.color = 'white';
+
+        // Event listener for checkbox change
+        checkboxWrapper.querySelector('input').addEventListener('change', (e) => {
+            if (e.target.checked) {
+                checkboxLabel.style.backgroundColor = 'black';
+                checkboxLabel.style.color = 'white';
+            } else {
+                checkboxLabel.style.backgroundColor = 'white';
+                checkboxLabel.style.color = 'black';
+            }
+
+            // Call colorPTMs function to update the highlights based on checked boxes
+            colorPTMs(e.target);
+        });
+
+        checkboxList.push(checkboxWrapper);
+        checkboxContainer.appendChild(checkboxWrapper);
+    }
+
+    // Filter checkboxes based on search query
+    function filterCheckboxes() {
+        const query = searchBox.value.toLowerCase();
+        checkboxList.forEach(wrapper => {
+            const labelText = wrapper.innerText.toLowerCase();
+            if (labelText.includes(query)) {
+                wrapper.style.display = ''; // Show if it matches
+            } else {
+                wrapper.style.display = 'none'; // Hide if it doesn't match
+            }
+        });
+    }
+
+    // searchBox.addEventListener('input', filterCheckboxes);
+    // filterCheckboxes();
 }
 
 // Function for getting the subsequence for vector calculation
@@ -439,7 +602,8 @@ function convertPubMedReferences(text) {
 async function search() {
     const id = document.getElementById('form_value').value;
     if (id) {
-        document.getElementById('ptmSearch').style.display = 'none';
+        document.getElementById('proteinStatisticsContainer').style.display = 'none';
+        // document.getElementById('ptmSearch').style.display = 'none';
         document.getElementById('giantCheckboxContainer').style.display = 'none';
         document.getElementById('form_submit').disabled = true;
         const table = document.getElementById('proteinInfo');
@@ -500,6 +664,8 @@ async function search() {
                                     // Special case #1
                                     if (key === 'proteinFunction') {
                                         valueCell.innerHTML = convertPubMedReferences(value);
+                                    } else if (key === 'uniProtID' || key === 'uniProtAC') {
+                                        valueCell.innerHTML = `<a href="https://www.uniprot.org/uniprotkb/${value}">${value}</a>`;
                                     } else
                                         valueCell.textContent = value;
                                     // Special case #2 (this is admittedly just for fun)
@@ -625,7 +791,10 @@ async function search() {
                             //     }
                             //     highlightableText.appendChild(span);
                             // }
-
+                            
+                            fetchProteinStructure(json.uniProtAC);
+                            populateCheckboxesFromResult(data.result.PTMs)
+                            updateStats(data.result.PTMs)
                             displayProteinSequence(json.proteinSequence, data.result.PTMs);
                             document.getElementById('sequenceDisplayer').setAttribute('style', "display: block;");
                             document.getElementById('iframeData').textContent = "Protein Info";
@@ -635,7 +804,8 @@ async function search() {
                             document.getElementById('foundProtein').style.display = 'block';
                             document.getElementById('checkboxContainer').style.display = 'block';
                             document.getElementById('giantCheckboxContainer').style.display = 'block';
-                            document.getElementById('ptmSearch').style.display = 'block';
+                            // document.getElementById('ptmSearch').style.display = 'block';
+                            document.getElementById('proteinStatisticsContainer').style.display = 'block';
                         }
                         else {
                             alert(json.message);

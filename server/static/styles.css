@@ -10,6 +10,42 @@ body {
     min-height: 100vh; /* Ensures the body takes up at least the full height of the viewport */
 }
 
+
+/* VIEWING PROTEIN HERE */
+
+.top-right-window {
+    width: 300px;    /* or 100% for responsiveness */
+    height: 300px;   /* or your desired height */
+    position: fixed;
+    background-color: rgba(224, 224, 224, 0.8);
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    overflow: hidden;  /* Hide anything outside the container */
+    justify-content: center;
+    align-items: center;
+    display: flex;
+}
+
+#bottomAlphaFold {
+    position: absolute;
+    bottom: 0;
+}
+
+/* Style for the canvas element */
+.protein-canvas {
+    border: 3px solid #333;                /* Border around the canvas */
+    border-radius: 10px;                   /* Rounded corners */
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.5); /* Add shadow around the canvas */
+    background-color: #f5f5f5;             /* Background color */
+    max-width: 100%;                       /* Ensure the canvas scales with its container */
+    max-height: 100%;                      /* Ensure the canvas scales with its container */
+    display: block;                        /* Make canvas a block element */
+    margin: auto;                          /* Center the canvas within its container */
+}
+
+/* APPLYING MAIN CONTENT HERE */
+
 /* Main content will take up all the available space between the navbar and footer */
 .main-content {
     flex: 1; /* This ensures that the content grows to fill any remaining space */
@@ -69,6 +105,8 @@ iframe {
 }
 
 .alert {
+    width: 600px;
+    margin: 0 auto;
     border-radius: 8px; /* Add rounded corners to the alert */
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
 }
@@ -143,45 +181,245 @@ iframe {
     }
 }
 
-.table {
-    table-layout: fixed; /* Ensures the table layout is fixed */
-    /* width: 100%; Set to 100% or a specific width */
-    border-collapse: collapse; /* Collapses borders to avoid double borders */
-    font-family: "Verdana, Geneva, Tahoma, sans-serif";
+/* Going to use this to display general protein information here */
+
+/* Specific styles for the custom table container */
+.protein-info-container {
+    background-color: #f4f4f9; /* Light gray background behind the table */
+    padding: 30px; /* Space around the table */
+    border-radius: 10px; /* Rounded corners for a modern look */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Soft shadow for depth */
+    max-width: 90%; /* Allow for responsive sizing */
+    margin: 0 auto; /* Center align the table */
+    overflow-x: auto; /* Allow horizontal scrolling if needed */
+    position: relative;
 }
 
-.table td {
-    overflow-wrap: break-word; /* Allows breaking long words */
-    word-wrap: break-word; /* Older support for breaking long words */
-    white-space: normal; /* Ensures that text can wrap onto new lines */
+/* New window styling for the top-right corner */
+.protein-info-container .top-right-window {
+    position: absolute; /* Position it relative to the protein-info-container */
+    top: 20px; /* Adjust the distance from the top */
+    right: 20px; /* Adjust the distance from the right */
+    background-color: #fff; /* White background for the window */
+    padding: 15px; /* Space inside the window */
+    border-radius: 8px; /* Rounded corners for the window */
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); /* Light shadow for depth */
+    width: 300px; /* Set a fixed width for the window */
+    max-height: 300px; /* Maximum height for the window */
+    overflow-y: auto; /* Allow scrolling if the content exceeds the height */
+    z-index: 10; /* Ensure it's on top of the table */
+}
+
+/* Table Styling - Scoped to the protein-info-container */
+.protein-info-container .table {
+    table-layout: fixed; /* Ensure column widths are fixed */
+    width: 100%; /* Make sure table takes full width */
+    border-collapse: collapse; /* Collapse table borders */
+    background-color: #fff; /* White background for table itself */
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1); /* Light shadow for table */
+    border-radius: 10px; /* Rounded corners for table */
+}
+
+/* Header Styling */
+.protein-info-container .table th {
+    background-color: #007bff; /* Blue background for header */
+    color: #fff; /* White text color */
+    padding: 12px 16px; /* Padding inside header cells */
+    font-size: 16px; /* Larger font size for headers */
+    text-align: left;
+    font-weight: bold; /* Bold text in the header */
+    border-bottom: 2px solid #0066cc; /* Darker border below header */
+    text-transform: uppercase; /* Uppercase text for a modern look */
+}
+
+/* Table Cell Styling */
+.protein-info-container .table th, .protein-info-container .table td {
+    padding: 12px 16px; /* Add space inside cells */
+    border: 1px solid #e0e0e0; /* Light border for table cells */
+    font-size: 14px;
+    color: #333; /* Darker text color for contrast */
+    line-height: 1.6; /* Increased line-height for readability */
+    transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease; /* Smooth transitions */
+}
+
+/* Default cell background (light blue-ish) */
+.protein-info-container .table td {
+    background-color: #e3f2fd; /* Soft light blue background */
+    color: #333; /* Dark text color for contrast */
+    word-wrap: break-word; /* Ensure long words break */
+    overflow-wrap: break-word; /* Older support for breaking long words */
+    white-space: normal; /* Allow the text to wrap to the next line */
+    text-align: left;
+}
+
+/* Key Column */
+.protein-info-container .table td.key {
+    width: 200px; /* Set width for key column */
+    text-align: center; /* Left-align key text */
+    color: #444; /* Slightly lighter color for keys */
+    border-right: 2px solid #ddd; /* Border on the right side of key column */
+    background-color: #f7f7f7; /* Keep key cells highlighted */
+    font-weight: 700; /* Keep the key text bold */
+}
+
+/* Hover Effect for Table Cells (No strong color change) */
+.protein-info-container .table td:hover {
+    background-color: #b0bec5;
+    color: #333;
+    transform: none;
+}
+
+/* Focus State for Table Cells */
+.protein-info-container .table td:focus, .protein-info-container .table th:focus {
+    outline: 2px solid #007bff; /* Blue outline when focused */
+    background-color: #e1f4fd; /* Light blue background on focus */
+}
+
+/* Alternating Row Backgrounds */
+.protein-info-container .table tr:nth-child(even) {
+    background-color: #f9f9f9; /* Light background for even rows */
+}
+
+.protein-info-container .table tr:nth-child(odd) {
+    background-color: #ffffff; /* White background for odd rows */
+}
+
+/* Responsive Table - Stack cells vertically on smaller screens */
+@media screen and (max-width: 991px) {
+    .protein-info-container .table th, .protein-info-container .table td {
+        display: block; /* Stack cells vertically */
+        width: 100%; /* Ensure each cell takes full width */
+        text-align: left; /* Align text to the left */
+        margin-bottom: 10px; /* Add space between rows */
+    }
+
+    .protein-info-container .table td.key {
+        background-color: #f7f7f7; /* Keep key cells highlighted */
+        font-weight: 700; /* Keep the key text bold */
+    }
+
+    .protein-info-container .table td.value {
+        margin-left: 20px; /* Add some left margin for better readability */
+    }
+
+    .top-right-window {
+        visibility: hidden;
+    }
+}
+
+
+/* PROTEIN SEQUENCE PTM STATISTICS HERE */
+/* Main container styles for protein stats */
+.protein-statistics-container {
+    background-color: #f4f4f9; /* Light gray background */
+    padding: 30px;
+    border-radius: 10px; /* Rounded corners for the container */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Soft shadow for depth */
+    max-width: 1050px; /* Maximum width */
+    margin: 0 auto; /* Center align the container */
+    overflow-x: auto; /* Allow horizontal scrolling if needed */
+    margin-bottom: 20px;
+}
+
+/* Heading */
+.protein-statistics-container h1 {
     text-align: center;
-    font-size: small;
+    margin-bottom: 30px;
+    font-size: 28px;
+    color: #444;
+    font-weight: bold;
 }
 
-.table th, .table td {
-    border: 1px solid #ccc; /* Adds a light gray border to cells */
-    padding: 8px; /* Adds some padding inside the cells */
-    font-size: small;
+/* Flexbox for rows */
+.row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 20px;
 }
 
-.table td.key {
-    width: 20%; /* Set width for key column */
-    text-align: center; /* Center text in key column */
-    font-size: medium;
-    font-weight: 700;
+/* Column styles */
+.col {
+    flex: 1 1 calc(33% - 20px); /* Ensure three columns */
+    min-width: 250px;
+    box-sizing: border-box;
 }
 
-.table td.value {
-    width: 40%; /* Adjust width for value column */
-    text-align: left; /* Left align text in value column */
-    font-size: medium;
+/* Stat box styles */
+.stat-box {
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Soft shadow */
+    padding: 20px;
+    text-align: center;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-.table td.notes {
-    width: 40%; /* Set width for notes column */
-    text-align: left; /* Left align text in notes column */
-    font-size: large;
+/* Hover effect for stat boxes */
+.stat-box:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 10px 15px rgba(0, 0, 0, 0.2);
 }
+
+/* Icons */
+.stat-box i {
+    margin-bottom: 10px;
+    color: #007bff; /* Blue icons */
+}
+
+/* Links within the stat box */
+.stat-box a {
+    text-decoration: none;
+    color: inherit;
+}
+
+/* Stat title */
+.stat-box h3 {
+    font-size: 2rem;
+    margin: 10px 0;
+    color: #555;
+}
+
+/* Stat description */
+.stat-box p {
+    font-size: 1rem;
+    color: #777;
+}
+
+/* Colors for different stat boxes */
+.info {
+    background-color: #e3f2fd;
+    border-left: 5px solid #1e88e5;
+}
+
+.success {
+    background-color: #e8f5e9;
+    border-left: 5px solid #43a047;
+}
+
+.warning {
+    background-color: #fff3e0;
+    border-left: 5px solid #ff9800;
+}
+
+/* General hover effect for stat-boxes */
+.stat-box:hover {
+    background-color: #f5f5f5;
+}
+
+/* Focus state */
+.stat-box a:focus {
+    outline: 2px solid #007bff;
+}
+
+/* Responsive design for smaller screens */
+@media (max-width: 768px) {
+    .col {
+        flex: 1 1 100%; /* Single column layout for smaller screens */
+    }
+}
+
+
 
 @font-face {
     font-family: 'perfectDOSVGA';
@@ -190,82 +428,138 @@ iframe {
         url('../data/fonts/perfect_dos_vga.woff2') format('woff2');
 }
 
+
+/* DISPLAYING THE PROTEIN SEQUENCE HERE */
+
+.protein-sequence-container {
+    background-color: #f4f4f9; /* Light gray background behind the table */
+    padding: 30px; /* Space around the table */
+    border-radius: 10px; /* Rounded corners for a modern look */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Soft shadow for depth */
+    max-width: 90%; /* Allow for responsive sizing */
+    margin: 0 auto; /* Center align the table */
+    overflow-x: auto; /* Allow horizontal scrolling if needed */
+}
+
 /* Container for sequence blocks */
 #sequenceDisplayer {
-    display: inline-block;      /* Use flexbox for horizontal layout */
-    flex-wrap: wrap;            /* Allow wrapping of blocks to the next line */
-    border-color:rgb(0, 0, 0);
-    border-width: 4px;
-    gap: 20px;                  /* Gap between blocks */
-    padding: 20px;
+    display: inline-block;      
+    flex-wrap: wrap;
+    gap: 20px;
+    padding: 30px;
     margin-top: 10px;
     margin-bottom: 10px;
-    background: linear-gradient(135deg, #f7f7f7 0%, #dbdbdb 100%); /* Subtle gradient from light gray to slightly lighter gray */
-    border-radius: 10px;
-    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+    background: linear-gradient(135deg, #f4f4f9 0%, #e0e0e0 100%); 
+    border-radius: 12px;
+    box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.1); 
     overflow: hidden;
-    flex-grow: 1;               /* Ensures the sequenceDisplayer container grows within flex context */
-    width: 100%;                /* Use full width of parent container */
-    box-sizing: border-box;     /* Include padding and margin in the container's width */
+    flex-grow: 1;
+    width: 100%;
+    box-sizing: border-box;
     justify-items: center;
 }
 
 /* Each individual block of sequence */
 .sequence-block {
-    background-color: #f4f4f4;
-    border-color:rgb(0, 0, 0);
+    background-color: #fff;
+    border-color: #ddd;
     border-width: 2px;
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 1px;
-    font-size: 20px;
-    font-weight: 700;
+    padding: 12px;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 18px;
+    font-weight: 600;
     font-family: 'Courier New', Courier, monospace;
     position: relative;
-    transition: all 0.2s ease;
-    margin-bottom: 15px;
-    margin-top: 15px;
+    transition: all 0.3s ease;
+    margin-bottom: 10px;
+    margin-top: 10px;
     margin-left: 10px;
     margin-right: 10px;
-    display: inline-block;      /* Use flexbox to arrange items horizontally within each block */
-    justify-content: space-between; /* Space between the sequence and the block number */
-    align-items: center;           /* Vertically center the content */
-    width: 180px;                  /* Set block width to fit 3 blocks per row */
-    box-sizing: border-box;        /* Ensure padding and margin are included in width calculation */
+    display: inline-block;
+    width: 190px;
+    box-sizing: border-box;
+    overflow: hidden;
+    white-space: nowrap;
 }
 
 /* Styling for the sequence chunk */
 .sequence-text {
-    flex-grow: 1;                    /* Allow sequence text to take up available space */
-    white-space: nowrap;             /* Prevent text from wrapping inside the block */
+    display: inline-block;
+    white-space: nowrap;
     font-weight: 400;
-    text-align: center;              /* Center the sequence text */
+    text-align: center;
+    color: #333;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+    pointer-events: none;
 }
 
 /* Styling for the block number */
 .block-number {
-    font-size: 12px;                 /* Smaller font size for the number */
+    font-size: 12px;
     font-weight: bold;
     background-color: rgba(0, 0, 0, 0.1);
     padding: 2px 5px;
     border-radius: 3px;
-    margin-left: 10px;               /* Add space between sequence text and the block number */
-    user-select: none;               /* Prevent selection of the number */
-    pointer-events: none;            /* Prevent interaction with the number */
+    margin-left: 10px;
+    user-select: none;
+    pointer-events: none;
 }
 
-/* When a block is clicked, it gets this style */
+/* When a block is clicked, it gets this style
 .sequence-block.clicked {
-    background-color: #cce7ff; /* Light blue background for selected block */
-    border-color: #007bff;     /* Change border color to blue */
-    transform: scale(1.05);     /* Slightly enlarge the clicked block */
-    box-shadow: 0 4px 10px rgba(0, 123, 255, 0.3); /* Subtle shadow effect */
+    background-color: #cce7ff;
+    border-color: #007bff;
+    transform: scale(1.05);
+    box-shadow: 0 4px 10px rgba(0, 123, 255, 0.3);
 }
 
-/* Optional: Hover effect for non-clicked blocks */
-.sequence-block:hover {
-    background-color: #f0f8ff; /* Light background color on hover */
-    cursor: pointer;           /* Change the cursor to indicate clickability */
+/* Hover effect for non-clicked blocks */
+/* .sequence-block:hover {
+    background-color: #f0f8ff;
+    cursor: pointer;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+    transform: none;
+} */
+
+/* Highlighted protein text (e.g., PTM sites) */
+/* .sequence-block .highlighted {
+    font-weight: 700;
+    color: #000000;
+    text-transform: uppercase;
+    background-color: inherit;
+    text-decoration: underline;
+    text-decoration-color: rgba(0, 0, 0, 0.3);
+} */
+
+/* Prevent text overflow issues */
+.sequence-text span {
+    display: inline-block;
+    max-width: 100%;
+    text-overflow: ellipsis;
+    overflow: hidden;
+}
+
+/* Responsiveness: Stack sequence blocks on smaller screens */
+@media screen and (max-width: 768px) {
+    #sequenceDisplayer {
+        padding: 15px;
+    }
+
+    .sequence-block {
+        width: 150px;
+        margin-bottom: 10px;
+    }
+
+    .sequence-text {
+        font-size: 16px;
+    }
+
+    .block-number {
+        font-size: 10px;
+    }
 }
 
 .details-panel {
@@ -291,19 +585,23 @@ iframe {
     position: relative;
 }
 
+/* General highlighted class for styling */
 .highlighted {
-    background-color: #f1c40f;  /* Soft gold/yellow */
+    background-color: #f1c40f;  /* Default highlighted color */
     font-weight: 1000;
     color: #2c3e50;
     border-radius: 4px;
     cursor: pointer;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
+    pointer-events: visible;
 }
 
+/* Hover effect on highlighted text */
 .highlighted:hover {
-    transform: scale(1.1);  /* Subtle grow effect on hover */
+    color: #ffffff;
     box-shadow: 0 0 8px rgba(0, 0, 0, 0.3);  /* Soft shadow for emphasis */
 }
+
 .custom-tooltip {
     background-color: #333;
     text-align: center;
@@ -361,87 +659,138 @@ iframe {
     pointer-events: none; /* Let clicks pass through the line */
 }
 
-.checkbox-container {
+
+/* THIS IS FOR FILTERING PTM STUFF */
+
+/* Container for the search box and checkboxes */
+/* #ptmSearchContainer {
     display: flex;
-    flex-wrap: wrap;
-    margin-bottom: 10px;
-    padding: 10px;
-    font-size: smaller;
-    gap: 15px;  /* Add some space between the checkboxes */
-    max-height: 300px;  /* Set a maximum height for the container */
-    overflow-y: auto;   /* Enable vertical scrolling if content exceeds max height */
-    overflow-x: hidden; /* Prevent horizontal scrolling */
-    border: 1px solid #ccc; /* Optional: Border around the container */
-    border-radius: 5px; /* Optional: Rounded corners */
-}
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: 10px;
+    padding: 20px;
+    background-color: #fff;
+    box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+} */
 
-.checkbox-container ul {
-    padding: 0;
-    margin: 0;
-    clear: both;
-}
-
+/* Styling for each checkbox list item */
 .checkbox-container li {
-    list-style-type: none;
-    list-style-position: outside;
-    padding: 5px;
-    display: inline-block;  /* Ensure each item is on a new line */
-    margin-right: 10px;
+    display: inline-flex;            /* Align checkbox and label horizontally */
+    align-items: center;            /* Center vertically */
+    margin-right: 10px;              /* Space between checkboxes */
+    font-size: 14px;                 /* Standard font size */
+    padding: 0;                      /* Remove any extra padding */
+    position: relative;              /* Ensure that items are properly aligned */
+    user-select: none;               /* Prevent text selection */
 }
 
+/* Hide the checkbox input but keep it functional */
 .checkbox-container input[type="checkbox"] {
-    position: absolute;
-    left: -9999%; /* Keep it hidden, but functional */
+    width: 0;                       /* Set width to 0 to ensure no extra space is taken */
+    height: 0;                      /* Set height to 0 */
+    margin: 0;                       /* Remove default margin */
+    opacity: 0;                      /* Make checkbox invisible */
+    position: absolute;              /* Position it outside the flow */
+    pointer-events: none;            /* Disable interaction with the hidden checkbox */
 }
 
+/* Styling for the labels associated with checkboxes */
 .checkbox-container input[type="checkbox"] + label {
-    display: inline-block;
-    padding: 10px;
-    cursor: pointer;
-    border: 1px solid black;
-    color: black;
-    background-color: white;
-    margin-bottom: 10px;
-    border-radius: 5px;  /* Slightly round corners for better UX */
-    transition: background-color 0.3s, border-color 0.3s; /* Smooth transition */
+    display: inline-flex;            /* Align label inline with checkbox */
+    align-items: center;             /* Center the text vertically */
+    cursor: pointer;                /* Pointer cursor on hover */
+    color: #333;                     /* Default text color */
+    background-color: #fff;          /* White background */
+    padding: 0 10px;                 /* Adjusted padding to align properly */
+    font-size: 14px;                 /* Standard font size */
+    border-radius: 5px;              /* Rounded corners */
+    transition: background-color 0.3s ease, border-color 0.3s ease;  /* Smooth transition */
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.05); /* Subtle shadow for labels */
+    min-height: 16px;                /* Ensure the label height matches the checkbox size */
 }
 
+/* Hover and checked states for the labels */
 .checkbox-container input[type="checkbox"]:not(:checked) + label:hover,
 .checkbox-container input[type="checkbox"]:checked + label {
-    border: 2px solid white; /* Border stays the same when checked */
-    color: white;
-    background-color: black;
+    border-color: #007bff;           /* Blue border on hover/checked */
+    background-color: #f1f1f1;       /* Light grey background on hover */
+    color: #007bff;                  /* Blue text on hover */
 }
 
+/* Hover effect when checked */
 .checkbox-container input[type="checkbox"]:checked + label:hover {
-    background-color: #f0f0f0;
-    border-color: #999; /* Subtle hover effect */
+    background-color: #0056b3;       /* Darker blue when checked */
+    border-color: #0056b3;           /* Darker border */
 }
 
+/* Focus state for labels */
 .checkbox-container input[type="checkbox"]:focus + label {
-    outline: 2px solid #0056b3; /* Add a visible focus outline for accessibility */
+    outline: 2px solid #0056b3;      /* Blue outline for focus */
+    box-shadow: 0 0 5px rgba(0, 91, 255, 0.6); /* Focus shadow for better visibility */
 }
 
-.checkbox-container label {
-    user-select: none;  /* Prevent text selection */
-    border-radius: 5px; /* Ensure rounded borders */
-    display: inline-block;
+/* Styling to ensure the label behaves like a clickable checkbox */
+.checkbox-container input[type="checkbox"]:checked + label {
+    background-color: #007bff;       /* Blue background when checked */
+    color: white;                    /* White text when checked */
+    border-color: #007bff;           /* Blue border when checked */
 }
 
-
-#searchBox {
-    width: 50%;               /* Set the width to 50% (you can adjust this value) */
-    max-width: 400px;         /* Ensure it doesn't grow too wide */
+/* Styling for collapsible sections (if needed) */
+.accordion {
+    background-color: #444;
+    color: white;
+    cursor: pointer;
     padding: 10px;
-    margin: 0 auto 10px auto; /* Center it horizontally by using auto margins */
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    font-size: 14px;
-    box-sizing: border-box;   /* Ensures padding doesn't affect width */
-    display: block;           /* Make the search box a block element to take full width */
+    width: 100%;
+    text-align: center;
+    border: none;
+    outline: none;
+    font-size: 15px;
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 5px;
 }
 
+.panel {
+    display: none;
+    padding: 0 18px;
+    background-color: #f1f1f1;
+    margin-bottom: 10px;
+}
+
+.plus {
+    font-size: 18px;
+}
+
+.accordion:hover {
+    background-color: #555;
+}
+
+/* Styling for the search box */
+#searchBox {
+    width: 100%;                        /* Full width for the search box */
+    max-width: 350px;                   /* Max width */
+    padding: 12px 20px;
+    margin: 0;                          /* No margin at the top */
+    border: 2px solid #ccc;             /* Soft border */
+    border-radius: 8px;                 /* Rounded corners */
+    font-size: 16px;                    /* Larger font size for readability */
+    box-sizing: border-box;             /* Include padding in width */
+    display: block;                     /* Block display */
+    background-color: #f9f9f9;          /* Light background */
+    transition: all 0.3s ease;          /* Smooth transition for focus state */
+}
+
+/* Adjust hover for search box */
+#searchBox:hover {
+    border-color: #007bff;
+}
+
+/* Focus state for the search box */
 #searchBox:focus {
-    border-color: #0056b3; /* Change border color on focus */
-    outline: none; /* Remove default outline */
+    border-color: #007bff;              /* Blue border on focus */
+    outline: none;                      /* Remove default outline */
+    background-color: #fff;             /* Slightly change background on focus */
 }

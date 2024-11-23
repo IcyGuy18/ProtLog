@@ -10,9 +10,10 @@
     <!-- <link rel="stylesheet" href="styles.css"> -->
     <script src="../static/jquery.min.js"></script>
     <script src="../static/jquery-ui.js"></script>
-    <script src="../static/index.js" defer></script>
     <script src="../static/bootstrap-min.js"></script>
     <script src="../static/popper.js" defer></script>
+    <script src="../static/3Dmol-min.js" defer></script>
+    <script src="../static/index.js" defer></script>
     <link rel="stylesheet" href="../static/styles.css">
 </head>
 <body>
@@ -49,13 +50,6 @@
     </nav>
 
     <div class="container-fluid mt-5" style="width: 80%; align-content: center;">
-        <div class="container" style="width: 80%; align-content: center;">
-            <div class="row justify-content-center">
-                <div class="col-md-8 custom-container text-center">
-                    <h3 style="font-family: monospace">PTM KB</h3>
-                </div>
-            </div>
-        </div>
 
         <div class="alert alert-info text-center">
             <i class="fa fa-search fa-small"></i>&nbsp;<label>Search</label>&nbsp;(Enter Protein Identifier or a UniProt Accession Number)
@@ -72,7 +66,10 @@
             <div id="iframeLoader"></div> <!-- Loader class here -->
             <h4 id="iframeData"></h4>
             <!-- <div> class="container mt-4"> -->
-            <div>
+            <div class="protein-info-container">
+                <div id="protein3DStructure" class="top-right-window">
+                    <div id="bottomAlphaFold">Powered by <a href="https://alphafold.ebi.ac.uk">AlphaFold</a>&#169</div>
+                </div>
                 <table class="table table-striped mx-auto">
                     <tbody class="thead-light" id="proteinInfo">
                     </tbody>
@@ -80,24 +77,67 @@
             </div>
             <h4 id="iframeData2"></h4>
             <p id="iframeData2Info"></p>
+
+            <div id="proteinStatisticsContainer" class="protein-statistics-container">
+                <h1>Protein Statistics</h1>
+                <div class="row">
+                    <div class="col">
+                        <div class="stat-box info">
+                            <i class="fa fa-map-pin fa-5x"></i>
+                            <i class="fa fa-clipboard-check fa-5x"></i>
+                            <a>
+                                <h3 id="total-sites">0 Sites</h3>
+                                # Experimentally Verified Site(s)
+                            </a>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="stat-box success">
+                            <i class="fa fa-sitemap fa-5x"></i>
+                            <i class="fa fa-tasks fa-5x"></i>
+                            <a>
+                                <h3 id="unique-ptms">0+ PTM Types</h3>
+                                # Post-Translational Modification(s)
+                            </a>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="stat-box warning">
+                            <i class="fa fa-database fa-5x"></i>
+                            <i class="fa fa-chart-pie fa-5x"></i>
+                            <a>
+                                <h3 id="experimentally-verified">0+ Verified PTMs</h3>
+                                # Literature Verifying PTM(s)
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div id="foundProtein" style="position: relative; display: none;">
 
-                <p id="iframeData3"></p>
-                <div id="ptmSearch">
-                    <input type="text" id="searchBox" placeholder="Search for PTM to show/hide" oninput="filterCheckboxes()" />
-                </div>
-                <div id="giantCheckboxContainer" class="checkbox-container">
-                    <ul id="checkboxContainer"></ul>
-                </div>
-
-                <div class="protein-container">
+                <div class="protein-sequence-container">
                     <div class="sequence-displayer" id="sequenceDisplayer"></div>
+                    <div id="ptmSearchContainer">
+                        <!-- Search Box Section -->
+                        <!-- <div id="ptmSearch">
+                            <input type="text" id="searchBox" placeholder="Search for PTM to show/hide" oninput="filterCheckboxes()" />
+                        </div> -->
+                        
+                        <!-- Checkbox Container Section -->
+                        <div id="giantCheckboxContainer" class="checkbox-container">
+                            <ul id="checkboxContainer"></ul>
+                        </div>
+                    </div>
                     <div id="detailsPanel" class="details-panel">
                         <!-- This will display detailed information about the hovered chunk -->
                         <h3>Chunk Details</h3>
                         <p id="chunkDetails">Hover over a chunk to see details.</p>
                     </div>
                 </div>
+
+                <p id="iframeData3"></p>
+                
             </div>
             <div id="ptmSiteInfo" style="display: none; align-content: center;">
                 <h3>PTM Info</h3>

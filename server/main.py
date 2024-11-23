@@ -15,7 +15,7 @@ import json
 # from mongo_ptm import fetch_identifiers, search_identifier
 from local_ptm import fetch_identifiers, search_identifier
 from calculator import additive_calculator, multiplicative_calculator
-from response_fetcher import fetch_response
+from response_fetcher import fetch_response_uniprot_trim
 
 app = FastAPI()
 templates = Jinja2Templates(directory='templates/')
@@ -108,7 +108,7 @@ async def get_uniprot_info(request: Request):
     # This is necessary for web scraping purposes
     # OR we can just use the REST API to fetch the necessary information
     # without worrying about the type of ID
-    return_response = fetch_response(prot_id)
+    return_response = fetch_response_uniprot_trim(prot_id)
 
     return return_response
 
@@ -226,6 +226,12 @@ def get_protein(request: Request, upid: str = None, upac: str = None):
 @app.get("/ptmkb/api/ptms")
 async def get_options():
     options = [i.split("\\")[-1] for i in glob.glob(r'data\tables\*')]
+    return {'ptms': options}
+
+@app.get("/ptmkb/api/ptms_detailed")
+async def get_options():
+    with open('./data/ptms-expanded.json', 'r') as f:
+        options = json.load(f)
     return {'ptms': options}
 
 @app.get("/ptmkb/api/data")

@@ -28,6 +28,5 @@ def search_identifier(_id: str) -> tuple[bool, dict[str, str]]:
         if str(i['Accession Number']) == _id
     ]
     ids_upid.extend(ids_upac)
-    print(ids_upac)
     found = True if ids_upid else False
     return (found, ids_upid)

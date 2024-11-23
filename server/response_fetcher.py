@@ -1,7 +1,11 @@
 import requests
 import traceback
 
-def fetch_response(prot_id):
+def fetch_response_alphafold(prot_id):
+    ...
+
+def fetch_response_uniprot_trim(prot_id):
+    print(prot_id)
     return_response = dict.fromkeys(
         [
             'uniProtID',
@@ -33,6 +37,7 @@ def fetch_response(prot_id):
                     # For DELETED
                     if 'DELETED' in inactive_reason:
                         prot_id = response['extraAttributes']['uniParcId']
+                        print("UNIPARC", prot_id)
                         response = requests.get(
                             f'https://rest.uniprot.org/uniparc/{prot_id}',
                             headers={
@@ -101,6 +106,7 @@ def fetch_response(prot_id):
                     # For DEMERGED
                     elif 'DEMERGED' in inactive_reason:
                         prot_id = response['inactiveReason']['mergeDemergeTo'][0]
+                        print("DEL", prot_id)
                         response = requests.get(
                             f"https://rest.uniprot.org/uniprotkb/{prot_id}",
                             headers={
