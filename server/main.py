@@ -16,6 +16,7 @@ import json
 from local_ptm import fetch_identifiers, search_identifier
 from calculator import additive_calculator, multiplicative_calculator
 from response_fetcher import fetch_response_uniprot_trim
+from jpred_prediction import submit_job, get_job
 
 app = FastAPI()
 templates = Jinja2Templates(directory='templates/')
@@ -209,8 +210,17 @@ async def get_log_value(request: Request):
         '*_m_score': round(asterisk_m_score, 3) if not isinstance(asterisk_m_score, str) else asterisk_m_score
     }
 
+
 ######## API CALLS ########
 
+@app.post('/ptmkb/unrel/submitJpred')
+async def get_jpred_prediction(request: Request):
+    info = await request.json()
+    return await submit_job(info['sequence'])
+
+@app.get('/ptmkb/unrel/getJpred')
+def get_jpred_prediction(request: Request, jobid: str):
+    return get_job(jobid)
 
 @app.get("/ptmkb/api/proteins")
 def get_protein(request: Request, upid: str = None, upac: str = None):

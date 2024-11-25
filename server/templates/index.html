@@ -12,7 +12,7 @@
     <script src="../static/jquery-ui.js"></script>
     <script src="../static/bootstrap-min.js"></script>
     <script src="../static/popper.js" defer></script>
-    <script src="../static/3Dmol-min.js" defer></script>
+    <script src="../static/3Dmol.js" defer></script>
     <script src="../static/index.js" defer></script>
     <link rel="stylesheet" href="../static/styles.css">
 </head>
@@ -52,7 +52,7 @@
     <div class="container-fluid mt-5" style="width: 80%; align-content: center;">
 
         <div class="alert alert-info text-center">
-            <i class="fa fa-search fa-small"></i>&nbsp;<label>Search</label>&nbsp;(Enter Protein Identifier or a UniProt Accession Number)
+            <i class="fa fa-search fa-small"></i>&nbsp;<label>Search</label>&nbsp;(Enter Uniprot Identifier/Accession Number)
             <div class="input-group position-relative">
                 <input class="form-control" id="form_value" type="text" placeholder="Enter UniProt ID or UniProt AC">
                 <span class="form-group input-group-btn">
@@ -66,10 +66,9 @@
             <div id="iframeLoader"></div> <!-- Loader class here -->
             <h4 id="iframeData"></h4>
             <!-- <div> class="container mt-4"> -->
-            <div class="protein-info-container">
-                <div id="protein3DStructure" class="top-right-window">
-                    <div id="bottomAlphaFold">Powered by <a href="https://alphafold.ebi.ac.uk">AlphaFold</a>&#169</div>
-                </div>
+            <div id="proteinInfoContainer" class="protein-info-container">
+                <div id="protein3DStructure" class="top-right-window"></div>
+                <div id="protein3DStructureInfo" class="top-right-window-disclaimer"></div>
                 <table class="table table-striped mx-auto">
                     <tbody class="thead-light" id="proteinInfo">
                     </tbody>
@@ -85,7 +84,7 @@
                         <div class="stat-box info">
                             <i class="fa fa-map-pin fa-5x"></i>
                             <i class="fa fa-clipboard-check fa-5x"></i>
-                            <a>
+                            <a id="totalSites">
                                 <h3 id="total-sites">0 Sites</h3>
                                 # Experimentally Verified Site(s)
                             </a>
@@ -115,8 +114,8 @@
             </div>
 
             <div id="foundProtein" style="position: relative; display: none;">
-
                 <div class="protein-sequence-container">
+                    <h1 style="text-align: center; font-size: 28px; color: #444; font-weight: bold;">Protein Sequence</h1>
                     <div class="sequence-displayer" id="sequenceDisplayer"></div>
                     <div id="ptmSearchContainer">
                         <!-- Search Box Section -->
@@ -125,18 +124,17 @@
                         </div> -->
                         
                         <!-- Checkbox Container Section -->
+                        <p id="iframeData3"></p>
                         <div id="giantCheckboxContainer" class="checkbox-container">
                             <ul id="checkboxContainer"></ul>
                         </div>
                     </div>
                     <div id="detailsPanel" class="details-panel">
-                        <!-- This will display detailed information about the hovered chunk -->
-                        <h3>Chunk Details</h3>
-                        <p id="chunkDetails">Hover over a chunk to see details.</p>
+                        <h3>Click on a PTM to view details here!</h3>
                     </div>
+                    <div id="jpredPredictions"></div>
+                    <div id="jpredInfo"></div>                    
                 </div>
-
-                <p id="iframeData3"></p>
                 
             </div>
             <div id="ptmSiteInfo" style="display: none; align-content: center;">

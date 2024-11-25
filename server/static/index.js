@@ -2,6 +2,7 @@
 
 var ptmSites = null;
 var currentSequence = null;
+var pdbDataGlobal = '';
 
 const ptmColorMapping = {
     // Classical colors for more commonly occurring PTMs
@@ -153,42 +154,415 @@ function splitSequence(sequence) {
     return response;
 }
 
-// Function to display additional details about the clicked block
-function displayBlockDetails(event) {
-    // Get the clicked block element
-    const clickedBlock = event.target.closest('.sequence-block'); // Closest ensures we get the right parent div if the span is clicked
+/*
 
-    // Retrieve the sequence chunk and block number from the clicked block
-    const sequenceText = clickedBlock.querySelector('.sequence-text').textContent;
-    const blockNumber = clickedBlock.querySelector('.block-number').textContent;
+    JPRED
 
-    // Get additional details for the chunk if available (example: could be fetched from an API or a database)
-    const details = `Block Number: ${blockNumber}\nSequence: ${sequenceText}`;
+*/
 
-    // Update the content inside the details panel
-    const chunkDetailsPanel = document.getElementById('chunkDetails');
-    chunkDetailsPanel.textContent = details; // Update the panel with details about the clicked block
+async function getJPredInference(seq) {
+    document.getElementById('jpredPredictions').classList.add('lds-dual-ring');
+    fetch('/ptmkb/unrel/submitJpred',  {
+        method: "POST",
+        headers: {
+            "Accept": "application/json",
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ "sequence": seq  })
+    }).then(res => {
+        console.log(res);
+        return res.json();
+    }).then(obj => {
+        console.log(obj);
+        submitJob(obj['jobid'], 'full');
+    }).catch(err => {
+        console.log(err);
+    })
+}
 
-    // Show the details panel
-    document.getElementById('detailsPanel').style.display = 'block';
+async function submitJob(jobid, resType) {
+    try {
+        // Poll for the job status until it's finished
+        let jobFinished = false;
+        let resultResponse;
+        while (!jobFinished) {
+            // Sleep for 3 seconds before checking again
+            await new Promise(resolve => setTimeout(resolve, 10000));
 
-    // Remove the 'clicked' class from all blocks
-    const allBlocks = document.querySelectorAll('.sequence-block');
-    allBlocks.forEach(block => {
-        block.classList.remove('clicked');
+            resultResponse = await fetch(`/ptmkb/unrel/getJpred?jobid=${jobid}`);
+            resultResponse = await resultResponse.json()
+
+            // Check if the job is finished
+            jobFinished = resultResponse['response'];
+        }
+
+        formatJpredResponse(resultResponse['content']);  // Assuming this function processes the HTML as expected
+    } catch (error) {
+        console.error('Error:', error);
+        return error.message;
+    }
+}
+
+function formatJpredResponse(response) {
+    // Parse the response as HTML
+    let parser = new DOMParser();
+    let parsedHtml = parser.parseFromString(response, 'text/html');
+    
+    // Find the content inside the <code> tag
+    let codeChunk = parsedHtml.querySelector('code').textContent;
+
+    // Initialize the formatted response object
+    let formattedResponse = { alignment: {}, prediction: {} };
+
+    // Process each line of the code chunk
+    let lines = codeChunk.split('\n');
+    lines.forEach(line => {
+        if (line.trim() !== '') {
+            let [key, value] = line.split(':').map(part => part.trim());
+            
+            // Check if the key contains 'UniRef' or 'QUERY' for alignment
+            if (key.includes('UniRef') || key.includes('QUERY')) {
+                formattedResponse.alignment[key] = value;
+            } else {
+                // If the key is empty, default it to 'Pos'
+                if (!key) {
+                    key = 'Pos';
+                }
+                formattedResponse.prediction[key] = value;
+            }
+        }
     });
 
-    // Add the 'clicked' class to the currently clicked block
-    clickedBlock.classList.add('clicked');
+    generateHtmlForJPred(formattedResponse);
+}
+
+function generateHtmlForJPred(data) {
+    document.getElementById('jpredInfo').innerHTML = '';
+    // Set a base font size for both labels and sequences
+    const fontSize = '14px';
+
+    // Create the main HTML structure
+    const htmlContent = document.createElement('div');
+    htmlContent.setAttribute('style', 'font-family: "Courier New", Courier, monospace; padding: 20px;');
+
+    // Add a header for the main content area
+    const titleHeader = document.createElement('h1');
+    titleHeader.textContent = 'JPred Results';
+    htmlContent.appendChild(titleHeader);
+
+    // Add first box for Sequence Alignment Data
+    const alignmentBox = document.createElement('div');
+    alignmentBox.setAttribute('style', 'font-family: "Courier New", Courier, monospace; margin-bottom: 30px; padding: 20px; border: 2px solid #ddd; border-radius: 10px; background-color: #f9f9f9; white-space:nowrap');
+    const alignmentHeader = document.createElement('h2');
+    alignmentHeader.textContent = 'JPred Alignment';
+    alignmentBox.appendChild(alignmentHeader);
+
+    // Create the alignment section (scrollable container)
+    const alignmentScrollContainer = document.createElement('div');
+    alignmentScrollContainer.setAttribute('style', 'display: flex; justify-content: flex-start; align-items: flex-start; margin-top: 20px; padding-right: 10px;');
+    alignmentBox.appendChild(alignmentScrollContainer);
+
+    // Create the labels box for the alignment section
+    const labelsBox = document.createElement('div');
+    labelsBox.setAttribute('style', `background-color: #f4f4f4; padding: 15px; border-radius: 5px; font-family: monospace; flex: 1; font-size: ${fontSize}; max-width: 200px; margin-right: 20px;`);
+    alignmentScrollContainer.appendChild(labelsBox);
+
+    // Create the sequences box for the alignment section
+    const sequencesBox = document.createElement('div');
+    sequencesBox.setAttribute('style', `background-color: #f4f4f4; padding: 15px; border-radius: 5px; font-family: monospace; flex: 2; font-size: ${fontSize}; white-space: nowrap`);
+    alignmentScrollContainer.appendChild(sequencesBox);
+
+    // Append labels and sequences for the alignment data
+    Object.keys(data.alignment).forEach(key => {
+        // Create label div
+        const labelDiv = document.createElement('div');
+        labelDiv.setAttribute('style', `font-weight: bold; margin-bottom: 10px; white-space: nowrap; color: ${key.includes('QUERY') ? 'red' : 'black'};`);
+        labelDiv.textContent = key;
+        labelsBox.appendChild(labelDiv);
+
+        // Create sequence div
+        const sequenceDiv = document.createElement('div');
+        sequenceDiv.setAttribute('style', 'white-space: nowrap; margin-bottom: 10px;');
+        sequenceDiv.textContent = data.alignment[key];
+        sequencesBox.appendChild(sequenceDiv);
+    });
+
+    const jpredAlignment = document.createElement('h5');
+    jpredAlignment.textContent = "Click here to view JPred Alignments!";
+    jpredAlignment.setAttribute('style', 'cursor: grab');
+    jpredAlignment.addEventListener('click', function() {
+        const newWindow = window.open('', '_blank', 'width=800, height=600');
+        newWindow.document.write(alignmentBox.outerHTML);
+        newWindow.document.close()
+    });
+    htmlContent.appendChild(jpredAlignment);
+
+    // Now make a popup here.
+
+    // Add second box for Prediction Data
+    const predictionBox = document.createElement('div');
+    predictionBox.setAttribute('style', 'padding: 20px; border: 2px solid #ddd; border-radius: 10px; background-color: #f9f9f9;');
+    const predictionHeader = document.createElement('h2');
+    predictionHeader.textContent = 'JPred Predictions';
+    predictionBox.appendChild(predictionHeader);
+
+    // Create the prediction section (scrollable container)
+    const predictionScrollContainer = document.createElement('div');
+    predictionScrollContainer.setAttribute('style', 'display: flex; justify-content: flex-start; align-items: flex-start; margin-top: 20px; padding-right: 10px;');
+    predictionBox.appendChild(predictionScrollContainer);
+
+    // Create the labels box for the prediction section
+    const predictionLabelsBox = document.createElement('div');
+    predictionLabelsBox.setAttribute('style', `background-color: #f4f4f4; padding: 15px; border-radius: 5px; font-family: monospace; flex: 1; font-size: ${fontSize}; max-width: 100px; margin-right: 20px;`);
+    predictionScrollContainer.appendChild(predictionLabelsBox);
+
+    // Create the sequences box for the prediction section (with scrolling)
+    const predictionSequencesBox = document.createElement('div');
+    predictionSequencesBox.setAttribute('style', `background-color: #f4f4f4; padding: 15px; border-radius: 5px; font-family: monospace; flex: 2; font-size: ${fontSize}; white-space: nowrap; max-height: 400px; overflow-y: hidden;`);
+    predictionScrollContainer.appendChild(predictionSequencesBox);
+
+    // Append labels and sequences for the prediction data
+    Object.keys(data.prediction).forEach(key => {
+        // Create label div
+        const predictionLabelDiv = document.createElement('div');
+        predictionLabelDiv.setAttribute('style', `font-weight: bold; margin-bottom: 10px; white-space: nowrap; color: ${key.includes('QUERY') ? 'red' : 'black'};`);
+        predictionLabelDiv.textContent = key;
+        predictionLabelsBox.appendChild(predictionLabelDiv);
+
+        // Create sequence div
+        const predictionSequenceDiv = document.createElement('div');
+        predictionSequenceDiv.setAttribute('style', 'white-space: nowrap; margin-bottom: 10px;');
+        predictionSequenceDiv.textContent = data.prediction[key];
+        predictionSequencesBox.appendChild(predictionSequenceDiv);
+    });
+
+    // Find the target div to append the content
+    const targetDiv = document.getElementById('jpredPredictions');
+    targetDiv.classList.remove('lds-dual-ring');
+    targetDiv.appendChild(htmlContent);
+
+    // Append the two sections to the target div
+    // targetDiv.appendChild(alignmentBox);
+    targetDiv.appendChild(predictionBox);
+}
+
+/*
+    DISPLAY PTM DETAILS AFTER SELECTING
+*/
+
+// Function to display additional details about the clicked highlighted text (PTM data)
+function displayPTMDetails(event) {
+    // Retrieve PTM information from the clicked highlighted span
+    const ptmsData = JSON.parse(event.target.getAttribute("data-all-ptms"));
+
+    // Get the parent sequence block of the clicked highlighted text
+    const clickedSpan = event.target;
+    const clickedBlock = clickedSpan.closest('.sequence-block');  // Find the parent .sequence-block
+
+    // Initialize totalText to store the entire sequence
+    let totalText = '';
+    let totalTextInfo = new Array();
+
+    // Append previous block's text if available
+    const previousBlock = clickedBlock.previousElementSibling;
+    if (previousBlock) {
+        const previousBlockText = previousBlock.querySelector('.sequence-text').textContent;
+        previousBlock.querySelector('.sequence-text').querySelectorAll('span').forEach((span, index) => {
+            totalTextInfo.push(span.getAttribute('data-all-ptms'));
+        });
+        totalText += previousBlockText;
+    }
+    while (totalText.length < 11) {
+        totalTextInfo.unshift(null);
+        totalText = '-' + totalText;
+    }
+
+    // Add the current block's text (clicked block)
+    const sequenceText = clickedBlock.querySelector('.sequence-text');
+    const spans = sequenceText.querySelectorAll('span');
+    
+    spans.forEach((span, index) => {
+        totalTextInfo.push(span.getAttribute('data-all-ptms'));
+
+        const clickedResidueIndex = Array.from(clickedBlock.querySelector('.sequence-text').children).indexOf(clickedSpan);
+        if (index == clickedResidueIndex)
+            totalText += '<' + span.textContent + '>';
+        else
+            totalText += span.textContent;
+    });
+
+    // Append next block's text if available
+    const nextBlock = clickedBlock.nextElementSibling;
+    if (nextBlock) {
+        const nextBlockText = nextBlock.querySelector('.sequence-text').textContent;
+        nextBlock.querySelector('.sequence-text').querySelectorAll('span').forEach((span, index) => {
+            totalTextInfo.push(span.getAttribute('data-all-ptms'));
+        });
+        totalText += nextBlockText;
+    }
+    while (totalText.length < 32) {
+        totalText = totalText + '-';
+        totalTextInfo.push(null);
+    }
+
+    // Find the position of the marked residue (the one surrounded by < >)
+    const clickedResidueIndex = totalText.indexOf('<');
+    const endClickedIndex = totalText.indexOf('>', clickedResidueIndex);
+
+    // Calculate the start and end positions for the localized sequence
+    const start = Math.max(0, clickedResidueIndex - 10);  // Ensure not going out of bounds for previous residues
+    const end = Math.min(totalText.length, endClickedIndex + 10 + 1);  // Ensure not going out of bounds for next residues
+
+    // Extract the localized sequence based on the start and end indices
+    var localizedSequence = totalText.slice(start, end);
+    var localizedSequenceInfo = totalTextInfo.slice(start, end);
+    localizedSequenceInfo = localizedSequenceInfo.slice(0, 21)
+    localizedSequence = localizedSequence.replace('<', '')
+    localizedSequence = localizedSequence.replace('>', '')
+    localizedSequence = localizedSequence.slice(0, 21)
+
+    // Prepare to display the localized sequence with bolded PTMs
+    const detailsPanel = document.getElementById("detailsPanel");
+    detailsPanel.innerHTML = "";  // Clear any previous content
+
+    // Create a container to hold the localized sequence with bolded PTMs
+    const sequenceDisplay = document.createElement('div');
+    sequenceDisplay.classList.add('localized-sequence'); // Apply localized-sequence class
+    const sequenceDisplayTitle = document.createElement('div')
+    sequenceDisplayTitle.innerHTML = '<h4>Local Sequence Window</h4>'
+
+    // Loop through the localized sequence text and bold PTMs
+    localizedSequence.split('').forEach((char, index) => {
+        // Get the global index for this character in the full sequence
+
+        // Check if this position has PTMs (adjust the index to global sequence)
+        let formattedChar = document.createElement('span');
+        formattedChar.textContent = char;
+
+        if (localizedSequenceInfo[index] !== null) {
+            var tempArr = JSON.parse(localizedSequenceInfo[index]);
+            var uniquePTMs = new Set(tempArr.map(arr => arr[1]));
+            uniquePTMs = Array.from(uniquePTMs);
+            // If PTMs exist at this position, make the character bold
+            if (index === 10)
+                formattedChar.setAttribute('style', "font-weight: 700; font-size: 40px; user-select: none; cursor: default;");
+            else
+                formattedChar.setAttribute('style', "user-select: none; cursor: default;");
+
+            const ptmColors = uniquePTMs.map(ptmType => ptmColorMapping[ptmType] || '#f39c12')
+
+            if (uniquePTMs.length > 1) {
+                const gradient = ptmColors
+                    .map((color, idx) => `${color} ${100 / ptmColors.length}%`)
+                    .join(', ');
+                formattedChar.style.background = `linear-gradient(to bottom, ${gradient})`;
+                formattedChar.style.backgroundSize = '100% 100%'; // Ensure the gradient covers the entire span
+            } else {
+                formattedChar.style.backgroundColor = ptmColors[0];
+            }
+
+            formattedChar.addEventListener("mouseenter", (e) => {
+                if (uniquePTMs.length > 0) {
+                    // Create a tooltip element
+                    const tooltip = document.createElement("div");
+                    tooltip.classList.add("custom-tooltip");
+                    tooltip.textContent = uniquePTMs.join(", ");  // Display all PTMs for this position
+
+                    // Append the tooltip to the body
+                    document.body.appendChild(tooltip);
+
+                    // Position the tooltip near the character
+                    const rect = e.target.getBoundingClientRect(); // Get the character's position
+                    tooltip.style.position = "absolute";
+                    tooltip.style.left = `${rect.left + window.scrollX}px`; // Adjust for any page scroll
+                    tooltip.style.top = `${rect.top + window.scrollY - 30}px`; // Position above the character
+                    tooltip.style.zIndex = 10; // Ensure it's above other content
+
+                    // Add the 'visible' class to the tooltip to show it
+                    setTimeout(() => {
+                        tooltip.classList.add("visible");
+                    }, 10); // Small delay for the transition to kick in
+
+                    // Store tooltip for later removal
+                    e.target.tooltip = tooltip;
+                }
+            });
+
+            // Add mouseleave event to remove the tooltip
+            formattedChar.addEventListener("mouseleave", (e) => {
+                const tooltip = e.target.tooltip;
+                if (tooltip) {
+                    tooltip.remove(); // Remove the tooltip when the mouse leaves
+                    delete e.target.tooltip; // Clean up the tooltip reference
+                }
+            });
+
+            formattedChar.classList.add('highlighted');
+            formattedChar.setAttribute('data-ptms', localizedSequenceInfo[index]);
+        }
+        sequenceDisplay.appendChild(formattedChar);
+    });
+
+    // Append the sequence to the details panel
+    detailsPanel.appendChild(sequenceDisplayTitle);
+    detailsPanel.appendChild(sequenceDisplay);
+
+    // Create a div for additional PTM details
+    const ptmDetailsDiv = document.createElement('div');
+    ptmDetailsDiv.classList.add('additional-ptm-details');
+
+    // Loop through each PTM in ptmsData to create separate divs for each PTM
+    ptmsData.forEach(ptm => {
+        // Create a new div for each PTM
+        const ptmDiv = document.createElement('div');
+        ptmDiv.classList.add('ptm-entry'); // Add a class for styling
+
+        // PTM Type: Extract and display the PTM type (second element in each sub-array)
+        const ptmTypeText = document.createElement('p');
+        ptmTypeText.innerHTML = `<strong>PTM Type:</strong> ${ptm[1]}`;
+
+        // Position: Display the residue position (assuming position is stored in data-position on clickedSpan)
+        const positionText = document.createElement('p');
+        const position = clickedSpan.getAttribute('data-position'); // Assuming position is stored in data-position
+        positionText.innerHTML = `<strong>Position:</strong> ${ptm[0]}`;
+
+        // Evidence Identifiers: Extract and display all evidence identifiers (third element in each sub-array)
+        const evidenceIdentifiersText = document.createElement('p');
+
+        function convertPubMedReferencesMinor(text) {
+            const pubMedRegex = /(\d+)/g; // Regex to match PubMed references
+
+            return text.replace(pubMedRegex, (match, id) => {
+                const url = `https://www.ncbi.nlm.nih.gov/pubmed/?term=${id}`; // Construct the URL
+                return `<a href="${url}" target="_blank">${match}</a>`; // Create the link
+            });
+        }
+
+        const evidenceIdentifiers = convertPubMedReferencesMinor(ptm[2]); // Extract evidence identifiers for the current PTM
+        evidenceIdentifiersText.innerHTML = `<strong>Evidence Identifiers:</strong> ${evidenceIdentifiers}`;
+
+        // Append the individual PTM details (PTM type, position, evidence identifiers) to the ptmDiv
+        ptmDiv.appendChild(ptmTypeText);
+        ptmDiv.appendChild(positionText);
+        ptmDiv.appendChild(evidenceIdentifiersText);
+
+        // Append the individual PTM div to the main details div
+        ptmDetailsDiv.appendChild(ptmDiv);
+    });
+
+    // Append the ptmDetailsDiv (containing all PTMs) to the details panel
+    detailsPanel.appendChild(ptmDetailsDiv);
+
+    // Show the details panel with styles applied
+    detailsPanel.style.display = 'block';
 }
 
 // Function to initialize the sequence blocks and attach event listeners
-function initializeBlockClickListeners() {
-    const blocks = document.querySelectorAll('.sequence-block');
-
-    // Attach the click event listener to each sequence block
-    blocks.forEach(block => {
-        block.addEventListener('click', displayBlockDetails);
+function initializePTMClickListeners() {
+    // Attach event listeners for the highlighted spans (to display PTM info)
+    const highlightedSpans = document.querySelectorAll('.highlighted');
+    highlightedSpans.forEach(span => {
+        span.addEventListener('click', displayPTMDetails);
     });
 }
 
@@ -214,6 +588,7 @@ function displayProteinSequence(sequence, modificationData) {
 
         // Create an object to track PTMs at each position
         const ptmsAtPositions = {};
+        const allPtmsAtPositions = {};
 
         // Iterate over the characters in the block
         block[0].split('').forEach((char, index) => {
@@ -232,7 +607,12 @@ function displayProteinSequence(sequence, modificationData) {
                     if (!ptmsAtPositions[charIndex]) {
                         ptmsAtPositions[charIndex] = [];
                     }
+                    if (!allPtmsAtPositions[charIndex]) {
+                        allPtmsAtPositions[charIndex] = [];
+                    }
+
                     ptmsAtPositions[charIndex].push(mod[1]);
+                    allPtmsAtPositions[charIndex].push(mod);
 
                     // Get the current 'data-ptm' value from the dataset (if exists)
                     let existingPtms = charSpan.getAttribute('data-ptm') || ''; // Retrieve data-ptm from the dataset
@@ -251,37 +631,56 @@ function displayProteinSequence(sequence, modificationData) {
                 }
             });
 
-            // // After collecting all PTMs for the character, handle highlighting
-            // const ptmsForThisPosition = ptmsAtPositions[charIndex] || [];
+            for (const [key, value] of Object.entries(allPtmsAtPositions)) {
+                for (i = 0; i < value.length; i++) {
+                    if (value[i][0] === charIndex + 1) { // Convert to 1-indexed
+                        // We're going to join the redundant sub arrays together based on the PTMs
+                        let grouped = {};
 
-            // ptmsForThisPosition.forEach(ptmType => {
-            //     const checkbox = document.getElementById(ptmType);
-            //     if (checkbox && checkbox.checked && !checkbox.disabled) {
-            //         // Add highlight class if checkbox is checked
-            //         charSpan.classList.add("highlighted");
+                        value.forEach(entry => {
+                            const modType = entry[1];
+                            const ids = entry[2];
 
-            //         // Apply the PTM color from the mapping (multiple PTMs will stack their background)
-            //         const color = ptmColorMapping[ptmType] || '#f39c12';  // Default color if PTM not in map
-            //         charSpan.style.backgroundColor = color;  // Apply the color
-            //     }
-            // });
+                            if (!grouped[modType]) {
+                                grouped[modType] = {
+                                    index: entry[0],
+                                    ids: new Set() 
+                                };
+                            }
+                            ids.split(';').forEach(id => grouped[modType].ids.add(id));
+                        });
+
+                        let result = Object.keys(grouped).map(modType => {
+                            return [
+                                grouped[modType].index,
+                                modType,
+                                Array.from(grouped[modType].ids).join(';')
+                            ];
+                        });
+                        charSpan.setAttribute('data-all-ptms', JSON.stringify(result));
+                        break;
+                    }
+                }
+            }
 
             // After collecting all PTMs for the character, handle highlighting
-            const ptmsForThisPosition = ptmsAtPositions[charIndex] || [];
+            var ptmsForThisPosition = ptmsAtPositions[charIndex] || [];
+            ptmsForThisPosition = new Set(ptmsForThisPosition);
+            ptmsForThisPosition = Array.from(ptmsForThisPosition);
 
             // Handle multiple PTMs at the same position (apply gradient background)
             if (ptmsForThisPosition.length > 0) {
                 // Get colors from ptmColorMapping
                 const ptmColors = ptmsForThisPosition.map(ptmType => ptmColorMapping[ptmType] || '#f39c12');
 
-                // Add 'highlighted' class for styling (always add this class)
                 charSpan.classList.add("highlighted");
+                const gradientPercentile = 100 / ptmsForThisPosition.length
 
                 // If there are multiple PTMs, apply the gradient background class
                 if (ptmColors.length > 1) {
                     // Create the gradient using the colors from ptmColorMapping
                     const gradient = ptmColors
-                        .map((color, idx) => `${color} ${idx * (100 / ptmColors.length)}%`)
+                        .map((color, idx) => `${color} ${gradientPercentile}%`)
                         .join(', ');
 
                     // Apply the gradient as a style to the charSpan
@@ -298,7 +697,9 @@ function displayProteinSequence(sequence, modificationData) {
 
             // Add a hover event to show the custom tooltip
             charSpan.addEventListener("mouseenter", (e) => {
-                const ptmsForThisChar = ptmsAtPositions[charIndex] || [];
+                var ptmsForThisChar = ptmsAtPositions[charIndex] || [];
+                ptmsForThisChar = new Set(ptmsForThisPosition);
+                ptmsForThisChar = Array.from(ptmsForThisPosition);
                 if (ptmsForThisChar.length > 0) {
                     // Create a tooltip element
                     const tooltip = document.createElement("div");
@@ -352,7 +753,136 @@ function displayProteinSequence(sequence, modificationData) {
     });
 
     // After blocks are created, initialize the click event listeners
-    initializeBlockClickListeners();
+    initializePTMClickListeners();
+}
+
+
+// We're going to gather all of the PTMs of all sequences and make a table out of it.
+function generatePTMHtmlTable() {
+    const sequenceTexts = document.getElementById('sequenceDisplayer').querySelectorAll('.sequence-text');
+    let sequencesArr = new Array();
+    sequenceTexts.forEach((seqText) => {
+        let spans = seqText.querySelectorAll('span');
+        spans.forEach(span => {
+            if (span.getAttribute('data-ptm')) {
+                ptms = span.getAttribute('data-ptm').split(';');
+                ptms.forEach((ptm) => {
+                    sequencesArr.push({
+                        'aa': span.textContent,
+                        'ptm': ptm
+                    });
+                });
+            }
+        });
+    });
+
+    let ptmCounts = {};
+    let aminoAcids = ["A", "C", "D", "E", "F", "G", "H", "I", "K", "L", "M", "N", "P", "Q", "R", "S", "T", "V", "W", "Y"]
+    sequencesArr.forEach(entry => {
+        const { aa, ptm } = entry;
+    
+        // If the PTM doesn't exist in the ptmCounts object, initialize it
+        if (!ptmCounts[ptm]) {
+            ptmCounts[ptm] = {};
+        }
+    
+        // If the amino acid doesn't exist for the current PTM, initialize it
+        if (!ptmCounts[ptm][aa]) {
+            ptmCounts[ptm][aa] = 0;
+        }
+    
+        // Increment the count for the amino acid under the given PTM
+        ptmCounts[ptm][aa]++;
+    });
+    ptmKeys = Object.keys(ptmCounts);
+
+    // Create the table container
+    const tableContainer = document.createElement('div');
+    tableContainer.setAttribute('id', 'ptmTableSummary')
+    tableContainer.style.padding = '20px';
+    tableContainer.style.maxWidth = '1000px';
+    tableContainer.style.margin = 'auto';
+    tableContainer.style.fontFamily = "'Courier New', Courier, monospace";
+
+    // Create the table wrapper
+    const tableWrapper = document.createElement('div');
+    tableWrapper.style.overflowX = 'auto';
+
+    // Create the table element
+    const table = document.createElement('table');
+    table.style.width = '100%';
+    table.style.borderCollapse = 'collapse';
+    table.style.border = '1px solid #ddd';
+
+    // Create the table header
+    const thead = document.createElement('thead');
+    const headerRow = document.createElement('tr');
+
+    // Create the first header cell for PTM Type
+    const th = document.createElement('th');
+    th.textContent = 'PTM Type';
+    th.style.padding = '10px';
+    th.style.textAlign = 'center';
+    th.style.border = '1px solid #ddd';
+    th.style.backgroundColor = '#f4f4f4';
+    th.style.fontWeight = 'bold';
+    headerRow.appendChild(th);
+
+    // Create the rest of the header cells for amino acids
+    aminoAcids.forEach(aa => {
+        const th = document.createElement('th');
+        th.textContent = aa;
+        th.style.padding = '10px';
+        th.style.textAlign = 'center';
+        th.style.border = '1px solid #ddd';
+        th.style.backgroundColor = '#f4f4f4';
+        th.style.fontWeight = 'bold';
+        headerRow.appendChild(th);
+    });
+
+    thead.appendChild(headerRow);
+    table.appendChild(thead);
+
+    // Create the table body
+    const tbody = document.createElement('tbody');
+    ptmKeys.forEach(ptm => {
+        const row = document.createElement('tr');
+        
+        // Create a cell for PTM Type
+        const ptmCell = document.createElement('th');
+        ptmCell.textContent = ptm;
+        ptmCell.style.padding = '10px';
+        ptmCell.style.textAlign = 'center';
+        ptmCell.style.border = '1px solid #ddd';
+        ptmCell.style.backgroundColor = '#f4f4f4';
+        row.appendChild(ptmCell);
+        
+        // Loop through each amino acid and check if it exists in the current PTM data
+        aminoAcids.forEach(aa => {
+            const td = document.createElement('td');
+            td.style.padding = '10px';
+            td.style.textAlign = 'center';
+            td.style.border = '1px solid #ddd';
+            td.style.backgroundColor = '#f4f4f4';
+            
+            if (ptmCounts[ptm][aa]) {
+                td.style.fontWeight = 700;
+                td.textContent = ptmCounts[ptm][aa];
+            } else {
+                td.textContent = '-';
+            }
+            
+            row.appendChild(td);
+        });
+        
+        tbody.appendChild(row);
+    });
+
+    table.appendChild(tbody);
+    tableWrapper.appendChild(table);
+    tableContainer.appendChild(tableWrapper);
+    
+    return tableContainer
 }
 
 function updateStats(ptmData) {
@@ -370,6 +900,8 @@ function updateStats(ptmData) {
     document.getElementById('total-sites').textContent = `${totalSites}`;
     document.getElementById('unique-ptms').textContent = `${uniquePTMs.size}`;
     document.getElementById('experimentally-verified').textContent = `${totalStrings}`;
+
+    document.getElementById('proteinStatisticsContainer').appendChild(generatePTMHtmlTable());
 }
 
 // Function to handle PTM highlighting (this is where you can remove highlights if unchecked)
@@ -404,19 +936,17 @@ function colorPTMs(checkbox) {
             } else if (isChecked) {
                 // If the checkbox is checked, add the highlight and handle gradient
                 // Check if there are multiple PTMs and apply a gradient
-                const ptmsForThisChar = span.getAttribute('data-ptm').split(';');
                 if (ptmsForThisChar.length > 1) {
-                    const ptmColors = ptmsForThisChar.map(ptm => ptmColorMapping[ptm] || '#f39c12');
-                    const gradient = ptmColors
-                        .map((color, idx) => `${color} ${idx * (100 / ptmColors.length)}%`)
+                    // Create a gradient string with each color assigned to a specific position
+                    const gradient = ptmsForThisChar
+                        .map((color, idx) => `${ptmColorMapping[color]} ${(100 / ptmsForThisChar.length)}%`)
                         .join(', ');
-
-                    // Apply the gradient as a style to the charSpan
+                
+                    // Apply the linear gradient to the span
                     span.style.background = `linear-gradient(to bottom, ${gradient})`;
-                    span.style.backgroundSize = '100% 100%'; // Ensure the gradient covers the entire span
                 } else {
                     // If only one PTM, apply the single PTM color
-                    span.style.backgroundColor = ptmColorMapping[ptmType] || '#f39c12';
+                    span.style.backgroundColor = ptmColorMapping[ptmType];
                 }
                 span.classList.add('highlighted');  // Add the 'highlighted' class
             }
@@ -426,6 +956,7 @@ function colorPTMs(checkbox) {
 
 // Function to fetch the PDB file from AlphaFold and render it inside the specified div
 async function fetchProteinStructure(uniprotAccession) {
+    pdbDataGlobal = '';
     document.getElementById('protein3DStructure').classList.add('lds-dual-ring')
     const apiUrl = `https://alphafold.ebi.ac.uk/api/prediction/${uniprotAccession}`;
 
@@ -433,18 +964,21 @@ async function fetchProteinStructure(uniprotAccession) {
         // Fetch the list of JSON objects with prediction data
         const response = await fetch(apiUrl);
         if (!response.ok) {
-            throw new Error(`Failed to fetch prediction data: ${response.statusText}`);
+            // throw new Error(`Failed to fetch prediction data: ${response.statusText}`);
+            document.getElementById('protein3DStructure').innerHTML = `<h5>No 3D structure found!</h5><span class="question-mark" title="This is your tooltip text!">?</span>`
+            document.getElementById('protein3DStructure').classList.remove('lds-dual-ring');
         }
+        else {
+            const data = await response.json();
 
-        const data = await response.json();
-
-        // If the response contains multiple entries, you can iterate over them
-        for (let entry of data) {
-            // Check if the 'pdbUrl' exists in the response entry
-            if (entry.pdbUrl) {
-                // Fetch the raw PDB file from the pdbUrl
-                await fetchAndRenderPDB(entry.pdbUrl);
-                break; // Assuming we want to display the first model with a valid pdbUrl
+            // If the response contains multiple entries, you can iterate over them
+            for (let entry of data) {
+                // Check if the 'pdbUrl' exists in the response entry
+                if (entry.pdbUrl) {
+                    // Fetch the raw PDB file from the pdbUrl
+                    await fetchAndRenderPDB(entry.pdbUrl);
+                    break; // Assuming we want to display the first model with a valid pdbUrl
+                }
             }
         }
 
@@ -462,6 +996,7 @@ async function fetchAndRenderPDB(pdbUrl) {
         }
 
         const pdbData = await response.text();  // Read as text (PDB format)
+        pdbDataGlobal = pdbData;
 
         // Remove the loading spinner if present
         document.getElementById('protein3DStructure').classList.remove('lds-dual-ring');
@@ -478,13 +1013,23 @@ async function fetchAndRenderPDB(pdbUrl) {
         // Zoom and render the model
         viewer.zoomTo();
         viewer.render();
-        viewer.zoom(1.2, 1000);
+        // viewer.zoom(1, 1000);
 
         // Access the canvas element created by 3Dmol.js
         const canvas = viewer.getCanvas();
+        // canvas.setAttribute('style', 'overflow: hidden;')
 
-        // Assign a CSS class to the canvas
-        canvas.classList.add('top-right-window');  // Add a custom class to the canvas
+        // Create a new div element for the disclaimer
+        const disclaimer = document.createElement('div');
+
+        // Add the custom class for styling the disclaimer
+        disclaimer.classList.add('disclaimer-text');
+
+        // Create the text content with a hyperlink
+        disclaimer.innerHTML = `Powered by <a href="https://alphafold.ebi.ac.uk" target="_blank" style="color: rgba(0, 0, 0, 0.7); text-decoration: none;"><strong><span style="text-color: 'blue';">AlphaFold</span></strong></a>©`
+
+        // Append the disclaimer to the #protein3DStructureInfo div
+        document.getElementById('protein3DStructureInfo').appendChild(disclaimer);
 
     } catch (error) {
         console.error("Error rendering PDB file:", error);
@@ -493,7 +1038,6 @@ async function fetchAndRenderPDB(pdbUrl) {
 
 // USE THIS to populate ONLY APPLICABLE CHECKBOXES
 function populateCheckboxesFromResult(data) {
-    console.log(data);
     const uniquePTMs = new Set(data.map(ptm => ptm[1]));
     const checkboxContainer = document.getElementById('checkboxContainer');
     // const arr = data['ptms'];
@@ -603,12 +1147,19 @@ async function search() {
     const id = document.getElementById('form_value').value;
     if (id) {
         document.getElementById('proteinStatisticsContainer').style.display = 'none';
+        document.getElementById('protein3DStructure').innerHTML = '';
+        document.getElementById('protein3DStructureInfo').innerHTML = '';
+        document.getElementById('proteinInfoContainer').style.display = 'none';
+        try {document.getElementById('ptmTableSummary').remove();} catch(e) {} // Special case
+        document.getElementById('jpredPredictions').innerHTML = '';
+        document.getElementById('jpredInfo').innerHTML = '<h5>Loading JPred Predictions, please wait! (This can take minutes depending on the sequence and job queues)</h5>';
         // document.getElementById('ptmSearch').style.display = 'none';
         document.getElementById('giantCheckboxContainer').style.display = 'none';
         document.getElementById('form_submit').disabled = true;
         const table = document.getElementById('proteinInfo');
         table.innerHTML = ''
         document.getElementById('foundProtein').style.display = 'none';
+        document.getElementById('checkboxContainer').innerHTML = '';
         document.getElementById('checkboxContainer').style.display = 'none';
         document.getElementById('iframeContainer').setAttribute('style', "display: block;");
         document.getElementById('iframeLoader').setAttribute('class', 'lds-dual-ring');
@@ -662,7 +1213,7 @@ async function search() {
                                                             .replace('Uni Prot', 'UniProt');
                                     keyCell.className = 'key';
                                     // Special case #1
-                                    if (key === 'proteinFunction') {
+                                    if (key === 'proteinFunction' || key === 'subcellularLocalizations') {
                                         valueCell.innerHTML = convertPubMedReferences(value);
                                     } else if (key === 'uniProtID' || key === 'uniProtAC') {
                                         valueCell.innerHTML = `<a href="https://www.uniprot.org/uniprotkb/${value}">${value}</a>`;
@@ -794,17 +1345,18 @@ async function search() {
                             
                             fetchProteinStructure(json.uniProtAC);
                             populateCheckboxesFromResult(data.result.PTMs)
-                            updateStats(data.result.PTMs)
+                            getJPredInference(json.proteinSequence);
                             displayProteinSequence(json.proteinSequence, data.result.PTMs);
+                            updateStats(data.result.PTMs)
                             document.getElementById('sequenceDisplayer').setAttribute('style', "display: block;");
-                            document.getElementById('iframeData').textContent = "Protein Info";
+                            document.getElementById('iframeData').textContent = "Protein Basic Information";
                             document.getElementById('iframeData2').textContent = "Modification Sites";
                             document.getElementById('iframeData2Info').textContent = "Hover on a highlighted amino acid to view the PTM; click on a highlighted amino acid to view details of the PTM below."
                             document.getElementById('iframeData3').textContent = "You can click on the boxes below to highlight certain PTMs in the above sequence. They are all enabled by default.";
                             document.getElementById('foundProtein').style.display = 'block';
                             document.getElementById('checkboxContainer').style.display = 'block';
                             document.getElementById('giantCheckboxContainer').style.display = 'block';
-                            // document.getElementById('ptmSearch').style.display = 'block';
+                            document.getElementById('proteinInfoContainer').style.display = 'block';
                             document.getElementById('proteinStatisticsContainer').style.display = 'block';
                         }
                         else {
@@ -830,7 +1382,6 @@ async function search() {
 }
 
 async function loadFile(subsequence, matched, aa) {
-    console.log(matched[1], aa);
     const response = await fetch("/ptmkb/api/data?selection=" + matched[1] + "&aa=" + aa, {
         method: 'GET'
     });

@@ -14,6 +14,7 @@ def fetch_response_uniprot_trim(prot_id):
             'geneName',
             'organism',
             'sequenceLength',
+            'subcellularLocalizations',
             'proteinFunction',
             'proteinSequence',
             'message'
@@ -166,6 +167,22 @@ def fetch_response_uniprot_trim(prot_id):
                         except:
                             print(traceback.format_exc())
                             return_response['proteinSequence'] = ''
+                    
+                        # Handle subcellular localizations differently
+                        subcellular_localizations = [i for i in response.get('comments', []) if 'SUBCELLULAR LOCATION' in i.get('commentType', '')]
+                        subcell_response = ''
+                        for subcell in subcellular_localizations:
+                            subcell_response += subcell.get('molecule') + ': ' if subcell.get('molecule', None) else ''
+                            locs = subcell.get('subcellularLocations', [])
+                            for loc in locs:
+                                subcell_response += loc.get('location', {}).get('value', '') + ' '
+                            locs = subcell.get('note', {}).get('texts', [])
+                            if locs:
+                                subcell_response += '- '
+                            for loc in locs:
+                                subcell_response += loc.get('value', '') + ' '
+                            subcell_response += '\n'
+                        return_response['subcellularLocalizations'] = subcell_response
 
                 # Otherwise just process as usual.
                 else:
@@ -222,6 +239,22 @@ def fetch_response_uniprot_trim(prot_id):
                     except:
                         print(traceback.format_exc())
                         return_response['proteinSequence'] = ''
+                    
+                    # Handle subcellular localizations differently
+                    subcellular_localizations = [i for i in response.get('comments', []) if 'SUBCELLULAR LOCATION' in i.get('commentType', '')]
+                    subcell_response = ''
+                    for subcell in subcellular_localizations:
+                        subcell_response += subcell.get('molecule') + ': ' if subcell.get('molecule', None) else ''
+                        locs = subcell.get('subcellularLocations', [])
+                        for loc in locs:
+                            subcell_response += loc.get('location', {}).get('value', '') + ' '
+                        locs = subcell.get('note', {}).get('texts', [])
+                        if locs:
+                            subcell_response += '- '
+                        for loc in locs:
+                            subcell_response += loc.get('value', '') + ' '
+                        subcell_response += '\n'
+                    return_response['subcellularLocalizations'] = subcell_response
             except Exception as e:
                 print(traceback.format_exc())
                 return_response['message'] = f"Error: {e}"
