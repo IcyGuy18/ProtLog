@@ -14,17 +14,10 @@ body {
 /* VIEWING PROTEIN HERE */
 
 .top-right-window {
-    width: 300px;    /* or 100% for responsiveness */
-    height: 300px;   /* or your desired height */
+    width: 250px;
+    height: 250px;
     position: fixed;
-    background-color: rgba(224, 224, 224, 0.8);
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    overflow: hidden;  /* Hide anything outside the container */
-    justify-content: center;
-    align-items: center;
-    display: flex;
+    overflow: hidden;
 }
 
 #bottomAlphaFold {
@@ -105,7 +98,8 @@ iframe {
 }
 
 .alert {
-    width: 600px;
+    width: 500px;
+    max-width: 1050px; /* Maximum width */
     margin: 0 auto;
     border-radius: 8px; /* Add rounded corners to the alert */
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
@@ -185,11 +179,11 @@ iframe {
 
 /* Specific styles for the custom table container */
 .protein-info-container {
-    background-color: #f4f4f9; /* Light gray background behind the table */
+    background-color: #e5e5e5;
     padding: 30px; /* Space around the table */
     border-radius: 10px; /* Rounded corners for a modern look */
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Soft shadow for depth */
-    max-width: 90%; /* Allow for responsive sizing */
+    max-width: 1050px; /* Maximum width */
     margin: 0 auto; /* Center align the table */
     overflow-x: auto; /* Allow horizontal scrolling if needed */
     position: relative;
@@ -208,6 +202,27 @@ iframe {
     max-height: 300px; /* Maximum height for the window */
     overflow-y: auto; /* Allow scrolling if the content exceeds the height */
     z-index: 10; /* Ensure it's on top of the table */
+}
+
+/* New class for positioning the protein3DStructureInfo window (same as 3DStructure window) */
+.protein-info-container .top-right-window-disclaimer {
+    position: absolute; /* Keep absolute positioning */
+    top: 270px; /* Adjust the distance from the top (same as 3DStructure) */
+    right: 20px; /* Position it to the left instead of right */
+    background-color: #fff; /* Same white background */
+    padding: 1px; /* Space inside the window */
+    border-radius: 4px; /* Rounded corners for the window */
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); /* Light shadow for depth */
+    width: 300px; /* Set a fixed width for the window */
+    height: 24px; /* Maximum height for the window */
+    z-index: 10; /* Keep on top of table content */
+}
+
+/* Style for the disclaimer (customized to sit below 3DStructureInfo) */
+.disclaimer-text {
+    text-align: center;
+    font-size: 16px;
+    color: rgba(0, 0, 0, 0.7); /* Darker color for better visibility */
 }
 
 /* Table Styling - Scoped to the protein-info-container */
@@ -250,6 +265,7 @@ iframe {
     overflow-wrap: break-word; /* Older support for breaking long words */
     white-space: normal; /* Allow the text to wrap to the next line */
     text-align: left;
+    white-space: pre-wrap;
 }
 
 /* Key Column */
@@ -262,8 +278,7 @@ iframe {
     font-weight: 700; /* Keep the key text bold */
 }
 
-/* Hover Effect for Table Cells (No strong color change) */
-.protein-info-container .table td:hover {
+.protein-info-container .table td.value:hover {
     background-color: #b0bec5;
     color: #333;
     transform: none;
@@ -311,7 +326,7 @@ iframe {
 /* PROTEIN SEQUENCE PTM STATISTICS HERE */
 /* Main container styles for protein stats */
 .protein-statistics-container {
-    background-color: #f4f4f9; /* Light gray background */
+    background-color: #e5e5e5; /* Light gray background */
     padding: 30px;
     border-radius: 10px; /* Rounded corners for the container */
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Soft shadow for depth */
@@ -432,11 +447,11 @@ iframe {
 /* DISPLAYING THE PROTEIN SEQUENCE HERE */
 
 .protein-sequence-container {
-    background-color: #f4f4f9; /* Light gray background behind the table */
+    background-color: #e5e5e5; /* Light gray background behind the table */
     padding: 30px; /* Space around the table */
     border-radius: 10px; /* Rounded corners for a modern look */
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Soft shadow for depth */
-    max-width: 90%; /* Allow for responsive sizing */
+    max-width: 1050px; /* Maximum width */
     margin: 0 auto; /* Center align the table */
     overflow-x: auto; /* Allow horizontal scrolling if needed */
 }
@@ -467,7 +482,7 @@ iframe {
     padding: 12px;
     border: 1px solid #e0e0e0;
     border-radius: 8px;
-    font-size: 18px;
+    font-size: 20px;
     font-weight: 600;
     font-family: 'Courier New', Courier, monospace;
     position: relative;
@@ -494,6 +509,7 @@ iframe {
     text-overflow: ellipsis;
     max-width: 100%;
     pointer-events: none;
+    user-select: none;
 }
 
 /* Styling for the block number */
@@ -507,32 +523,6 @@ iframe {
     user-select: none;
     pointer-events: none;
 }
-
-/* When a block is clicked, it gets this style
-.sequence-block.clicked {
-    background-color: #cce7ff;
-    border-color: #007bff;
-    transform: scale(1.05);
-    box-shadow: 0 4px 10px rgba(0, 123, 255, 0.3);
-}
-
-/* Hover effect for non-clicked blocks */
-/* .sequence-block:hover {
-    background-color: #f0f8ff;
-    cursor: pointer;
-    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
-    transform: none;
-} */
-
-/* Highlighted protein text (e.g., PTM sites) */
-/* .sequence-block .highlighted {
-    font-weight: 700;
-    color: #000000;
-    text-transform: uppercase;
-    background-color: inherit;
-    text-decoration: underline;
-    text-decoration-color: rgba(0, 0, 0, 0.3);
-} */
 
 /* Prevent text overflow issues */
 .sequence-text span {
@@ -564,11 +554,132 @@ iframe {
 
 .details-panel {
     padding: 20px;
-    background-color: #f1f1f1;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    background-color: #ffffff; /* White background for contrast */
+    border: 1px solid #ddd; /* Light border for separation */
+    border-radius: 10px; /* Rounded corners for a soft, modern look */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Soft shadow for depth */
     margin-top: 20px;
+    max-width: 90%; /* Responsive width */
+    margin: 0 auto; /* Center the panel */
+    overflow: hidden; /* Prevent overflow */
+    position: relative; /* For absolute positioning of elements within */
+    font-family: 'Arial', sans-serif; /* Clean and modern font */
+}
+
+.details-panel h2 {
+    font-size: 20px; /* Larger font for the title */
+    color: #007bff; /* Blue color for the header */
+    font-weight: 600; /* Slightly bold for better visibility */
+    margin-bottom: 15px; /* Space below the header */
+}
+
+.details-panel .localized-sequence {
+    font-family: 'Courier New', Courier, monospace; /* Monospace font for sequence */
+    font-size: 24px; /* Clear font size for better readability */
+    line-height: 1.8; /* Increase line height for better spacing */
+    color: #333; /* Darker text for contrast */
+    white-space: pre-wrap; /* Preserve spacing in sequence */
+    word-wrap: break-word; /* Ensure long words or sequences break properly */
+    background-color: #f4f7fa; /* Light gray background */
+    border-radius: 8px; /* Rounded corners for the sequence box */
+    padding: 15px; /* Padding inside the sequence box */
+    border: 1px solid #e0e0e0; /* Light border around the sequence box */
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1); /* Light shadow around the sequence */
+}
+
+/* Styling for bold PTMs */
+.details-panel .localized-sequence strong {
+    font-weight: 700; /* Make PTMs bold */
+    color: #e64a19; /* Orange color for PTMs */
+}
+
+/* Highlighting the clicked residue */
+.details-panel .localized-sequence span.clicked-residue {
+    font-size: 20px; /* Larger font for emphasis */
+    color: #fff; /* White text */
+    background-color: #007bff; /* Blue background to highlight */
+    border-radius: 50%; /* Rounded appearance */
+    padding: 5px 8px; /* Space around the clicked residue */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Shadow for the clicked residue */
+}
+
+/* Add some space between the localized sequence and PTM info */
+.details-panel .ptm-info {
+    margin-top: 20px; /* Space above PTM info */
+    font-size: 14px; /* Slightly smaller font for PTM data */
+    color: #555; /* Lighter color for PTM details */
+}
+
+/* Panel focus state */
+.details-panel:focus {
+    outline: 3px solid #007bff; /* Blue outline for focus */
+}
+
+/* Smooth transitions for hover and focus effects */
+.details-panel .localized-sequence span:hover {
+    background-color: #f5f5f5; /* Slightly darker background on hover */
+    transition: background-color 0.3s ease; /* Smooth transition */
+}
+
+/* Modify the styling for the PTM details container to prevent overflow */
+.details-panel .additional-ptm-details {
+    margin-top: 20px;
+    padding: 15px;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    word-wrap: break-word; /* Ensure content wraps inside the box */
+    white-space: normal; /* Allow text to wrap */
+}
+
+/* Modify the PTM entry to manage link overflow */
+.details-panel .ptm-entry {
+    padding: 15px;
+    margin-bottom: 15px;
+    background-color: #f4f7fa;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    overflow-wrap: break-word; /* Allow words to break and wrap inside the container */
+    word-wrap: break-word; /* Ensure long links break correctly */
+}
+
+/* Style for PTM Type label and content */
+.details-panel .ptm-entry p strong {
+    font-weight: bold;
+    color: #007bff; /* Blue color for strong labels */
+}
+
+/* Ensure links are nicely separated and can wrap into the next line */
+.details-panel .ptm-entry p {
+    margin: 5px 0;
+    color: #333;
+    font-size: 14px;
+    word-wrap: break-word; /* Break long text and links */
+}
+
+/* Style for evidence identifiers (links) */
+.details-panel .ptm-entry p a {
+    color: #007bff;
+    text-decoration: none;
+    display: inline-block; /* Ensure that each link takes its own line if needed */
+    margin-right: 10px; /* Add some space between the links */
+    max-width: 100%; /* Prevent links from exceeding container width */
+    word-wrap: break-word; /* Wrap the long links */
+    overflow-wrap: break-word; /* Handle word wrapping gracefully */
+}
+
+/* Hover effect for evidence links */
+.details-panel .ptm-entry p a:hover {
+    text-decoration: underline; /* Underline the link when hovered */
+    color: #0056b3; /* Darker blue when hovered */
+}
+
+/* Optional: Add a hover effect for the PTM entries */
+.details-panel .ptm-entry:hover {
+    background-color: #f1f1f1; /* Lighten the background on hover */
+    cursor: pointer; /* Change cursor to indicate interactivity */
 }
 
 #chunkDetails {
@@ -793,4 +904,43 @@ iframe {
     border-color: #007bff;              /* Blue border on focus */
     outline: none;                      /* Remove default outline */
     background-color: #fff;             /* Slightly change background on focus */
+}
+
+/* PTM TABLE OVERVIEW STUFF */
+.protein-ptm-overview {
+    margin: 20px;
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+}
+
+.protein-ptm-overview__table-wrapper {
+    width: 100%;
+    height: 600px;
+    overflow-x: auto;
+}
+
+.protein-ptm-overview__table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: center;
+}
+
+.protein-ptm-overview__table th,
+.protein-ptm-overview__table td {
+    padding: 8px;
+    border: 1px solid #ccc;
+}
+
+.protein-ptm-overview__table th {
+    background-color: #f2f2f2;
+    font-weight: bold;
+}
+
+.protein-ptm-overview__table td a {
+    color: #007bff;
+    text-decoration: none;
+}
+
+.protein-ptm-overview__table td a:hover {
+    text-decoration: underline;
 }

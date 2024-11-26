@@ -25,11 +25,15 @@ async def submit_job(seq: str) -> str:
 
     if response.status_code == 202:
         result_url = response.headers['Location']
-        jobid = re.search(r"(jp_.*)$", result_url).group(1)
-        return {'jobid': jobid}
+        print(result_url)
+        matched = re.search(r"(jp_.*)$", result_url)
+        if matched:
+            jobid = matched.group(1)
+            return {'message': "Job submitted!", 'jobid': jobid}
+        return {'message': "Could not submit job! Sequence is too long."}
 
     else:
-        return {'message': "Could not submit job!"}
+        return {'message': "Could not submit job! URL error."}
 
 def get_job(jobid: str) -> str:
     response = requests.get(f'http://www.compbio.dundee.ac.uk/jpred4/cgi-bin/rest/job/id/{jobid}')

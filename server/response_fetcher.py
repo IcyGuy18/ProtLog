@@ -140,15 +140,20 @@ def fetch_response_uniprot_trim(prot_id):
                         try:
                             return_response['geneName'] = response['genes'][0]['geneName']['value']
                         except:
-                            print(traceback.format_exc())
-                            return_response['geneName'] = ''
+                            try:
+                                return_response['geneName'] = ', '.join(i['value'] for i in response['genes'][0]['orfNames'])
+                            except:
+                                print(traceback.format_exc())
+                                return_response['geneName'] = ''
                         try:
-                            return_response['organism'] = (
-                                f"{response['organism']['scientificName']} ({response['organism']['commonName']})"
-                            )
+                            return_response['organism'] = response['organism']['scientificName']
                         except:
                             print(traceback.format_exc())
                             return_response['organism'] = ''
+                        try:
+                            return_response['organism'] += response['organism']['commonName']
+                        except:
+                            print(traceback.format_exc())
                         try:
                             return_response['sequenceLength'] = response['sequence']['length']
                         except:
@@ -212,15 +217,20 @@ def fetch_response_uniprot_trim(prot_id):
                     try:
                         return_response['geneName'] = response['genes'][0]['geneName']['value']
                     except:
-                        print(traceback.format_exc())
-                        return_response['geneName'] = ''
+                        try:
+                             return_response['geneName'] = ', '.join(i['value'] for i in response['genes'][0]['orfNames'])
+                        except:
+                            print(traceback.format_exc())
+                            return_response['geneName'] = ''
                     try:
-                        return_response['organism'] = (
-                            f"{response['organism']['scientificName']} ({response['organism']['commonName']})"
-                        )
+                        return_response['organism'] = response['organism']['scientificName']
                     except:
                         print(traceback.format_exc())
                         return_response['organism'] = ''
+                    try:
+                        return_response['organism'] += response['organism']['commonName']
+                    except:
+                        print(traceback.format_exc())
                     try:
                         return_response['sequenceLength'] = response['sequence']['length']
                     except:

@@ -174,7 +174,13 @@ async function getJPredInference(seq) {
         return res.json();
     }).then(obj => {
         console.log(obj);
-        submitJob(obj['jobid'], 'full');
+        if (obj.jobid)
+            submitJob(obj['jobid'], 'full');
+        else {
+            // ADD STUFF HERE
+            document.getElementById('jpredPredictions').classList.remove('lds-dual-ring');
+            document.getElementById('jpredInfo').innerHTML = '<h5>The sequence is too long and cannot be predicted by JPred!</h5>';
+        }
     }).catch(err => {
         console.log(err);
     })
@@ -351,7 +357,7 @@ function generateHtmlForJPred(data) {
 */
 
 // Function to display additional details about the clicked highlighted text (PTM data)
-function displayPTMDetails(event) {
+async function displayPTMDetails(event) {
     // Retrieve PTM information from the clicked highlighted span
     const ptmsData = JSON.parse(event.target.getAttribute("data-all-ptms"));
 
@@ -431,6 +437,8 @@ function displayPTMDetails(event) {
     const sequenceDisplayTitle = document.createElement('div')
     sequenceDisplayTitle.innerHTML = '<h4>Local Sequence Window</h4>'
 
+    let centerChar = ''; // Use this later on
+
     // Loop through the localized sequence text and bold PTMs
     localizedSequence.split('').forEach((char, index) => {
         // Get the global index for this character in the full sequence
@@ -444,8 +452,10 @@ function displayPTMDetails(event) {
             var uniquePTMs = new Set(tempArr.map(arr => arr[1]));
             uniquePTMs = Array.from(uniquePTMs);
             // If PTMs exist at this position, make the character bold
-            if (index === 10)
+            if (index === 10) {
                 formattedChar.setAttribute('style', "font-weight: 700; font-size: 40px; user-select: none; cursor: default;");
+                centerChar = char;
+            }
             else
                 formattedChar.setAttribute('style', "user-select: none; cursor: default;");
 
@@ -541,10 +551,73 @@ function displayPTMDetails(event) {
         const evidenceIdentifiers = convertPubMedReferencesMinor(ptm[2]); // Extract evidence identifiers for the current PTM
         evidenceIdentifiersText.innerHTML = `<strong>Evidence Identifiers:</strong> ${evidenceIdentifiers}`;
 
+        // Going to reference table links as well
+
+        // const tableDiv = document.createElement('div');
+        // const tableText = document.createElement('p')
+        // tableText.innerHTML = `Click below to view the matrix positional frequency of amino acids for ${ptm[1]}:`;
+        
+        // const freqTable = document.createElement('a');
+        // freqTable.textContent = 'Frequency Matrix';
+        // const logTable = document.createElement('a');
+        // logTable.textContent = 'Log Odd Frequency Matrix';
+        
+        // var url = new URL('/ptmkb/api/data', window.location.origin);
+        // url.searchParams.append('selection', ptm[1]);
+        // url.searchParams.append('aa', centerChar);
+        // url.searchParams.append('table', 'freq');
+
+        // let freqData = new Object();
+        // fetch(url)
+        //     .then(res => {
+        //         res.json();
+        //     }).then(json => {
+        //         freqData = json;
+        //         return json
+        //     }).catch(err => {
+        //         console.error(err);
+        //     });
+        
+        // var url = new URL('/ptmkb/api/data', window.location.origin);
+        // url.searchParams.append('selection', ptm[1]);
+        // url.searchParams.append('aa', centerChar);
+        // url.searchParams.append('table', 'log-e');
+
+        // let logData = new Object();
+        // fetch(url)
+        //     .then(res => {
+        //         res.json();
+        //     }).then(json => {
+        //         logData = json;
+        //         return json
+        //     }).catch(err => {
+        //         console.error(err);
+        //     });
+
+        // console.log(freqData, logData);
+
+        // freqTable.addEventListener('click', async () => {
+        //     const newWindow = window.open('', '_blank', 'width=800, height=600');
+        //     newWindow.document.write(displayTable(freqData, ptm[1]));
+        //     newWindow.document.close()
+        // });
+
+        // logTable.addEventListener('click', async () => {
+        //     const newWindow = window.open('', '_blank', 'width=800, height=600');
+        //     newWindow.document.write(displayTable(logData, ptm[1]));
+        //     newWindow.document.close()
+        // });
+
+        // tableDiv.appendChild(tableText);
+        // tableDiv.appendChild(freqTable);
+        // tableDiv.appendChild(document.createElement('br'));
+        // tableDiv.appendChild(logTable);
+
         // Append the individual PTM details (PTM type, position, evidence identifiers) to the ptmDiv
         ptmDiv.appendChild(ptmTypeText);
         ptmDiv.appendChild(positionText);
         ptmDiv.appendChild(evidenceIdentifiersText);
+        // ptmDiv.appendChild(tableDiv);
 
         // Append the individual PTM div to the main details div
         ptmDetailsDiv.appendChild(ptmDiv);
@@ -555,6 +628,7 @@ function displayPTMDetails(event) {
 
     // Show the details panel with styles applied
     detailsPanel.style.display = 'block';
+    document.getElementById('detailsPanel').scrollIntoView({ behavior: 'smooth'})
 }
 
 // Function to initialize the sequence blocks and attach event listeners
@@ -958,6 +1032,7 @@ function colorPTMs(checkbox) {
 async function fetchProteinStructure(uniprotAccession) {
     pdbDataGlobal = '';
     document.getElementById('protein3DStructure').classList.add('lds-dual-ring')
+    document.getElementById('protein3DStructureInfo').style.display = 'none';
     const apiUrl = `https://alphafold.ebi.ac.uk/api/prediction/${uniprotAccession}`;
 
     try {
@@ -965,7 +1040,7 @@ async function fetchProteinStructure(uniprotAccession) {
         const response = await fetch(apiUrl);
         if (!response.ok) {
             // throw new Error(`Failed to fetch prediction data: ${response.statusText}`);
-            document.getElementById('protein3DStructure').innerHTML = `<h5>No 3D structure found!</h5><span class="question-mark" title="This is your tooltip text!">?</span>`
+            document.getElementById('protein3DStructure').innerHTML = `<h5>No 3D structure found!</h5><span class="question-mark" title="This is your tooltip text!"></span>`
             document.getElementById('protein3DStructure').classList.remove('lds-dual-ring');
         }
         else {
@@ -984,6 +1059,8 @@ async function fetchProteinStructure(uniprotAccession) {
 
     } catch (error) {
         console.error("Error fetching protein structure:", error);
+        document.getElementById('protein3DStructure').innerHTML = `<h5>Block Error ${e}</h5>`
+        document.getElementById('protein3DStructure').classList.remove('lds-dual-ring');
     }
 }
 
@@ -1030,6 +1107,7 @@ async function fetchAndRenderPDB(pdbUrl) {
 
         // Append the disclaimer to the #protein3DStructureInfo div
         document.getElementById('protein3DStructureInfo').appendChild(disclaimer);
+        document.getElementById('protein3DStructureInfo').style.display = 'block';
 
     } catch (error) {
         console.error("Error rendering PDB file:", error);
@@ -1541,8 +1619,13 @@ function displayTable(data, ptm) {
     label_x.textContent = `${ptm} - Position Relative to Modification Site`
     
     xlabel.appendChild(label_x);
+    // <table class="table table-bordered table-responsive th td" id="dataTable" style="display: none; font-family: 'Courier New', Courier, monospace;  text-align: center;">
+    //                         <thead id="tableHead"></thead>
+    //                         <tbody id="tableBody"></tbody>
+    //                     </table>
+    // const dataTable = document.getElementById("dataTable");
+    const dataTable = document.createElement('table');
 
-    const dataTable = document.getElementById("dataTable");
 
     const AA = "A C D E F G H I K L M N P Q R S T V W Y".split(' ');
     const KEYS = Object.keys(data);
@@ -1614,5 +1697,18 @@ function displayTable(data, ptm) {
         })
     });
 
-    dataTable.style.display = "table"; // Show the table
+
+    // <head>
+    //     <link rel="stylesheet" type="text/css" href="styles.css">
+    // </head>
+    const head = document.createElement('head');
+    const link = document.createElement('link');
+    link.setAttribute('rel', 'stylesheet');
+    link.setAttribute('type', 'text/css');
+    link.setAttribute('href', '../static/styles.css')
+    head.appendChild(link);
+    head.appendChild(dataTable);
+
+    // dataTable.style.display = "table"; // Show the table
+    return head.outerHTML;
 }

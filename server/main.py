@@ -245,7 +245,8 @@ async def get_options():
     return {'ptms': options}
 
 @app.get("/ptmkb/api/data")
-async def get_data(request: Request, selection: str = None, aa: str = None):
+def get_data(request: Request, selection: str = None, aa: str = None, table: str = 'log-e'):
+    print(os.path.exists(f'./data/tables/{selection}/{table}/{aa}.json'))
     if not selection:
         ptms = [i.split("\\")[-1] for i in glob.glob(r'data\tables\*')]
         response = {ptm: [] for ptm in ptms}
@@ -270,10 +271,19 @@ async def get_data(request: Request, selection: str = None, aa: str = None):
                         aa: json.load(f)
                     }
                 )
-    else:
-        print(f'./data/tables/{selection}/log-e/{aa}.json')
+    elif table not in ['log-e', 'log2', 'freq']:
+        if not os.path.exists(f'./data/tables/{selection}/log-e/{aa}.json'):
+            return {'message': f"Could not find matrix of positional frequency of {selection} for {aa}."}
         return FileResponse(
             './data/tables/{selection}/log-e/{aa}.json'.format(
                 selection=selection, aa=aa
+            )
+        )
+    else:
+        if not os.path.exists(f'./data/tables/{selection}/{table}/{aa}.json'):
+            return {'message': f"Could not find the {table}-based matrix of positional frequency of {selection} for {aa}."}
+        return FileResponse(
+            './data/tables/{selection}/{table}/{aa}.json'.format(
+                selection=selection, aa=aa, table=table
             )
         )
