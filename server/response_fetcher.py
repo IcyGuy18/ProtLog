@@ -151,7 +151,7 @@ def fetch_response_uniprot_trim(prot_id):
                             print(traceback.format_exc())
                             return_response['organism'] = ''
                         try:
-                            return_response['organism'] += response['organism']['commonName']
+                            return_response['organism'] += f" ({response['organism']['commonName']})"
                         except:
                             print(traceback.format_exc())
                         try:
@@ -228,7 +228,7 @@ def fetch_response_uniprot_trim(prot_id):
                         print(traceback.format_exc())
                         return_response['organism'] = ''
                     try:
-                        return_response['organism'] += response['organism']['commonName']
+                        return_response['organism'] += f" ({response['organism']['commonName']})"
                     except:
                         print(traceback.format_exc())
                     try:
