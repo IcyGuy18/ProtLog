@@ -25,7 +25,6 @@ async def submit_job(seq: str) -> str:
 
     if response.status_code == 202:
         result_url = response.headers['Location']
-        print(result_url)
         matched = re.search(r"(jp_.*)$", result_url)
         if matched:
             jobid = matched.group(1)
@@ -36,7 +35,10 @@ async def submit_job(seq: str) -> str:
         return {'message': "Could not submit job! URL error."}
 
 def get_job(jobid: str) -> str:
-    response = requests.get(f'http://www.compbio.dundee.ac.uk/jpred4/cgi-bin/rest/job/id/{jobid}')
+    try:
+        response = requests.get(f'http://www.compbio.dundee.ac.uk/jpred4/cgi-bin/rest/job/id/{jobid}')
+    except:
+        return {'response': False}
     if 'finished' not in response.text.lower():
         return {'response': False}
     results_url = response.text.split('Results available at the following URL:')[-1].strip().split('.results')[0] + '.html'

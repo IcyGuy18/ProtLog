@@ -91,6 +91,8 @@ async def search(request: Request):
     # We're just going to load the HTML file here to include in the iframe.
     with open('./templates/protein.html', 'r', encoding='utf-8') as f:
         html_page = f.read()
+    if not isinstance(results['Accession Number'], str):
+        results['Accession Number'] = ''
     return {
         'found': found,
         'result': results,
@@ -245,7 +247,7 @@ async def get_options():
     return {'ptms': options}
 
 @app.get("/ptmkb/api/data")
-def get_data(request: Request, selection: str = None, aa: str = None, table: str = 'log-e'):
+async def get_data(request: Request, selection: str = None, aa: str = None, table: str = 'log-e'):
     print(os.path.exists(f'./data/tables/{selection}/{table}/{aa}.json'))
     if not selection:
         ptms = [i.split("\\")[-1] for i in glob.glob(r'data\tables\*')]

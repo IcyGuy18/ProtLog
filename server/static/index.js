@@ -161,7 +161,9 @@ function splitSequence(sequence) {
 */
 
 async function getJPredInference(seq) {
+    // Show loading spinner
     document.getElementById('jpredPredictions').classList.add('lds-dual-ring');
+
     fetch('/ptmkb/unrel/submitJpred',  {
         method: "POST",
         headers: {
@@ -174,37 +176,71 @@ async function getJPredInference(seq) {
         return res.json();
     }).then(obj => {
         console.log(obj);
-        if (obj.jobid)
+
+        // When a job is submitted successfully, submit a new job and check status
+        if (obj.jobid) {
             submitJob(obj['jobid'], 'full');
-        else {
-            // ADD STUFF HERE
+        } else {
+            // Handle the case where the sequence is too long for JPred
             document.getElementById('jpredPredictions').classList.remove('lds-dual-ring');
             document.getElementById('jpredInfo').innerHTML = '<h5>The sequence is too long and cannot be predicted by JPred!</h5>';
         }
     }).catch(err => {
         console.log(err);
-    })
+        document.getElementById('jpredPredictions').classList.remove('lds-dual-ring');
+        document.getElementById('jpredInfo').innerHTML = '<h5>Error while submitting sequence. Please try again!</h5>';
+    });
 }
+
+let currentJobAbortController = null; // Global variable to store the current active abort controller
 
 async function submitJob(jobid, resType) {
     try {
-        // Poll for the job status until it's finished
+        // If there's an active job polling, abort it
+        if (currentJobAbortController) {
+            currentJobAbortController.abort();
+        }
+
+        // Create a new abort controller for the current job
+        currentJobAbortController = new AbortController();
+        const signal = currentJobAbortController.signal;
+
         let jobFinished = false;
         let resultResponse;
+
+        // Poll for the job status until it's finished
         while (!jobFinished) {
             // Sleep for 3 seconds before checking again
             await new Promise(resolve => setTimeout(resolve, 10000));
 
-            resultResponse = await fetch(`/ptmkb/unrel/getJpred?jobid=${jobid}`);
-            resultResponse = await resultResponse.json()
+            // Make the fetch request with the signal to support aborting
+            const resultResponseRaw = await fetch(`/ptmkb/unrel/getJpred?jobid=${jobid}`, { signal });
+            
+            // If the request is aborted, throw an error and break out of the loop
+            if (resultResponseRaw.status === 0) {
+                console.log('Polling aborted due to new job submission');
+                break;
+            }
+
+            resultResponse = await resultResponseRaw.json();
 
             // Check if the job is finished
             jobFinished = resultResponse['response'];
         }
 
-        formatJpredResponse(resultResponse['content']);  // Assuming this function processes the HTML as expected
+        // Only process the result if polling was not aborted
+        if (jobFinished) {
+            formatJpredResponse(resultResponse['content']);  // Assuming this function processes the HTML as expected
+        }
     } catch (error) {
-        console.error('Error:', error);
+        document.getElementById('jpredPredictions').classList.remove('lds-dual-ring');
+        document.getElementById('jpredInfo').innerHTML = '<h5>The job results could not be fetched!</h5>';
+        // Handle any errors, including aborting
+        if (error.name === 'AbortError') {
+            console.log('Job polling aborted');
+        } else {
+            console.error('Error:', error);
+        }
         return error.message;
     }
 }
@@ -283,7 +319,15 @@ function generateHtmlForJPred(data) {
         // Create label div
         const labelDiv = document.createElement('div');
         labelDiv.setAttribute('style', `font-weight: bold; margin-bottom: 10px; white-space: nowrap; color: ${key.includes('QUERY') ? 'red' : 'black'};`);
-        labelDiv.textContent = key;
+        if (key === 'QUERY') {
+            labelDiv.innerHTML = `<a>${key}</a>`;
+        } else {
+            let keyUri = key;
+            if (keyUri.includes('UPI'))
+                keyUri.replace('UniRef90_', '')
+            labelDiv.innerHTML = `<a href="https://www.ebi.ac.uk/ebisearch/search.ebi?db=allebi&query=${keyUri}" target="_blank" style="cursor: pointer;">${key}</a>`;
+        }
+        
         labelsBox.appendChild(labelDiv);
 
         // Create sequence div
@@ -356,6 +400,203 @@ function generateHtmlForJPred(data) {
     DISPLAY PTM DETAILS AFTER SELECTING
 */
 
+// Also temp function for gathering PTM data
+async function fetchData(ptm, char, table) {
+    try {
+        return await fetch(`/ptmkb/api/data?selection=${encodeURIComponent(ptm)}&aa=${encodeURIComponent(char)}&table=${encodeURIComponent(table)}`)
+            .then(res => res.json());
+
+    } catch (err) {
+        console.error('Error:', err);
+    }
+}
+
+async function preparePTMDetails(localizedSequence, localizedSequenceInfo, ptmsData) {
+    // Prepare to display the localized sequence with bolded PTMs
+    const detailsPanel = document.getElementById("detailsPanel");
+    detailsPanel.innerHTML = "";  // Clear any previous content
+
+    // Create a container to hold the localized sequence with bolded PTMs
+    const sequenceDisplay = document.createElement('div');
+    sequenceDisplay.classList.add('localized-sequence'); // Apply localized-sequence class
+    const sequenceDisplayTitle = document.createElement('div')
+    sequenceDisplayTitle.innerHTML = '<h4>Local Sequence Window</h4>'
+
+    let centerChar = ''; // Use this later on
+
+    // Loop through the localized sequence text and bold PTMs
+    localizedSequence.split('').forEach((char, index) => {
+        // Get the global index for this character in the full sequence
+
+        // Check if this position has PTMs (adjust the index to global sequence)
+        let formattedChar = document.createElement('span');
+        formattedChar.textContent = char;
+
+        if (localizedSequenceInfo[index] !== null) {
+            var tempArr = JSON.parse(localizedSequenceInfo[index]);
+            var uniquePTMs = new Set(tempArr.map(arr => arr[1]));
+            uniquePTMs = Array.from(uniquePTMs);
+            // If PTMs exist at this position, make the character bold
+            if (index === 10) {
+                formattedChar.setAttribute('style', "font-weight: 700; font-size: 40px; user-select: none; cursor: pointer");
+                centerChar = char;
+            }
+            else
+                formattedChar.setAttribute('style', "user-select: none; cursor: pointer;");
+
+            const ptmColors = uniquePTMs.map(ptmType => ptmColorMapping[ptmType] || '#f39c12')
+
+            if (uniquePTMs.length > 1) {
+                const gradient = ptmColors
+                    .map((color, idx) => `${color} ${100 / ptmColors.length}%`)
+                    .join(', ');
+                formattedChar.style.background = `linear-gradient(to bottom, ${gradient})`;
+                formattedChar.style.backgroundSize = '100% 100%'; // Ensure the gradient covers the entire span
+            } else {
+                formattedChar.style.backgroundColor = ptmColors[0];
+            }
+
+            formattedChar.addEventListener("mouseenter", (e) => {
+                if (uniquePTMs.length > 0) {
+                    // Create a tooltip element
+                    const tooltip = document.createElement("div");
+                    tooltip.classList.add("custom-tooltip");
+                    tooltip.textContent = uniquePTMs.join(", ");  // Display all PTMs for this position
+
+                    // Append the tooltip to the body
+                    document.body.appendChild(tooltip);
+
+                    // Position the tooltip near the character
+                    const rect = e.target.getBoundingClientRect(); // Get the character's position
+                    tooltip.style.position = "absolute";
+                    tooltip.style.left = `${rect.left + window.scrollX}px`; // Adjust for any page scroll
+                    tooltip.style.top = `${rect.top + window.scrollY - 30}px`; // Position above the character
+                    tooltip.style.zIndex = 10; // Ensure it's above other content
+
+                    // Add the 'visible' class to the tooltip to show it
+                    setTimeout(() => {
+                        tooltip.classList.add("visible");
+                    }, 10); // Small delay for the transition to kick in
+
+                    // Store tooltip for later removal
+                    e.target.tooltip = tooltip;
+                }
+            });
+
+            // Add mouseleave event to remove the tooltip
+            formattedChar.addEventListener("mouseleave", (e) => {
+                const tooltip = e.target.tooltip;
+                if (tooltip) {
+                    tooltip.remove(); // Remove the tooltip when the mouse leaves
+                    delete e.target.tooltip; // Clean up the tooltip reference
+                }
+            });
+
+            formattedChar.classList.add('highlighted');
+            formattedChar.setAttribute('data-all-ptms', localizedSequenceInfo[index]);
+        }
+        sequenceDisplay.appendChild(formattedChar);
+    });
+
+    // Append the sequence to the details panel
+    detailsPanel.appendChild(sequenceDisplayTitle);
+    detailsPanel.appendChild(sequenceDisplay);
+
+    // Create a div for additional PTM details
+    const ptmDetailsDiv = document.createElement('div');
+    ptmDetailsDiv.classList.add('additional-ptm-details');
+
+    // Loop through each PTM in ptmsData to create separate divs for each PTM
+    ptmsData.forEach(async (ptm) => {
+        // Create a new div for each PTM
+        const ptmDiv = document.createElement('div');
+        ptmDiv.classList.add('ptm-entry'); // Add a class for styling
+
+        // PTM Type: Extract and display the PTM type (second element in each sub-array)
+        const ptmTypeText = document.createElement('p');
+        ptmTypeText.innerHTML = `<strong>PTM Type:</strong> ${ptm[1]}`;
+
+        // Position: Display the residue position (assuming position is stored in data-position on clickedSpan)
+        const positionText = document.createElement('p');
+        positionText.innerHTML = `<strong>Position:</strong> ${ptm[0]}`;
+
+        // Evidence Identifiers: Extract and display all evidence identifiers (third element in each sub-array)
+        const evidenceIdentifiersText = document.createElement('p');
+
+        function convertPubMedReferencesMinor(text) {
+            const pubMedRegex = /(\d+)/g; // Regex to match PubMed references
+
+            return text.replace(pubMedRegex, (match, id) => {
+                const url = `https://www.ncbi.nlm.nih.gov/pubmed/?term=${id}`; // Construct the URL
+                return `<a href="${url}" target="_blank">${match}</a>`; // Create the link
+            });
+        }
+
+        const evidenceIdentifiers = convertPubMedReferencesMinor(ptm[2]); // Extract evidence identifiers for the current PTM
+        evidenceIdentifiersText.innerHTML = `<strong>Evidence Identifiers:</strong> ${evidenceIdentifiers}`;
+
+        // Going to reference table links as well
+
+        const tableDiv = document.createElement('div');
+        const tableText = document.createElement('p')
+        tableText.innerHTML = `Click below to view the matrix positional frequency of amino acids for ${ptm[1]}:`;
+        
+        const freqTable = document.createElement('a');
+        freqTable.style.cursor = 'pointer';
+        freqTable.textContent = 'Frequency Matrix';
+        const logTable = document.createElement('a');
+        logTable.style.cursor = 'pointer';
+        logTable.textContent = 'Log Odd Frequency Matrix';
+
+        freqTable.addEventListener('click', async () => {
+            console.log(ptm[1], centerChar);
+            const newWindow = window.open('', '_blank', 'width=1200, height=716');
+            newWindow.document.write(displayTable(await fetchData(ptm[1], centerChar, 'freq')));
+            newWindow.document.close()
+        });
+
+        logTable.addEventListener('click', async () => {
+            const newWindow = window.open('', '_blank', 'width=1200, height=716');
+            newWindow.document.write(displayTable(await fetchData(ptm[1], centerChar, 'log-e')));
+            newWindow.document.close()
+        });
+
+        tableDiv.appendChild(tableText);
+        tableDiv.appendChild(freqTable);
+        tableDiv.appendChild(document.createElement('br'));
+        tableDiv.appendChild(logTable);
+
+        // Append the individual PTM details (PTM type, position, evidence identifiers) to the ptmDiv
+        ptmDiv.appendChild(ptmTypeText);
+        ptmDiv.appendChild(positionText);
+        ptmDiv.appendChild(evidenceIdentifiersText);
+        ptmDiv.appendChild(tableDiv);
+
+        // Append the individual PTM div to the main details div
+        ptmDetailsDiv.appendChild(ptmDiv);
+    });
+
+    // Append the ptmDetailsDiv (containing all PTMs) to the details panel
+    detailsPanel.appendChild(ptmDetailsDiv);
+
+    // Show the details panel with styles applied
+    detailsPanel.style.display = 'block';
+    function scrollIfNotInView(element) {
+        const rect = element.getBoundingClientRect();
+        const isInViewport = (
+            rect.top >= 0 &&
+            rect.left >= 0 &&
+            rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
+            rect.right <= (window.innerWidth || document.documentElement.clientWidth)
+        );
+    
+        if (!isInViewport) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }
+    scrollIfNotInView(document.getElementsByClassName('localized-sequence')[0]);
+}
+
 // Function to display additional details about the clicked highlighted text (PTM data)
 async function displayPTMDetails(event) {
     // Retrieve PTM information from the clicked highlighted span
@@ -427,216 +668,74 @@ async function displayPTMDetails(event) {
     localizedSequence = localizedSequence.replace('>', '')
     localizedSequence = localizedSequence.slice(0, 21)
 
-    // Prepare to display the localized sequence with bolded PTMs
-    const detailsPanel = document.getElementById("detailsPanel");
-    detailsPanel.innerHTML = "";  // Clear any previous content
-
-    // Create a container to hold the localized sequence with bolded PTMs
-    const sequenceDisplay = document.createElement('div');
-    sequenceDisplay.classList.add('localized-sequence'); // Apply localized-sequence class
-    const sequenceDisplayTitle = document.createElement('div')
-    sequenceDisplayTitle.innerHTML = '<h4>Local Sequence Window</h4>'
-
-    let centerChar = ''; // Use this later on
-
-    // Loop through the localized sequence text and bold PTMs
-    localizedSequence.split('').forEach((char, index) => {
-        // Get the global index for this character in the full sequence
-
-        // Check if this position has PTMs (adjust the index to global sequence)
-        let formattedChar = document.createElement('span');
-        formattedChar.textContent = char;
-
-        if (localizedSequenceInfo[index] !== null) {
-            var tempArr = JSON.parse(localizedSequenceInfo[index]);
-            var uniquePTMs = new Set(tempArr.map(arr => arr[1]));
-            uniquePTMs = Array.from(uniquePTMs);
-            // If PTMs exist at this position, make the character bold
-            if (index === 10) {
-                formattedChar.setAttribute('style', "font-weight: 700; font-size: 40px; user-select: none; cursor: default;");
-                centerChar = char;
-            }
-            else
-                formattedChar.setAttribute('style', "user-select: none; cursor: default;");
-
-            const ptmColors = uniquePTMs.map(ptmType => ptmColorMapping[ptmType] || '#f39c12')
-
-            if (uniquePTMs.length > 1) {
-                const gradient = ptmColors
-                    .map((color, idx) => `${color} ${100 / ptmColors.length}%`)
-                    .join(', ');
-                formattedChar.style.background = `linear-gradient(to bottom, ${gradient})`;
-                formattedChar.style.backgroundSize = '100% 100%'; // Ensure the gradient covers the entire span
-            } else {
-                formattedChar.style.backgroundColor = ptmColors[0];
-            }
-
-            formattedChar.addEventListener("mouseenter", (e) => {
-                if (uniquePTMs.length > 0) {
-                    // Create a tooltip element
-                    const tooltip = document.createElement("div");
-                    tooltip.classList.add("custom-tooltip");
-                    tooltip.textContent = uniquePTMs.join(", ");  // Display all PTMs for this position
-
-                    // Append the tooltip to the body
-                    document.body.appendChild(tooltip);
-
-                    // Position the tooltip near the character
-                    const rect = e.target.getBoundingClientRect(); // Get the character's position
-                    tooltip.style.position = "absolute";
-                    tooltip.style.left = `${rect.left + window.scrollX}px`; // Adjust for any page scroll
-                    tooltip.style.top = `${rect.top + window.scrollY - 30}px`; // Position above the character
-                    tooltip.style.zIndex = 10; // Ensure it's above other content
-
-                    // Add the 'visible' class to the tooltip to show it
-                    setTimeout(() => {
-                        tooltip.classList.add("visible");
-                    }, 10); // Small delay for the transition to kick in
-
-                    // Store tooltip for later removal
-                    e.target.tooltip = tooltip;
-                }
-            });
-
-            // Add mouseleave event to remove the tooltip
-            formattedChar.addEventListener("mouseleave", (e) => {
-                const tooltip = e.target.tooltip;
-                if (tooltip) {
-                    tooltip.remove(); // Remove the tooltip when the mouse leaves
-                    delete e.target.tooltip; // Clean up the tooltip reference
-                }
-            });
-
-            formattedChar.classList.add('highlighted');
-            formattedChar.setAttribute('data-ptms', localizedSequenceInfo[index]);
-        }
-        sequenceDisplay.appendChild(formattedChar);
-    });
-
-    // Append the sequence to the details panel
-    detailsPanel.appendChild(sequenceDisplayTitle);
-    detailsPanel.appendChild(sequenceDisplay);
-
-    // Create a div for additional PTM details
-    const ptmDetailsDiv = document.createElement('div');
-    ptmDetailsDiv.classList.add('additional-ptm-details');
-
-    // Loop through each PTM in ptmsData to create separate divs for each PTM
-    ptmsData.forEach(ptm => {
-        // Create a new div for each PTM
-        const ptmDiv = document.createElement('div');
-        ptmDiv.classList.add('ptm-entry'); // Add a class for styling
-
-        // PTM Type: Extract and display the PTM type (second element in each sub-array)
-        const ptmTypeText = document.createElement('p');
-        ptmTypeText.innerHTML = `<strong>PTM Type:</strong> ${ptm[1]}`;
-
-        // Position: Display the residue position (assuming position is stored in data-position on clickedSpan)
-        const positionText = document.createElement('p');
-        const position = clickedSpan.getAttribute('data-position'); // Assuming position is stored in data-position
-        positionText.innerHTML = `<strong>Position:</strong> ${ptm[0]}`;
-
-        // Evidence Identifiers: Extract and display all evidence identifiers (third element in each sub-array)
-        const evidenceIdentifiersText = document.createElement('p');
-
-        function convertPubMedReferencesMinor(text) {
-            const pubMedRegex = /(\d+)/g; // Regex to match PubMed references
-
-            return text.replace(pubMedRegex, (match, id) => {
-                const url = `https://www.ncbi.nlm.nih.gov/pubmed/?term=${id}`; // Construct the URL
-                return `<a href="${url}" target="_blank">${match}</a>`; // Create the link
-            });
-        }
-
-        const evidenceIdentifiers = convertPubMedReferencesMinor(ptm[2]); // Extract evidence identifiers for the current PTM
-        evidenceIdentifiersText.innerHTML = `<strong>Evidence Identifiers:</strong> ${evidenceIdentifiers}`;
-
-        // Going to reference table links as well
-
-        // const tableDiv = document.createElement('div');
-        // const tableText = document.createElement('p')
-        // tableText.innerHTML = `Click below to view the matrix positional frequency of amino acids for ${ptm[1]}:`;
-        
-        // const freqTable = document.createElement('a');
-        // freqTable.textContent = 'Frequency Matrix';
-        // const logTable = document.createElement('a');
-        // logTable.textContent = 'Log Odd Frequency Matrix';
-        
-        // var url = new URL('/ptmkb/api/data', window.location.origin);
-        // url.searchParams.append('selection', ptm[1]);
-        // url.searchParams.append('aa', centerChar);
-        // url.searchParams.append('table', 'freq');
-
-        // let freqData = new Object();
-        // fetch(url)
-        //     .then(res => {
-        //         res.json();
-        //     }).then(json => {
-        //         freqData = json;
-        //         return json
-        //     }).catch(err => {
-        //         console.error(err);
-        //     });
-        
-        // var url = new URL('/ptmkb/api/data', window.location.origin);
-        // url.searchParams.append('selection', ptm[1]);
-        // url.searchParams.append('aa', centerChar);
-        // url.searchParams.append('table', 'log-e');
-
-        // let logData = new Object();
-        // fetch(url)
-        //     .then(res => {
-        //         res.json();
-        //     }).then(json => {
-        //         logData = json;
-        //         return json
-        //     }).catch(err => {
-        //         console.error(err);
-        //     });
-
-        // console.log(freqData, logData);
-
-        // freqTable.addEventListener('click', async () => {
-        //     const newWindow = window.open('', '_blank', 'width=800, height=600');
-        //     newWindow.document.write(displayTable(freqData, ptm[1]));
-        //     newWindow.document.close()
-        // });
-
-        // logTable.addEventListener('click', async () => {
-        //     const newWindow = window.open('', '_blank', 'width=800, height=600');
-        //     newWindow.document.write(displayTable(logData, ptm[1]));
-        //     newWindow.document.close()
-        // });
-
-        // tableDiv.appendChild(tableText);
-        // tableDiv.appendChild(freqTable);
-        // tableDiv.appendChild(document.createElement('br'));
-        // tableDiv.appendChild(logTable);
-
-        // Append the individual PTM details (PTM type, position, evidence identifiers) to the ptmDiv
-        ptmDiv.appendChild(ptmTypeText);
-        ptmDiv.appendChild(positionText);
-        ptmDiv.appendChild(evidenceIdentifiersText);
-        // ptmDiv.appendChild(tableDiv);
-
-        // Append the individual PTM div to the main details div
-        ptmDetailsDiv.appendChild(ptmDiv);
-    });
-
-    // Append the ptmDetailsDiv (containing all PTMs) to the details panel
-    detailsPanel.appendChild(ptmDetailsDiv);
-
-    // Show the details panel with styles applied
-    detailsPanel.style.display = 'block';
-    document.getElementById('detailsPanel').scrollIntoView({ behavior: 'smooth'})
+    preparePTMDetails(localizedSequence, localizedSequenceInfo, ptmsData);
+    initializePTMClickListenersForPTMSequence();
 }
 
 // Function to initialize the sequence blocks and attach event listeners
-function initializePTMClickListeners() {
+function initializePTMClickListenersForProteinSequence() {
     // Attach event listeners for the highlighted spans (to display PTM info)
     const highlightedSpans = document.querySelectorAll('.highlighted');
     highlightedSpans.forEach(span => {
         span.addEventListener('click', displayPTMDetails);
+    });
+}
+
+function initializePTMClickListenersForPTMSequence() {
+    const localSpans = document.querySelector('.localized-sequence').querySelectorAll('span');
+    document.querySelectorAll('.custom-tooltip').forEach(function(tooltip) {
+        tooltip.remove();  // This removes the tooltip element from the DOM
+    });
+    localSpans.forEach((span) => {
+        if (span.getAttribute('data-all-ptms')) {
+            span.addEventListener('click', (e) => {
+                let localizedSequenceIndex = 0;
+                const ptmsData = JSON.parse(e.target.getAttribute('data-all-ptms'));
+                localizedSequenceIndex = ptmsData[0][0];
+                const blocks = document.getElementById('sequenceDisplayer').querySelectorAll('.sequence-block');
+                let sequence = '';
+                let allSpans = []
+                blocks.forEach((block) => {
+                    block.querySelectorAll('.sequence-text').forEach((spans) => {
+                        sequence += spans.textContent;
+                        spans.querySelectorAll('span').forEach(s => {
+                            allSpans.push(s);
+                        })
+                    });
+                });
+
+                // Get index from original protein sequence
+                let max = Math.max(localizedSequenceIndex - 11, 0)
+                let min = Math.min(localizedSequenceIndex + 10, (sequence.length))
+                let localizedSequence = sequence.slice(max, min);
+                let localSpans = allSpans.slice(max, min)
+                if (localizedSequenceIndex - 11 < 0) {
+                    while (localizedSequence.length != 21) {
+                        localizedSequence = '-' + localizedSequence;
+                        const tempSpan = document.createElement('span')
+                        tempSpan.textContent = '-';
+                        localSpans.unshift(tempSpan);
+                    }
+                }
+                if (localizedSequenceIndex + 10 > (sequence.length)) {
+                    while (localizedSequence.length != 21) {
+                        localizedSequence += '-';
+                        const tempSpan = document.createElement('span')
+                        tempSpan.textContent = '-';
+                        localSpans.push(tempSpan);
+                    }
+                }
+
+                let localizedSequenceInfo = []
+                localSpans.forEach((localSpan) => {
+                    localizedSequenceInfo.push(localSpan.getAttribute('data-all-ptms'));
+                })
+                console.log(localizedSequenceInfo);
+
+                preparePTMDetails(localizedSequence, localizedSequenceInfo, ptmsData);
+                initializePTMClickListenersForPTMSequence()
+            });
+        }
     });
 }
 
@@ -827,7 +926,7 @@ function displayProteinSequence(sequence, modificationData) {
     });
 
     // After blocks are created, initialize the click event listeners
-    initializePTMClickListeners();
+    initializePTMClickListenersForProteinSequence();
 }
 
 
@@ -1423,9 +1522,9 @@ async function search() {
                             
                             fetchProteinStructure(json.uniProtAC);
                             populateCheckboxesFromResult(data.result.PTMs)
-                            getJPredInference(json.proteinSequence);
                             displayProteinSequence(json.proteinSequence, data.result.PTMs);
                             updateStats(data.result.PTMs)
+                            getJPredInference(json.proteinSequence);
                             document.getElementById('sequenceDisplayer').setAttribute('style', "display: block;");
                             document.getElementById('iframeData').textContent = "Protein Basic Information";
                             document.getElementById('iframeData2').textContent = "Modification Sites";
@@ -1436,6 +1535,7 @@ async function search() {
                             document.getElementById('giantCheckboxContainer').style.display = 'block';
                             document.getElementById('proteinInfoContainer').style.display = 'block';
                             document.getElementById('proteinStatisticsContainer').style.display = 'block';
+                            document.getElementById('detailsPanel').innerHTML = `<h3>Click on a PTM to view details here!</h3>`
                         }
                         else {
                             alert(json.message);
@@ -1607,23 +1707,30 @@ async function displayVector(data, subsequence, result) {
 }
 
 function displayTable(data, ptm) {
-    const tableHead = document.getElementById("tableHead");
-    const tableBody = document.getElementById("tableBody");
-    tableHead.innerHTML = "";
-    tableBody.innerHTML = "";
-
-    const xlabel = document.getElementById("xlabel");
-    xlabel.innerHTML = "";
-
-    const label_x = document.createElement("strong")
-    label_x.textContent = `${ptm} - Position Relative to Modification Site`
-    
-    xlabel.appendChild(label_x);
     // <table class="table table-bordered table-responsive th td" id="dataTable" style="display: none; font-family: 'Courier New', Courier, monospace;  text-align: center;">
     //                         <thead id="tableHead"></thead>
     //                         <tbody id="tableBody"></tbody>
     //                     </table>
-    // const dataTable = document.getElementById("dataTable");
+    const tableData = document.createElement('table');
+    tableData.classList.add('table');
+    tableData.classList.add('table-bordered');
+    tableData.classList.add('table-responsive');
+    tableData.classList.add('th');
+    tableData.classList.add('td');
+    tableData.setAttribute('id', 'dataTable');
+    tableData.setAttribute('style', "display: none; font-family: 'Courier New', Courier, monospace;  text-align: center;");
+    const tableHead = document.createElement("thead");
+    tableHead.setAttribute('id', 'tableHead');
+    const tableBody = document.createElement("tbody");
+    tableBody.setAttribute('id', 'tableBody');
+
+    // const xlabel = document.getElementById("xlabel");
+    // xlabel.innerHTML = "";
+
+    // const label_x = document.createElement("strong")
+    // label_x.textContent = `${ptm} - Position Relative to Modification Site`
+    
+    // xlabel.appendChild(label_x);
     const dataTable = document.createElement('table');
 
 
@@ -1665,10 +1772,11 @@ function displayTable(data, ptm) {
 
     AA.forEach((aa, outer) => {
         
-        aaHeader = document.getElementById(aa);
+        aaHeader = tableBody.querySelector(`#${aa}`);
 
         KEYS.forEach((key, index)=> {
             const cell = document.createElement("td");
+            cell.style.textAlign = 'center';
             const value = data[key][aa];
             // Set value
             if (typeof value === 'number')
@@ -1677,11 +1785,11 @@ function displayTable(data, ptm) {
                 cell.textContent = "-inf";
             // Set border lines for table
             if (index == Object.keys(KEYS).length - 1)
-                cell.setAttribute("style", "border-right: 3px solid black;")
+                cell.setAttribute("style", "border-right: 3px solid black; text-align: center;")
             if (outer == AA.length - 1)
-                cell.setAttribute("style", "border-bottom: 3px solid black;")
+                cell.setAttribute("style", "border-bottom: 3px solid black; text-align: center;")
             if (index == Object.keys(KEYS).length - 1 && outer == AA.length - 1)
-                cell.setAttribute("style", "border-right: 3px solid black; border-bottom: 3px solid black;")
+                cell.setAttribute("style", "border-right: 3px solid black; border-bottom: 3px solid black; text-align: center;")
             // Set colour
             if (outer%2 == 0)
                 cell.style.backgroundColor = '#F0F0F0';
@@ -1697,18 +1805,24 @@ function displayTable(data, ptm) {
         })
     });
 
+    dataTable.appendChild(tableHead);
+    dataTable.appendChild(tableBody);
+    tableData.append(dataTable);
 
-    // <head>
-    //     <link rel="stylesheet" type="text/css" href="styles.css">
-    // </head>
     const head = document.createElement('head');
+    const body = document.createElement('body');
     const link = document.createElement('link');
     link.setAttribute('rel', 'stylesheet');
     link.setAttribute('type', 'text/css');
     link.setAttribute('href', '../static/styles.css')
     head.appendChild(link);
-    head.appendChild(dataTable);
+    dataTable.style.display = 'table';
+    body.appendChild(dataTable);
+
+    const newHtmlDocument = document.implementation.createHTMLDocument('New Page');
+    newHtmlDocument.documentElement.appendChild(head);
+    newHtmlDocument.documentElement.appendChild(body);
 
     // dataTable.style.display = "table"; // Show the table
-    return head.outerHTML;
+    return newHtmlDocument.documentElement.outerHTML;
 }

@@ -679,7 +679,7 @@ iframe {
 /* Optional: Add a hover effect for the PTM entries */
 .details-panel .ptm-entry:hover {
     background-color: #f1f1f1; /* Lighten the background on hover */
-    cursor: pointer; /* Change cursor to indicate interactivity */
+    cursor: default; /* Change cursor to indicate interactivity */
 }
 
 #chunkDetails {
