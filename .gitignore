@@ -7,3 +7,4 @@ server\static\bootstrap-min.css
 server\static\note.md
 server\templates\index_old.html
 server\data\resid
+data/dbptm/dbptm.json
