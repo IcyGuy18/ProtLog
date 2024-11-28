@@ -448,7 +448,7 @@ iframe {
 
 .protein-sequence-container {
     background-color: #e5e5e5; /* Light gray background behind the table */
-    padding: 30px; /* Space around the table */
+    padding: 10px; /* Space around the table */
     border-radius: 10px; /* Rounded corners for a modern look */
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Soft shadow for depth */
     max-width: 1050px; /* Maximum width */
@@ -458,7 +458,7 @@ iframe {
 
 /* Container for sequence blocks */
 #sequenceDisplayer {
-    display: inline-block;      
+    display: inline-block;
     flex-wrap: wrap;
     gap: 20px;
     padding: 30px;
@@ -471,28 +471,25 @@ iframe {
     flex-grow: 1;
     width: 100%;
     box-sizing: border-box;
-    justify-items: center;
+    justify-items: left;
+    justify-content: left;
 }
 
 /* Each individual block of sequence */
 .sequence-block {
-    background-color: #fff;
-    border-color: #ddd;
-    border-width: 2px;
-    padding: 12px;
-    border: 1px solid #e0e0e0;
-    border-radius: 8px;
+    /* background-color: #fff;
+    border-color: #ddd; */
+    /* border-width: 2px; */
+    padding-top: 12px;
+    /* border: 1px solid #e0e0e0; */
+    /* border-radius: 8px; */
     font-size: 20px;
     font-weight: 600;
     font-family: 'Courier New', Courier, monospace;
     position: relative;
     transition: all 0.3s ease;
-    margin-bottom: 10px;
-    margin-top: 10px;
-    margin-left: 10px;
-    margin-right: 10px;
     display: inline-block;
-    width: 190px;
+    width: 150px;
     box-sizing: border-box;
     overflow: hidden;
     white-space: nowrap;
@@ -500,6 +497,7 @@ iframe {
 
 /* Styling for the sequence chunk */
 .sequence-text {
+    position: relative;
     display: inline-block;
     white-space: nowrap;
     font-weight: 400;
@@ -517,11 +515,15 @@ iframe {
     font-size: 12px;
     font-weight: bold;
     background-color: rgba(0, 0, 0, 0.1);
-    padding: 2px 5px;
+    padding: -2px 5px;
     border-radius: 3px;
     margin-left: 10px;
     user-select: none;
     pointer-events: none;
+    position: absolute;
+    top: 0; /* Align to the top */
+    right: 0; /* Center horizontally */
+    transform: translateX(-48%)
 }
 
 /* Prevent text overflow issues */
@@ -530,6 +532,53 @@ iframe {
     max-width: 100%;
     text-overflow: ellipsis;
     overflow: hidden;
+}
+
+/* Container for the UniProt sequence information */
+.uniprot-sequence-info {
+    background-color: #f9f9f9;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    font-family: Arial, sans-serif;
+    width: 100%;  /* Allow it to expand to fill the container */
+    max-width: 500px; /* Adjust max-width to control the container's maximum size */
+    margin: 20px auto;
+}
+
+/* Each information row with label and value */
+.uniprot-sequence-info .info-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+/* Label styling */
+.uniprot-sequence-info .info-row .label {
+    font-weight: bold;
+    color: #333;
+    flex: 1;
+    text-align: left;
+}
+
+/* Value styling */
+.uniprot-sequence-info .info-row .value {
+    font-weight: 500;
+    color: #2c3e50;
+    padding-left: 8px; /* Small space between the label and the value */
+}
+
+/* Separator line */
+.uniprot-sequence-info .info-row::before {
+    content: '|';
+    color: #aaa;
+    margin-right: 8px;
+    font-size: 18px;  /* Adjust size of the separator */
+}
+
+/* Styling for each key-value pair to keep space */
+.uniprot-sequence-info .info-row:last-child {
+    margin-bottom: 0;
 }
 
 /* Responsiveness: Stack sequence blocks on smaller screens */
@@ -682,6 +731,16 @@ iframe {
     cursor: default; /* Change cursor to indicate interactivity */
 }
 
+.details-panel .ptm-scores {
+    background-color: #b4b4b4;
+    /* font-family: 'Courier New', Courier, monospace; */
+    border-radius: 4px;
+    border: #2c3e50;
+    cursor: default;
+    max-width: 500px;
+    margin: 0 auto;
+}
+
 #chunkDetails {
     font-size: 14px;
     line-height: 1.5;
@@ -705,6 +764,8 @@ iframe {
     cursor: pointer;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
     pointer-events: visible;
+    line-height: 1; /* Reduce line-height to shrink the height of the box */
+    margin-bottom: 5px;
 }
 
 /* Hover effect on highlighted text */

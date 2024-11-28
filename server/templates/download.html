@@ -96,11 +96,11 @@
         </div>
     </nav>
     <div class="container custom-download mt-4">
-        <h2>Select Modification and Download Option</h2>
+        <h4 style="text-align: center;">Download Positional Frequency Matrix Tables</h4>
         
-        <div class="mb-3">
+        <div class="mb-3" id="mod">
             <label for="ptmSelect" class="form-label">Select PTM:</label>
-            <select id="ptmSelect" class="form-select">
+            <select id="ptmSelect" class="form-select" onchange="getAminoAcids(this)">
                 <option>Acetylation</option>
                 <option>ADP-ribosylation</option>
                 <option>Amidation</option>
@@ -176,8 +176,23 @@
             </select>
         </div>
 
-        <div class="mb-3">
-            <label for="downloadSelect" class="form-label">Select Download Option:</label>
+        <div class="mb-3" id="aa">
+            <label for="aaSelect" class="form-label">Select Amino Acid:</label>
+            <select id="aaSelect" class="form-select">
+            </select>
+        </div>
+
+        <div class="mb-3" id="tab">
+            <label for="tableSelect" class="form-label">Select the type of table to download:</label>
+            <select id="tableSelect" class="form-select">
+                <option>Frequency</option>
+                <option>Log Odd (base e)</option>
+                <option>Log Odd (base 2)</option>
+            </select>
+        </div>
+
+        <div class="mb-3" id="download">
+            <label for="downloadSelect" class="form-label">Select download option:</label>
             <select id="downloadSelect" class="form-select">
                 <option>PNG</option>
                 <option>PDF</option>
@@ -190,10 +205,12 @@
         <button id="downloadButton" class="btn btn-primary" onclick="saveFile()">Download</button>
     </div>
 
+    <div id="ptmTable" style="margin-left: auto; margin-right: auto;"></div>
+
     <footer class="footer bg-light py-3">
         <div class="container text-center">
             <p class="mb-0"> This website is open for everyone to use. For more information, please contact us.</p>
-            <p class="mb-0"><a href="http://biolabs.lums.edu.pk/birl">© 2024 Biomedical Informatics & Engineering Research Laboratory (BIRL)</a></p>
+            <p class="mb-0"><a href="https://birl.lums.edu.pk">© 2024 Biomedical Informatics & Engineering Research Laboratory (BIRL)</a></p>
         </div>
     </footer>
 </body>

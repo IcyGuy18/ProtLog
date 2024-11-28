@@ -1,7 +1,8 @@
 from fastapi import FastAPI, Request
 from fastapi.templating import Jinja2Templates
-from starlette.responses import Response, FileResponse, JSONResponse
+from starlette.responses import Response, FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
+from starlette.middleware.base import BaseHTTPMiddleware
 import requests
 import glob
 import pandas as pd
@@ -18,7 +19,7 @@ from calculator import additive_calculator, multiplicative_calculator
 from response_fetcher import fetch_response_uniprot_trim
 from jpred_prediction import submit_job, get_job
 
-app = FastAPI()
+app = FastAPI(docs_url='/ptmkb/api')
 templates = Jinja2Templates(directory='templates/')
 app.mount('/static', StaticFiles(directory="static"), name="static")
 
@@ -37,31 +38,31 @@ def sort_ids(strings: list[str], substring: str):
 
 ######## PAGES ########
 
-@app.get("/")
+@app.get("/", include_in_schema=False)
 def home_page(request: Request):
     return templates.TemplateResponse(
         "index.html", context={"request": request}
     )
 
-@app.get("/documentation")
+@app.get("/documentation", include_in_schema=False)
 def docs_page(request: Request):
     return templates.TemplateResponse(
         "docs.html", context={"request": request}
     )
 
-@app.get("/download")
+@app.get("/download", include_in_schema=False)
 def download_page(request: Request):
     return templates.TemplateResponse(
         "download.html", context={"request": request}
     )
 
-@app.get("/integration")
+@app.get("/integration", include_in_schema=False)
 def integration_page(request: Request):
     return templates.TemplateResponse(
         "integration.html", context={"request": request}
     )
 
-@app.get("/about")
+@app.get("/about", include_in_schema=False)
 def integration_page(request: Request):
     return templates.TemplateResponse(
         "about.html", context={"request": request}
@@ -69,7 +70,7 @@ def integration_page(request: Request):
 
 ######## PAGE REQUESTS ########
 
-@app.get('/ptmkb/autofill')
+@app.get('/ptmkb/autofill', include_in_schema=False)
 async def search(_id: str, request: Request):
     # Probably best to insert elements in a database
     ids = fetch_identifiers(_id)
@@ -77,7 +78,7 @@ async def search(_id: str, request: Request):
     # Give only top 200 suggestions - otherwise burden on user
     return {'ids': ids[:200]}
 
-@app.post('/ptmkb/search_result')
+@app.post('/ptmkb/search_result', include_in_schema=False)
 async def search(request: Request):
     data = await request.json()
     data['id'] = data['id'].strip()
@@ -102,7 +103,7 @@ async def search(request: Request):
 # I look at this function and cry every single night.
 # This was the best I could do given the time constraint
 # and my inability to do good frontend programming at all. 
-@app.post('/ptmkb/fetch_uniprot')
+@app.post('/ptmkb/fetch_uniprot', include_in_schema=False)
 async def get_uniprot_info(request: Request):
     data = await request.json()
     prot_id: str = data['id']
@@ -168,7 +169,7 @@ def save_data(df: pd.DataFrame, format: str) -> bytes:
     print(raw_data)
     return raw_data
 
-@app.post('/ptmkb/download')
+@app.post('/ptmkb/download', include_in_schema=False)
 async def download(request: Request):
     data: dict = await request.json()
 
@@ -181,10 +182,12 @@ async def download(request: Request):
     }
     
     ptm = data.get("ptm")
+    aa = data.get('aa')
+    table = data.get('table')
     format = data.get("format")
     rounded = True # data.get('rounded')
 
-    df = pd.read_json(f"./data/tables/{ptm}.json")
+    df = pd.read_json(f"./data/tables/{ptm}/{table}/{aa}.json")
     
     if rounded and format in ["PNG", "PDF", "SVG"]: df = df.round(2)
     
@@ -197,11 +200,11 @@ async def download(request: Request):
     )
 
 # This function is a separate call
-@app.post('/ptmkb/get_protein_log')
+@app.post('/ptmkb/get_protein_log', include_in_schema=False)
 async def get_log_value(request: Request):
     data: dict = await request.json()
     data = dict(sorted(data.items(), key=lambda item: int(item[0])))
-    vector = [list(v.values())[0] for _, v in data.items()]
+    vector = list(data.values())
     # Use the above vector to calculate additive and multiplicative scores
     a_score, m_scores = additive_calculator(vector), multiplicative_calculator(vector)
     m_score = m_scores[1]['multiplicative_score']
@@ -212,20 +215,46 @@ async def get_log_value(request: Request):
         '*_m_score': round(asterisk_m_score, 3) if not isinstance(asterisk_m_score, str) else asterisk_m_score
     }
 
+@app.get('/ptmkb/getAminoAcids', include_in_schema=False)
+def get_amino_acids(request: Request, ptm: str):
+    if not ptm:
+        return {
+            'response': False,
+            'message': "No PTM was provided."
+        }
+    data = [i.split("\\")[-1].split('.')[0] for i in glob.glob(f'./data/tables/{ptm}/log-e/*.json')]
+    return {
+        'response': True,
+        'data': data
+    }
+
 
 ######## API CALLS ########
 
-@app.post('/ptmkb/unrel/submitJpred')
+@app.post('/ptmkb/unrel/submitJpred', include_in_schema=False)
 async def get_jpred_prediction(request: Request):
     info = await request.json()
     return await submit_job(info['sequence'])
 
-@app.get('/ptmkb/unrel/getJpred')
+@app.get('/ptmkb/unrel/getJpred', include_in_schema=False)
 def get_jpred_prediction(request: Request, jobid: str):
     return get_job(jobid)
 
-@app.get("/ptmkb/api/proteins")
+@app.get("/ptmkb/api/get-protein-details")
 def get_protein(request: Request, upid: str = None, upac: str = None):
+    """
+    Get the details of a protein and its Post-Translational Modifications (PTMs),
+    given a UniProt Protein Identifier or Accession Number.
+
+    Note that the UniProt Protein Identifier will take precedence over the Accession Number.
+
+    **Parameters:**
+    - **upid**: A UniProt-based Protein Identifier. (type: *str*)
+    - **upac**: A UniProt-based Accession Number. (type: *str*)
+
+    **Returns:**
+    - Detailed Post-Translational Modification details of a protein. (type: *JSON*)
+    """
     if not upid and not upac:
         return {'result': '', 'message': 'Please enter a protein identifier or an accession number first!'}
     _id = upid or upac
@@ -235,19 +264,31 @@ def get_protein(request: Request, upid: str = None, upac: str = None):
         return {'result': results}
     return {'result': results, 'message': 'Could not find the queried protein!'}
 
-@app.get("/ptmkb/api/ptms")
+@app.get("/ptmkb/api/available-ptms")
 async def get_options():
+    """
+    Get a list of available Post-Translational Modifications (PTMs) in the database.
+
+    **Returns:**
+    - A list of available PTMs paired with a key. (type: *JSON*)
+    """
     options = [i.split("\\")[-1] for i in glob.glob(r'data\tables\*')]
     return {'ptms': options}
 
-@app.get("/ptmkb/api/ptms_detailed")
-async def get_options():
-    with open('./data/ptms-expanded.json', 'r') as f:
-        options = json.load(f)
-    return {'ptms': options}
-
-@app.get("/ptmkb/api/data")
+@app.get("/ptmkb/api/get-positional-frequency-matrix")
 async def get_data(request: Request, selection: str = None, aa: str = None, table: str = 'log-e'):
+    """
+    Get the positional frequency matrix of a Post-Translational Modification (PTM),
+    given the PTM, amino acid, and matrix table.
+
+    **Parameters:**
+    - **selection**: The Post-Translational Modification's table to fetch. (type: *str*)
+    - **aa**: The amino acid to use as the PTM site for the table. (type: *str*)
+    - **table**: The type of table to fetch. (type: *str*)
+
+    **Returns:**
+    - The Positional Frequency Matrix of the Post-Translational Modification for the specified amino acid. (type: *JSON*)
+    """
     print(os.path.exists(f'./data/tables/{selection}/{table}/{aa}.json'))
     if not selection:
         ptms = [i.split("\\")[-1] for i in glob.glob(r'data\tables\*')]

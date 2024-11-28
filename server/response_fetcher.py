@@ -17,6 +17,8 @@ def fetch_response_uniprot_trim(prot_id):
             'subcellularLocalizations',
             'proteinFunction',
             'proteinSequence',
+            'proteinSequenceFull',
+            'lastUpdate',
             'message'
         ],
         ''
@@ -79,6 +81,16 @@ def fetch_response_uniprot_trim(prot_id):
                         except:
                             print(traceback.format_exc())
                             return_response['proteinSequence'] = ''
+                        try:
+                            return_response['proteinSequenceFull'] = response['sequence']
+                        except:
+                            print(traceback.format_exc())
+                            return_response['proteinSequenceFull'] = {}
+                        try:
+                            return_response['lastUpdate'] = response['uniParcCrossReferences'][0]['lastUpdated']
+                        except:
+                            print(traceback.format_exc())
+                            return_response['lastUpdate'] = ''
 
                         # UniParc doesn't hold UniProtID and Protein function, which is a shame,
                         # because this will be the THIRD call to the UniProt API
@@ -172,6 +184,16 @@ def fetch_response_uniprot_trim(prot_id):
                         except:
                             print(traceback.format_exc())
                             return_response['proteinSequence'] = ''
+                        try:
+                            return_response['proteinSequenceFull'] = response['sequence']
+                        except:
+                            print(traceback.format_exc())
+                            return_response['proteinSequenceFull'] = ''
+                        try:
+                            return_response['lastUpdate'] = response['entryAudit']['lastSequenceUpdateDate']
+                        except:
+                            print(traceback.format_exc())
+                            return_response['lastUpdate'] = ''
                     
                         # Handle subcellular localizations differently
                         subcellular_localizations = [i for i in response.get('comments', []) if 'SUBCELLULAR LOCATION' in i.get('commentType', '')]
@@ -249,6 +271,16 @@ def fetch_response_uniprot_trim(prot_id):
                     except:
                         print(traceback.format_exc())
                         return_response['proteinSequence'] = ''
+                    try:
+                        return_response['proteinSequenceFull'] = response['sequence']
+                    except:
+                        print(traceback.format_exc())
+                        return_response['proteinSequenceFull'] = ''
+                    try:
+                        return_response['lastUpdate'] = response['entryAudit']['lastSequenceUpdateDate']
+                    except:
+                        print(traceback.format_exc())
+                        return_response['lastUpdate'] = ''
                     
                     # Handle subcellular localizations differently
                     subcellular_localizations = [i for i in response.get('comments', []) if 'SUBCELLULAR LOCATION' in i.get('commentType', '')]
