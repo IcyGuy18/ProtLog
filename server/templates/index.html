@@ -30,6 +30,9 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
+                        <a class="nav-link" href="/propensity" id="propensityLink">Propensity</a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link" href="/documentation" id="documentationLink">Documentation</a>
                     </li>
                     <li class="nav-item">
@@ -37,9 +40,6 @@
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="/download" id="downloadLink">Download</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/contactUs" id="contactLink">Contact Us</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="/about" id="aboutLink">About</a>
@@ -121,12 +121,6 @@
                     <div class="uniprot-sequence-info" id="uniprotSequence"></div>
                     <div class="sequence-displayer" id="sequenceDisplayer"></div>
                     <div id="ptmSearchContainer">
-                        <!-- Search Box Section -->
-                        <!-- <div id="ptmSearch">
-                            <input type="text" id="searchBox" placeholder="Search for PTM to show/hide" oninput="filterCheckboxes()" />
-                        </div> -->
-                        
-                        <!-- Checkbox Container Section -->
                         <p id="iframeData3"></p>
                         <div id="giantCheckboxContainer" class="checkbox-container">
                             <ul id="checkboxContainer"></ul>
@@ -135,8 +129,21 @@
                     <div id="detailsPanel" class="details-panel">
                         <h3>Click on a highlighted residue to view its details!</h3>
                     </div>
-                    <div id="jpredPredictions"></div>
-                    <div id="jpredInfo"></div>                    
+                    <div id="jpredMajor">
+                        <div id="jpredPredictions"></div>
+                        <div id="jpredInfo"></div>
+                    </div>
+                    <div id="pdbMajor">
+                        <div id="pdbStructures">
+                            <div id="afPdbStructure"></div>
+                            <div id="rcsbPdbStructure"></div>
+                        </div>
+                        <div id="pdbInfo"></div>
+                        <div id="pdbStructuresInfo">
+                            <div id="afInfo"></div>
+                            <div id="rcsbInfo"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div id="ptmSiteInfo" style="display: none; align-content: center;">

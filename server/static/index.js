@@ -4,6 +4,10 @@ var ptmSites = null;
 var currentSequence = null;
 var pdbDataGlobal = '';
 
+function getValue(obj, key, defaultValue = null) {
+    return key in obj ? obj[key] : defaultValue;
+}
+
 const ptmColorMapping = {
     // Classical colors for more commonly occurring PTMs
     "Acetylation": "#D94F37",  // Slightly darker Tomato
@@ -84,9 +88,6 @@ const ptmColorMapping = {
 };
 
 document.addEventListener("DOMContentLoaded", () => {
-    // Populate checkboxes.
-    // populateCheckboxes();
-    // populateCheckboxesExpanded();
     // Set up an autocomplete function
     $('#form_value').on('input', async function() {
         const requestTerm = $(this).val();
@@ -96,7 +97,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         try {
-            const res = await fetch(`/ptmkb/autofill?_id=${requestTerm}`);
+            const res = await fetch(`/ptmkb/protein_autofill?_id=${requestTerm}`);
             const data = await res.json();
             const suggestions = data['ids'];
             
@@ -160,9 +161,10 @@ function splitSequence(sequence) {
 
 */
 
-async function getJPredInference(seq) {
+async function getJPredInference(seq, acc) {
     // Show loading spinner
     document.getElementById('jpredPredictions').classList.add('lds-dual-ring');
+    document.getElementById('jpredPredictions').style.alignContent = 'center';
 
     fetch('/ptmkb/unrel/submitJpred',  {
         method: "POST",
@@ -176,29 +178,25 @@ async function getJPredInference(seq) {
     }).then(obj => {
         // When a job is submitted successfully, submit a new job and check status
         if (obj.jobid) {
-            submitJob(obj['jobid'], 'full');
+            submitJob(obj['jobid'], 'full', acc);
         } else {
             // Handle the case where the sequence is too long for JPred
             document.getElementById('jpredPredictions').classList.remove('lds-dual-ring');
-            document.getElementById('jpredInfo').innerHTML = '<h5>The sequence is too long and cannot be predicted by JPred!</h5>';
+            document.getElementById('jpredPredictions').innerHTML = '<h5>The sequence is too long and cannot be predicted by JPred!</h5>';
         }
     }).catch(err => {
         console.log(err);
         document.getElementById('jpredPredictions').classList.remove('lds-dual-ring');
-        document.getElementById('jpredInfo').innerHTML = '<h5>Error while submitting sequence. Please try again!</h5>';
+        document.getElementById('jpredPredictions').innerHTML = '<h5>Error while submitting sequence. Please try again!</h5>';
     });
 }
 
 let currentJobAbortController = null; // Global variable to store the current active abort controller
 
-async function submitJob(jobid, resType) {
+async function submitJob(jobid, resType, acc) {
     // If there's an active job polling, abort it
     if (currentJobAbortController) {
-        try {
-            currentJobAbortController.abort();
-        } catch (error) {
-            console.log("Aborted previous job.");
-        }
+        currentJobAbortController.abort();
     }
     try {
         // Create a new abort controller for the current job
@@ -230,7 +228,7 @@ async function submitJob(jobid, resType) {
 
         // Only process the result if polling was not aborted
         if (jobFinished) {
-            formatJpredResponse(resultResponse['content']);  // Assuming this function processes the HTML as expected
+            formatJpredResponse(resultResponse['content'], acc);  // Assuming this function processes the HTML as expected
         }
     } catch (error) {
         // Handle any errors, including aborting
@@ -243,7 +241,7 @@ async function submitJob(jobid, resType) {
     }
 }
 
-function formatJpredResponse(response) {
+function formatJpredResponse(response, acc) {
     // Parse the response as HTML
     let parser = new DOMParser();
     let parsedHtml = parser.parseFromString(response, 'text/html');
@@ -273,10 +271,10 @@ function formatJpredResponse(response) {
         }
     });
 
-    generateHtmlForJPred(formattedResponse);
+    generateHtmlForJPred(formattedResponse, acc);
 }
 
-function generateHtmlForJPred(data) {
+function generateHtmlForJPred(data, acc) {
     document.getElementById('jpredInfo').innerHTML = '';
     // Set a base font size for both labels and sequences
     const fontSize = '14px';
@@ -321,8 +319,9 @@ function generateHtmlForJPred(data) {
             labelDiv.innerHTML = `<a>${key}</a>`;
         } else {
             let keyUri = key;
-            if (keyUri.includes('UPI'))
-                keyUri.replace('UniRef90_', '')
+            if (keyUri.includes('_UPI')) {
+                keyUri = keyUri.replace('UniRef90_', '')
+            }
             labelDiv.innerHTML = `<a href="https://www.ebi.ac.uk/ebisearch/search.ebi?db=allebi&query=${keyUri}" target="_blank" rel="noopener noreferrer" style="cursor: pointer;">${key}</a>`;
         }
         
@@ -380,7 +379,41 @@ function generateHtmlForJPred(data) {
         // Create sequence div
         const predictionSequenceDiv = document.createElement('div');
         predictionSequenceDiv.setAttribute('style', 'white-space: nowrap; margin-bottom: 10px;');
-        predictionSequenceDiv.textContent = data.prediction[key];
+        if (key === 'Jnet' || key === 'jhmm' || key === 'jpssm') {
+            let htmlString = '';
+            data.prediction[key].split('').forEach(char => {
+                if (char === 'H') {
+                    htmlString += `<font color="e900055">${char}</font>`
+                } else if (char === 'E') {
+                    htmlString += `<font color="ffa800">${char}</font>`
+                } else {
+                    htmlString += `<font>${char}</font>`
+                }
+            });
+            predictionSequenceDiv.innerHTML = htmlString;
+        } else if (key === 'Jnet_25' || key === 'Jnet_5' || key === 'Jnet_0') {
+            let htmlString = '';
+            data.prediction[key].split('').forEach(char => {
+                if (char === 'B') {
+                    htmlString += `<font color="aa0000">${char}</font>`
+                } else {
+                    htmlString += `<font>${char}</font>`
+                }
+            });
+            predictionSequenceDiv.innerHTML = htmlString;
+        } else if (key === 'Jnet Rel') {
+            let htmlString = '';
+            data.prediction[key].split('').forEach(char => {
+                if (char === '9' || char === '8' || char === '7') {
+                    htmlString += `<font color="00aa00">${char}</font>`
+                } else {
+                    htmlString += `<font>${char}</font>`
+                }
+            });
+            predictionSequenceDiv.innerHTML = htmlString;
+        } else {
+            predictionSequenceDiv.textContent = data.prediction[key];
+        }
         predictionSequencesBox.appendChild(predictionSequenceDiv);
     });
 
@@ -392,6 +425,18 @@ function generateHtmlForJPred(data) {
     // Append the two sections to the target div
     // targetDiv.appendChild(alignmentBox);
     targetDiv.appendChild(predictionBox);
+    const jpredDownloadBtn = document.createElement('button');
+    jpredDownloadBtn.classList.add('additional-button');
+    jpredDownloadBtn.textContent = "Download Alignments and Predictions as JSON"
+    jpredDownloadBtn.addEventListener('click', () => {
+        var jsonString = JSON.stringify(data, null, 2);
+        var blob = new Blob([jsonString], { type: 'application/json' });
+        var link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `${acc}_jpred.json`;
+        link.click();
+    });
+    document.getElementById('jpredInfo').appendChild(jpredDownloadBtn);
 }
 
 /*
@@ -523,7 +568,19 @@ async function preparePTMDetails(localizedSequence, localizedSequenceInfo, ptmsD
 
         // PTM Type: Extract and display the PTM type (second element in each sub-array)
         const ptmTypeText = document.createElement('p');
-        ptmTypeText.innerHTML = `<strong>PTM Type:</strong> ${ptm[1]}`;
+        ptmTypeText.innerHTML = `<strong>PTM Type:</strong> ${ptm[1]} `;
+
+        // We're going to fetch the PTM's details using the PTM and the residue it is modified on.
+        await fetch(`/ptmkb/getPTM?ptm=${ptm[1]}&aa=${centerChar}`).then(res => {
+            return res.json();
+        }).then(json => {
+            entries = json['response'];
+            entries.forEach((entry, index) => {
+                ptmTypeText.innerHTML += `<a target="_blank" href="https://proteininformationresource.org/cgi-bin/resid?id=${entry['@id']}">[${entry['@id']}]</a>`
+            })
+        }).catch(error => {
+            console.error(error);
+        })
 
         // Position: Display the residue position (assuming position is stored in data-position on clickedSpan)
         const positionText = document.createElement('p');
@@ -548,66 +605,83 @@ async function preparePTMDetails(localizedSequence, localizedSequenceInfo, ptmsD
         const freqTableResp = await fetchData(ptm[1], centerChar, 'freq');
         const logTableResp = await fetchData(ptm[1], centerChar, 'log-e');
 
-        const vectorData = {}
-        const positions = [
-            '-10', '-9', '-8', '-7', '-6', '-5', '-4', '-3', '-2', '-1',
-            '0',
-            '+1', '+2', '+3', '+4', '+5', '+6', '+7', '+8', '+9', '+10',
-        ]
-        // We'll use log odd tables for our calculations
-        localizedSequence.split('').forEach((char, index) => {
-            vectorData[positions[index]] =logTableResp[positions[index]][char]
-        });
-
-        const resp = await fetch('/ptmkb/get_protein_log', {
-            method: "POST",
-            headers: {
-                "Accept": "application/json",
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(vectorData)
-        }).then(res => res.json());
-        console.log(resp);
-
-        const ptmScoresDiv = document.createElement('div');
-        ptmScoresDiv.classList.add('ptm-scores');
-        ptmScoresDiv.innerHTML = `<h5>Additive Score: <a style="font-family: 'Courier New', Courier, monospace">${resp['a_score']}</a></h5><h5>Multiplicative Score: <a style="font-family: 'Courier New', Courier, monospace">${resp['*_m_score']}</a></h5>`;
-
-        // Going to reference table links as well
-
         const tableDiv = document.createElement('div');
-        const tableText = document.createElement('p')
-        tableText.innerHTML = `Click below to view the matrix positional frequency of amino acids for ${ptm[1]}:`;
-        
-        const freqTable = document.createElement('a');
-        freqTable.setAttribute('style', 'color: #1a0dab; text-decoration: underline; font-weight: normal; cursor: pointer;');
-        freqTable.textContent = 'Frequency Matrix';
-        const logTable = document.createElement('a');
-        logTable.setAttribute('style', 'color: #1a0dab; text-decoration: underline; font-weight: normal; cursor: pointer;');
-        logTable.textContent = 'Log Odd Frequency Matrix';
+        const ptmScoresDiv = document.createElement('div');
 
-        freqTable.addEventListener('click', async () => {
-            const newWindow = window.open('', '_blank', 'width=1200, height=800');
-            newWindow.document.write(displayTable(freqTableResp, ptm[1]));
-            newWindow.document.close()
-        });
+        if (!logTableResp.message) { // If the response does NOT contain a message key, then we're good to go
 
-        logTable.addEventListener('click', async () => {
-            const newWindow = window.open('', '_blank', 'width=1200, height=800');
-            newWindow.document.write(displayTable(logTableResp, ptm[1]));
-            newWindow.document.close()
-        });
+            const vectorData = {}
+            const positions = [
+                '-10', '-9', '-8', '-7', '-6', '-5', '-4', '-3', '-2', '-1',
+                '0',
+                '+1', '+2', '+3', '+4', '+5', '+6', '+7', '+8', '+9', '+10',
+            ]
+            // We'll use log odd tables for our calculations
+            localizedSequence.split('').forEach((char, index) => {
+                try{
+                    vectorData[positions[index]] = logTableResp[positions[index]][char];
+                }
+                catch(e) {
+                    vectorData[positions[index]] = '-inf';
+                }
+            });
 
-        tableDiv.appendChild(tableText);
-        tableDiv.appendChild(freqTable);
-        tableDiv.appendChild(document.createElement('br'));
-        tableDiv.appendChild(logTable);
+            const resp = await fetch('/ptmkb/get_protein_log', {
+                method: "POST",
+                headers: {
+                    "Accept": "application/json",
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(vectorData)
+            }).then(res => res.json());
+
+            ptmScoresDiv.classList.add('ptm-scores');
+            ptmScoresDiv.innerHTML = `<h5>Additive Score: <a style="font-family: 'Courier New', Courier, monospace">${resp['a_score']}</a></h5><h5>*-Multiplicative Score: <a style="font-family: 'Courier New', Courier, monospace">${resp['*_m_score']}</a></h5>`;
+
+            // Going to reference table links as well
+
+            const tableText = document.createElement('p')
+            tableText.innerHTML = `Click below to view the matrix positional frequency of amino acids for <strong>${ptm[1]}</strong> at residue <strong>${centerChar}</strong>:`;
+            
+            const freqTable = document.createElement('a');
+            freqTable.setAttribute('style', 'color: #1a0dab; text-decoration: underline; font-weight: normal; cursor: pointer;');
+            freqTable.textContent = 'Frequency Matrix';
+            const logTable = document.createElement('a');
+            logTable.setAttribute('style', 'color: #1a0dab; text-decoration: underline; font-weight: normal; cursor: pointer;');
+            logTable.textContent = 'Log Odd Frequency Matrix';
+
+            freqTable.addEventListener('click', async () => {
+                const newWindow = window.open('', '_blank', 'width=1200, height=800');
+                newWindow.document.write(displayTable(freqTableResp, ptm[1], centerChar, 'freq'));
+                newWindow.document.close()
+            });
+
+            logTable.addEventListener('click', async () => {
+                const newWindow = window.open('', '_blank', 'width=1200, height=800');
+                newWindow.document.write(displayTable(logTableResp, ptm[1], centerChar, 'log-e'));
+                newWindow.document.close()
+            });
+
+            tableDiv.appendChild(tableText);
+            tableDiv.appendChild(freqTable);
+            tableDiv.appendChild(document.createElement('br'));
+            tableDiv.appendChild(logTable);
+        }
+        else {
+            const tableText = document.createElement('p')
+            tableText.innerHTML = `No matrix positional frequency of amino acids for <strong>${ptm[1]}</strong> at residue <strong>${centerChar}</strong> exists.`;
+            tableDiv.appendChild(tableText);
+        }
 
         // Append the individual PTM details (PTM type, position, evidence identifiers) to the ptmDiv
         ptmDiv.appendChild(ptmTypeText);
         ptmDiv.appendChild(positionText);
         ptmDiv.appendChild(evidenceIdentifiersText);
-        ptmDiv.appendChild(ptmScoresDiv);
+
+        if (!logTableResp.message) {
+            ptmDiv.appendChild(ptmScoresDiv);
+        }
+
         ptmDiv.appendChild(tableDiv);
 
         // Append the individual PTM div to the main details div
@@ -784,6 +858,7 @@ function displayProteinSequence(sequence, modificationData, additionalUniprotInf
             // "molWeight": 63351,
             // "crc64": "0A020B7FB34132F9",
             // "md5": "BA05ABF472C72920B0D36DB229B3D33B"
+    document.getElementById('uniprotSequence').innerHTML = '';
     ["length", "molWeight", "crc64", "md5", "lastUpdate"].forEach((key) => {
         const uniprotDiv = document.createElement('div');
         uniprotDiv.classList.add('info-row');
@@ -1123,6 +1198,241 @@ function generatePTMHtmlTable() {
     return tableContainer
 }
 
+/*
+    GOING TO SHOW PREDICTED (AlphaFold) VS ACTUAL (RCSB Database) STRUCTURES
+*/
+
+async function displayPDBStructures(uniprotAC, alphafoldPdbData, proteinSequence) {
+    // We also have to collect it for RCSB data
+    let responseStr = ``;
+    const rcsbJson = {
+        "request_options": {
+            "return_all_hits": true
+        },
+        "query": {
+          "type": "group",
+          "logical_operator": "and",
+          "nodes": [
+            {
+              "type": "terminal",
+              "service": "text",
+              "parameters": {
+                "operator": "exact_match",
+                "value": uniprotAC,
+                "attribute": "rcsb_polymer_entity_container_identifiers.reference_sequence_identifiers.database_accession"
+              }
+            },
+            {
+              "type": "terminal",
+              "service": "text",
+              "parameters": {
+                "operator": "exact_match",
+                "value": "UniProt",
+                "attribute": "rcsb_polymer_entity_container_identifiers.reference_sequence_identifiers.database_name"
+              }
+            }
+          ]
+        },
+        "return_type": "entry"
+      };
+
+    if (alphafoldPdbData) {
+        // First and foremost - get calculations
+        const afCalculations = fetch('/ptmkb/structure_calculations', {
+            method: 'POST',
+            headers: {
+                "Accept": "application/json",
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ "raw_pdb_data": alphafoldPdbData })
+        }).then(async (res) => {
+            return await res.json();
+        });
+        console.log(afCalculations);
+        generateHtmlForPdbStructure(await afCalculations, 'afInfo');
+        const viewer = $3Dmol.createViewer("afPdbStructure", { defaultcolors: $3Dmol.rasmolElementColors });
+        canvas = viewer.getCanvas();
+        canvas.classList.add('viewer_3Dmoljs');
+        viewer.addModel(alphafoldPdbData, 'pdb');
+        
+        viewer.setStyle( {}, { cartoon: { color: 'spectrum' } });
+        viewer.zoomTo();
+        viewer.render();
+        responseStr += `<h5>Predicted Structure (Left, <a href="https://alphafold.ebi.ac.uk/entry/${uniprotAC}" target="_blank">AlphaFold</a>)`
+    } else {
+        responseStr += `<h5>Error: no PDB entry found in AlphaFold.`
+    }
+
+    let rcsbData = await fetch(
+        encodeURI(`https://search.rcsb.org/rcsbsearch/v2/query?json=${JSON.stringify(rcsbJson)}`)
+    )
+    .then((res) => {
+        return res.json();
+    }).catch(error => {
+        console.error(error);
+        responseStr += `- Error: no PDB entry found in RCSB.</h5>`
+    });
+    let response = getValue(rcsbData, 'result_set');
+    var identifiers = []
+
+    console.log("Waiting.")
+    if (response !== null) {
+        identifiers = response.map(item => item.identifier);
+        // The 0th index will always have the best result.
+        const score = response[0]['score'];
+        const id = response[0]['identifier'];
+        // We will have to use the ID to get the actual PDB entry from the RCSB database.
+        rcsbData = await fetch(
+            encodeURI(`https://files.rcsb.org/download/${id}.pdb`)
+        ).then(async (res) => {
+            // Use this PDB data to display actual PDB structure.
+            res = await res.text();
+            const rcsbCalculations = fetch('/ptmkb/structure_calculations', {
+                method: 'POST',
+                headers: {
+                    "Accept": "application/json",
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ "raw_pdb_data": res })
+            }).then(async (res) => {
+                return await res.json();
+            });
+            console.log(rcsbCalculations);
+            generateHtmlForPdbStructure(await rcsbCalculations, 'rcsbInfo');
+            const viewer = $3Dmol.createViewer("rcsbPdbStructure", { defaultcolors: $3Dmol.rasmolElementColors });
+            viewer.addModel(res, 'pdb');
+
+            viewer.setStyle( {}, { cartoon: { color: 'spectrum' } });
+            viewer.zoomTo();
+            viewer.render();
+            console.log("Loaded!");
+            responseStr += `- Actual Structure (Right, <a id="PDB_${id}" href="https://www.rcsb.org/structure/${id}" target="_blank">RCSB</a>).</h5>`
+        }).catch(error => {
+            console.error(error);
+            responseStr += `- Error: no PDB entry found in RCSB.</h5>`
+        });
+
+        document.getElementById('pdbInfo').innerHTML = responseStr + '<select id="pdbDropdownSelect"></select>';
+        document.getElementById('pdbDropdownSelect').innerHTML = '';
+
+        identifiers.forEach(identifier => {
+            const option = document.createElement('option');
+            option.text = identifier;
+            document.getElementById('pdbDropdownSelect').add(option);
+        });
+
+        document.getElementById('pdbDropdownSelect').addEventListener('change', async function(event) {
+            const selectedValue = event.target.value;
+            console.log("Selected value: " + selectedValue);
+            
+            rcsbData = await fetch(
+                encodeURI(`https://files.rcsb.org/download/${selectedValue}.pdb`)
+            ).then(async (res) => {
+                // Use this PDB data to display actual PDB structure.
+                res = await res.text();
+                const rcsbCalculations = fetch('/ptmkb/structure_calculations', {
+                    method: 'POST',
+                    headers: {
+                        "Accept": "application/json",
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ "raw_pdb_data": res })
+                }).then(async (res) => {
+                    return await res.json();
+                });
+                
+                const viewer = $3Dmol.createViewer("rcsbPdbStructure", { defaultcolors: $3Dmol.rasmolElementColors });
+                viewer.addModel(res, 'pdb');
+
+                viewer.setStyle( {}, { cartoon: { color: 'spectrum' } });
+                viewer.zoomTo();
+                viewer.render();
+                document.getElementById('pdbInfo')
+                .getElementsByTagName('h5')[0]
+                .getElementsByTagName('a')[1]
+                .setAttribute('href', `https://www.rcsb.org/structure/${selectedValue}`);
+                document.getElementById('pdbInfo')
+                .getElementsByTagName('h5')[0]
+                .getElementsByTagName('a')[1]
+                .setAttribute('id', `PDB_${selectedValue}`);
+                console.log("Loaded Again!");
+            }).catch(error => {
+                console.error(error);
+            });
+        });
+
+    } else {
+        console.log("Nothing here. Show error message.");
+        responseStr += `- Error: no PDB entry found in RCSB.</h5>`
+    }
+}
+
+function generateHtmlForPdbStructure(data, target) {
+    const fontSize = '14px';
+
+    // Create the main HTML structure
+    const htmlContent = document.createElement('div');
+    htmlContent.setAttribute('style', 'padding: 20px;');
+
+    // Create the structure box
+    const structureBox = document.createElement('div');
+    structureBox.setAttribute('style', 'font-family: "Courier New", Courier, monospace; margin-bottom: 30px; padding: 20px; white-space: pre; border: 2px solid #ddd; border-radius: 10px;');
+
+    // Create the scrollable container for simplified, detailed, SASA, and sequence data
+    const structureScrollContainer = document.createElement('div');
+    structureScrollContainer.setAttribute('style', 'display: flex; flex-direction: column; justify-content: flex-start; align-items: flex-start; margin-top: 20px; max-width: 400px; overflow-y: auto; white-space: pre;');
+    structureBox.appendChild(structureScrollContainer);
+
+    // Utility function to handle empty strings and formatting
+    function formatSequence(sequence) {
+        return sequence.map(item => item === " " ? " " : item).join('    ');
+    }
+
+    // Format SASA values: round them to 2 decimal places and ensure they take up 4 characters
+    function formatSASA(sasaData) {
+        return sasaData.map(value => {
+            if (!isNaN(value)) {
+                return value.toFixed(2).padStart(4, ' ');
+            }
+            return value === " " ? "    " : value; // Handle empty string for SASA as a period
+        }).join(' ');
+    }
+
+    // Create a box for the simplified data sequence
+    const simplifiedBox = document.createElement('div');
+    simplifiedBox.setAttribute('style', `padding: 15px; border-radius: 5px; font-family: monospace; font-size: ${fontSize}; margin-bottom: 10px; white-space: pre;`);
+    structureScrollContainer.appendChild(simplifiedBox);
+    simplifiedBox.textContent = formatSequence(data.simplified);
+
+    // Create a box for the detailed data sequence
+    const detailedBox = document.createElement('div');
+    detailedBox.setAttribute('style', `padding: 15px; border-radius: 5px; font-family: monospace; font-size: ${fontSize}; margin-bottom: 10px; white-space: pre;`);
+    structureScrollContainer.appendChild(detailedBox);
+    detailedBox.textContent = formatSequence(data.detailed);
+
+    // Create a box for the SASA data sequence
+    const sasaBox = document.createElement('div');
+    sasaBox.setAttribute('style', `padding: 15px; border-radius: 5px; font-family: monospace; font-size: ${fontSize}; margin-bottom: 10px; white-space: pre;`);
+    structureScrollContainer.appendChild(sasaBox);
+    sasaBox.textContent = formatSASA(data.SASA);
+
+    // Create a box for the sequence data
+    const sequenceBox = document.createElement('div');
+    sequenceBox.setAttribute('style', `padding: 15px; border-radius: 5px; font-family: monospace; font-size: ${fontSize}; margin-bottom: 10px; white-space: pre;`);
+    structureScrollContainer.appendChild(sequenceBox);
+    sequenceBox.textContent = formatSequence(data.sequence.split(''));
+
+    // Append the structure box to the main container
+    htmlContent.appendChild(structureBox);
+
+    const targetDiv = document.getElementById(target);
+    targetDiv.classList.remove('lds-dual-ring');
+    targetDiv.appendChild(htmlContent);
+}
+/*
+    THIS IS PURELY FOR DISPLAYING PROTEIN STATISTICS
+*/
+
 function updateStats(ptmData) {
     const totalSites = ptmData.length;
     const uniquePTMs = new Set(ptmData.map(ptm => ptm[1])); // Extract unique PTM types
@@ -1130,7 +1440,7 @@ function updateStats(ptmData) {
     // Count all string values from the third element (semicolon-separated)
     let totalStrings = 0;
     ptmData.forEach(ptm => {
-        let strings = []
+        let strings = [];
 
         if (typeof(ptm[2]) === "string") {
             strings = ptm[2].split(';'); // Split the third element by semicolon
@@ -1208,7 +1518,6 @@ function colorPTMs(checkbox) {
 
 // Function to fetch the PDB file from AlphaFold and render it inside the specified div
 async function fetchProteinStructure(uniprotAccession) {
-    pdbDataGlobal = '';
     document.getElementById('protein3DStructure').classList.add('lds-dual-ring')
     document.getElementById('protein3DStructureInfo').style.display = 'none';
     const apiUrl = `https://alphafold.ebi.ac.uk/api/prediction/${uniprotAccession}`;
@@ -1229,8 +1538,7 @@ async function fetchProteinStructure(uniprotAccession) {
                 // Check if the 'pdbUrl' exists in the response entry
                 if (entry.pdbUrl) {
                     // Fetch the raw PDB file from the pdbUrl
-                    await fetchAndRenderPDB(entry.pdbUrl, uniprotAccession);
-                    break; // Assuming we want to display the first model with a valid pdbUrl
+                    return await fetchAndRenderPDB(entry.pdbUrl, uniprotAccession, 'pdb');
                 }
             }
         }
@@ -1239,34 +1547,33 @@ async function fetchProteinStructure(uniprotAccession) {
         console.error("Error fetching protein structure:", error);
         document.getElementById('protein3DStructure').innerHTML = `<h5>Block Error ${e}</h5>`
         document.getElementById('protein3DStructure').classList.remove('lds-dual-ring');
+        return null;
     }
 }
 
-async function fetchAndRenderPDB(pdbUrl, uniprotAccession) {
+async function fetchAndRenderPDB(url, uniprotAccession, datatype) {
     try {
         // Fetch the raw PDB file as bytes
-        const response = await fetch(pdbUrl);
+        const response = await fetch(url);
         if (!response.ok) {
             throw new Error(`Failed to fetch PDB file: ${response.statusText}`);
         }
 
-        const pdbData = await response.text();  // Read as text (PDB format)
-        pdbDataGlobal = pdbData;
+        const data = await response.text();  // Read as text
+        pdbDataGlobal = data;
 
         // Remove the loading spinner if present
         document.getElementById('protein3DStructure').classList.remove('lds-dual-ring');
+        document.getElementById('protein3DStructure').classList.add('viewer_3Dmoljs');
 
         // Create the viewer inside the #protein3DStructure div
         const viewer = $3Dmol.createViewer("protein3DStructure", { defaultcolors: $3Dmol.rasmolElementColors });
 
         // Add the model to the viewer
-        viewer.addModel(pdbData, "pdb");
+        viewer.addModel(data, datatype);
 
         // Apply the visualization style (cartoon representation with color spectrum)
-        viewer.setStyle({}, { cartoon: { color: 'spectrum' } });
-
-        // Zoom and render the model
-        // viewer.zoom(1, 1000);
+        viewer.setStyle( {}, { cartoon: { color: 'spectrum' } });
 
         // Access the canvas element created by 3Dmol.js
         const canvas = viewer.getCanvas();
@@ -1280,28 +1587,17 @@ async function fetchAndRenderPDB(pdbUrl, uniprotAccession) {
         disclaimer.style.fontSize = 10;
 
         // Create the text content with a hyperlink
-        disclaimer.innerHTML = `
-        <label style="font-size: 12px;">Powered by</label>
-        <a href="https://alphafold.ebi.ac.uk/entry/${uniprotAccession}" target="_blank" rel="noopener noreferrer" style="color: #1a0dab; text-decoration: underline;  font-size: 12px;">
-            <strong>
-                AlphaFold
-            </strong>
-        </a><label style="font-size: 12px;">© and </label>
-        <a href="https://3dmol.csb.pitt.edu" target="_blank" rel="noopener noreferrer" style="color: #1a0dab; text-decoration: underline; font-size: 12px;">
-            <strong>
-                3DMol.js
-            </strong>
-        </a><label style="font-size: 12px;">©</label>
-        `
+        disclaimer.innerHTML = `<label style="font-size: 12px;">Powered by</label><a href="https://alphafold.ebi.ac.uk/entry/${uniprotAccession}" target="_blank" rel="noopener noreferrer" style="color: #1a0dab; text-decoration: underline;  font-size: 12px;"><strong>AlphaFold</strong></a><label style="font-size: 12px;">© and </label><a href="https://3dmol.csb.pitt.edu" target="_blank" rel="noopener noreferrer" style="color: #1a0dab; text-decoration: underline; font-size: 12px;"><strong>3DMol.js</strong></a><label style="font-size: 12px;">©</label>`
 
         // Append the disclaimer to the #protein3DStructureInfo div
         document.getElementById('protein3DStructureInfo').appendChild(disclaimer);
         document.getElementById('protein3DStructureInfo').style.display = 'block';
         viewer.zoomTo();
         viewer.render();
-
+        return data;
     } catch (error) {
         console.error("Error rendering PDB file:", error);
+        return null;
     }
 }
 
@@ -1422,13 +1718,16 @@ async function exampleSearch(element) {
 async function search() {
     const id = document.getElementById('form_value').value;
     if (id) {
+        if (currentJobAbortController) {
+            currentJobAbortController.abort();
+        }
         document.getElementById('proteinStatisticsContainer').style.display = 'none';
         document.getElementById('protein3DStructure').innerHTML = '';
         document.getElementById('protein3DStructureInfo').innerHTML = '';
         document.getElementById('proteinInfoContainer').style.display = 'none';
         try {document.getElementById('ptmTableSummary').remove();} catch(e) {} // Special case
         document.getElementById('jpredPredictions').innerHTML = '';
-        document.getElementById('jpredInfo').innerHTML = '<h5>Loading JPred Predictions, please wait! (This can take minutes depending on the sequence and job queues)</h5>';
+        document.getElementById('jpredInfo').innerHTML = '<h5>Loading JPred Predictions, please wait!</h5><br><h5>(This can take minutes depending on the sequence and job queues)</h5>';
         // document.getElementById('ptmSearch').style.display = 'none';
         document.getElementById('giantCheckboxContainer').style.display = 'none';
         document.getElementById('form_submit').disabled = true;
@@ -1472,7 +1771,7 @@ async function search() {
                         body: JSON.stringify({ "id": id })
                     }).then((res) => {
                         return res.json();
-                    }).then((json) => {
+                    }).then(async (json) => {
                         // Now do something with that JSON.
                         if (json.message === "") {
                             // Time to fill the table
@@ -1625,11 +1924,13 @@ async function search() {
                                 }
                             });
                             
-                            fetchProteinStructure(json.uniProtAC);
+                            let pdbData = await fetchProteinStructure(json.uniProtAC);
                             populateCheckboxesFromResult(updatedPtmData)
                             displayProteinSequence(json.proteinSequence, updatedPtmData, json.proteinSequenceFull, json.lastUpdate);
                             updateStats(updatedPtmData)
-                            getJPredInference(json.proteinSequence);
+                            getJPredInference(json.proteinSequence, json.uniProtAC);
+                            displayPDBStructures(json.uniProtAC, pdbData, json.proteinSequence);
+
                             document.getElementById('sequenceDisplayer').setAttribute('style', "display: block;");
                             document.getElementById('iframeData').textContent = "Protein Basic Information";
                             document.getElementById('iframeData2').textContent = "Hover on a highlighted amino acid to view the PTM; click on a highlighted amino acid to view details of the PTM below."
@@ -1663,144 +1964,24 @@ async function search() {
     document.getElementById('iframeLoader').setAttribute('class', '');
 }
 
-async function fetch_ptm_scores(vectorData, result, middle) {
-    let scores = {};
-    try {
-        const response = await fetch('/ptmkb/get_protein_log', {
-            method: "POST",
-            headers: {
-                "Accept": "application/json",
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(vectorData)
-        });
-        scores = await response.json();
-    } catch (err) {
-        scores = {};
-    }
-    return scores
-}
-
-async function displayVector(data, subsequence, result) {
-    const KEYS = Object.keys(data);
-    var values = new Array();
-    KEYS.sort((l, s) => {
-        return parseInt(l) - parseInt(s);
-    });
-    KEYS.forEach((key, index) => {
-        if (data[key].hasOwnProperty(subsequence[index])) {
-            values.push(
-                Math.round(data[key][subsequence[index]] * 100) / 100
-            );
-        }
-        else
-            values.push('-inf');
-    });
-
-    const middle = values[10];
-    // That was easy - Now comes the hard part
-    // HTML manupulation...
-
-    // Display the vector first so I can get over this
-    var vectorData = new Object();
-    KEYS.forEach((key, index) => {
-        var item = new Object();
-        item[subsequence[index]] = values[index];
-        vectorData[key] = item;
-    });
+function displayTable(data, ptm, site, mapping) {
     
-    const vectorTag = document.getElementById('dataVector');
-    const vectorHead = document.getElementById('vectorHead');
-    const vectorBody = document.getElementById('vectorBody');
-    vectorHead.innerHTML = ''
-    vectorBody.innerHTML = ''
-
-    KEYS.forEach((key, index) => {
-        const header = document.createElement("th");
-        header.textContent = key;
-        header.setAttribute("style", "border: 1px solid black; background-color: #A0C4FF;")
-        for (let [in_key, value] of Object.entries(vectorData[key])) {
-            const cell = document.createElement("td");
-            cell.textContent = vectorData[key][in_key];
-            if (index == 10)
-                cell.style.backgroundColor = '#F2C998';
-            vectorBody.appendChild(cell);
+    var colorMapping = (value) => {};
+    if (mapping === 'freq') {
+        colorMapping = (value) => {
+            value = Math.min(Math.max(value, 0), 1);
+            const alpha = Math.min(1, value);
+            return `rgba(255, 0, 0, ${alpha})`;
         }
-        vectorHead.appendChild(header);
-    });
-
-    // Now let's calculate the additive and multiplicative scores
-    // here...
-    // I know, this is a bad idea. I should make an API out of this.
-    var scores = await fetch_ptm_scores(vectorData, result, middle)
-                .then(json => {
-                    return json;
-                });
-    var json = {
-        "modificationType": result[1],
-        "modificationPosition": result[0],
-        "evidence": result[2],
-        "additiveScore": scores['a_score'],
-        "multiplicativeScore": scores['m_score'],
-        "*-MultiplicativeScore": scores['*_m_score']
+    } else if (mapping === 'log-e') {
+        colorMapping = (value) => {
+            let adjValue = Math.exp(value)
+            adjValue = Math.min(Math.max(adjValue, 0), 1);
+            const alpha = Math.min(1, adjValue);
+            return `rgba(255, 0, 0, ${alpha})`;
+        }
     }
 
-    // Now I'll work on the general info on the PTM
-    const table = document.getElementById('ptmInfo');
-    table.innerHTML = '';
-    for (var [key, value] of Object.entries(json)) {
-        const row = document.createElement('tr');
-        const keyCell = document.createElement('td');
-        keyCell.style.fontWeight = 1000;
-        const valueCell = document.createElement('td');
-        keyCell.textContent = key
-                                .replace(/([a-z](?=[A-Z]))/g, '$1 ')
-                                .replace(/^./, function(str){ return str.toUpperCase(); })
-        keyCell.className = 'key';
-        valueCell.className = 'value';
-        if (key !== "evidence") {
-            valueCell.textContent = value;
-        } else {
-            splits = json[key].split(';').map(item => "PubMed:" + item.trim());
-            var totalText = new String();
-            for (i = 0; i < splits.length; i++)
-                totalText += convertPubMedReferences(splits[i]) + '; ';
-            valueCell.innerHTML = totalText;
-        }
-        row.appendChild(keyCell);
-        row.appendChild(valueCell);
-        const notes = document.createElement('td');
-        notes.className = 'notes';
-
-        if (key === "additiveScore" || key === "multiplicativeScore" || key === "*-MultiplicativeScore") {
-            // Make notes
-            var tag = new String();
-            if (key === "additiveScore") {
-                tag = "<math><munderover><mo>∑</mo><mn>i=1</mn><mi>n</mi></munderover><msub><mi>x</mi><mi>i</mi></msub><mtext>, where&nbsp;</mtext><msub><mi>x</mi><mi>i</mi></msub><mo>≠</mo><mtext>'-inf'</mtext></math>";
-            }
-            else if (key === "multiplicativeScore") {
-                tag = "<math><munderover><mo>∏</mo><mi>i=1</mi><mn>n</mn></munderover><msub><mi>x</mi><mi>i</mi></msub><mtext>, where&nbsp;</mtext><msub><mi>x</mi><mi>i</mi></msub><mo>≠</mo><mtext>'-inf' and&nbsp;</mtext><msub><mi>x</mi><mi>i</mi></msub><mo>≠</mo><mtext>0</mtext></math>";
-            }
-            else {
-                tag = "<math><mrow><mo>ln</mo><mo>(</mo><mfrac><mn>1</mn><mrow><mrow><mn>-1</mn><mo>×</mo></mrow><munderover><mo>∏</mo><mi>i=1</mi><mn>n</mn></munderover><msub><mi>x</mi><mi>i</mi></msub></mrow></mfrac><mo>)</mo></mrow><mtext>, where&nbsp;</mtext><msub><mi>x</mi><mi>i</mi></msub><mo>≠</mo><mtext>'-inf' and&nbsp;</mtext><msub><mi>x</mi><mi>i</mi></msub><mo>≠</mo><mtext>0</mtext></math>";
-            }
-            notes.innerHTML = tag;
-            row.appendChild(notes);
-        } else {
-            notes.innerHTML = '';
-            row.appendChild(notes);
-        }
-        table.appendChild(row);
-    }
-
-    vectorTag.style.display = 'block';
-}
-
-function displayTable(data, ptm) {
-    // <table class="table table-bordered table-responsive th td" id="dataTable" style="display: none; font-family: 'Courier New', Courier, monospace;  text-align: center;">
-    //                         <thead id="tableHead"></thead>
-    //                         <tbody id="tableBody"></tbody>
-    //                     </table>
     const tableData = document.createElement('table');
     tableData.classList.add('table');
     tableData.classList.add('table-bordered');
@@ -1881,15 +2062,20 @@ function displayTable(data, ptm) {
             if (index == Object.keys(KEYS).length - 1 && outer == AA.length - 1)
                 cell.setAttribute("style", "border-right: 3px solid black; border-bottom: 3px solid black; text-align: center;")
             // Set colour
-            if (outer%2 == 0)
-                cell.style.backgroundColor = '#F0F0F0';
-            else
-                cell.style.backgroundColor = '#FFFFFF'
+            // if (outer%2 == 0)
+            //     cell.style.backgroundColor = '#F0F0F0';
+            // else {
+            //     cell.style.backgroundColor = '#FFFFFF';
+            // }
             if (index == site_index) {
-                cell.style.backgroundColor = '#F2C998';
+                // cell.style.backgroundColor = '#F2C998';
                 cell.style.borderRight = "2px solid black";
                 cell.style.borderLeft = "2px solid black";
             }
+            if (value !== '-inf')
+                cell.style.backgroundColor = colorMapping(value)
+            else
+                cell.style.backgroundColor = `rgba(0, 0, 255, 0.1)`
             cell.style.fontWeight = 700;
             aaHeader.appendChild(cell);
         })
@@ -1908,7 +2094,7 @@ function displayTable(data, ptm) {
     head.appendChild(link);
     dataTable.style.display = 'table';
     const title = document.createElement('h3')
-    title.innerHTML = `${ptm}`;
+    title.innerHTML = `${ptm} at site ${site}`;
     title.style.textAlign = 'center';
     body.append(title);
     body.appendChild(dataTable);

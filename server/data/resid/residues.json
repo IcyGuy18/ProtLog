@@ -2795,6 +2795,8 @@
             },
             {
                 "@id": "AA0021",
+                "PTM": "Formylation",
+                "AminoAcid": "M",
                 "Header": {
                     "Code": "AA0021",
                     "Dates": {
@@ -4303,6 +4305,8 @@
             },
             {
                 "@id": "AA0028",
+                "PTM": "Hydroxylation",
+                "AminoAcid": "K",
                 "Header": {
                     "Code": "AA0028",
                     "Dates": {
@@ -4790,6 +4794,8 @@
             },
             {
                 "@id": "AA0030",
+                "PTM": "Hydroxylation",
+                "AminoAcid": "P",
                 "Header": {
                     "Code": "AA0030",
                     "Dates": {
@@ -4974,6 +4980,8 @@
             },
             {
                 "@id": "AA0031",
+                "PTM": "Pyrrolidone carboxylic acid",
+                "AminoAcid": "Q",
                 "Header": {
                     "Code": "AA0031",
                     "Dates": {
@@ -5437,6 +5445,8 @@
             },
             {
                 "@id": "AA0033",
+                "PTM": "Phosphorylation",
+                "AminoAcid": "D",
                 "Header": {
                     "Code": "AA0033",
                     "Dates": {
@@ -6218,6 +6228,8 @@
             },
             {
                 "@id": "AA0037",
+                "PTM": "Phosphorylation",
+                "AminoAcid": "S",
                 "Header": {
                     "Code": "AA0037",
                     "Dates": {
@@ -6404,6 +6416,8 @@
             },
             {
                 "@id": "AA0038",
+                "PTM": "Phosphorylation",
+                "AminoAcid": "T",
                 "Header": {
                     "Code": "AA0038",
                     "Dates": {
@@ -6520,6 +6534,8 @@
             },
             {
                 "@id": "AA0039",
+                "PTM": "Phosphorylation",
+                "AminoAcid": "Y",
                 "Header": {
                     "Code": "AA0039",
                     "Dates": {
@@ -6841,6 +6857,8 @@
             },
             {
                 "@id": "AA0041",
+                "PTM": "Acetylation",
+                "AminoAcid": "A",
                 "Header": {
                     "Code": "AA0041",
                     "Dates": {
@@ -7472,6 +7490,8 @@
             },
             {
                 "@id": "AA0046",
+                "PTM": "Acetylation",
+                "AminoAcid": "G",
                 "Header": {
                     "Code": "AA0046",
                     "Dates": {
@@ -7806,6 +7826,8 @@
             },
             {
                 "@id": "AA0049",
+                "PTM": "Acetylation",
+                "AminoAcid": "M",
                 "Header": {
                     "Code": "AA0049",
                     "Dates": {
@@ -7939,6 +7961,8 @@
             },
             {
                 "@id": "AA0050",
+                "PTM": "Acetylation",
+                "AminoAcid": "P",
                 "Header": {
                     "Code": "AA0050",
                     "Dates": {
@@ -8067,6 +8091,8 @@
             },
             {
                 "@id": "AA0051",
+                "PTM": "Acetylation",
+                "AminoAcid": "S",
                 "Header": {
                     "Code": "AA0051",
                     "Dates": {
@@ -8223,6 +8249,8 @@
             },
             {
                 "@id": "AA0052",
+                "PTM": "Acetylation",
+                "AminoAcid": "T",
                 "Header": {
                     "Code": "AA0052",
                     "Dates": {
@@ -8606,6 +8634,8 @@
             },
             {
                 "@id": "AA0055",
+                "PTM": "Acetylation",
+                "AminoAcid": "K",
                 "Header": {
                     "Code": "AA0055",
                     "Dates": {
@@ -9104,6 +9134,8 @@
             },
             {
                 "@id": "AA0059",
+                "PTM": "Myristoylation",
+                "AminoAcid": "G",
                 "Header": {
                     "Code": "AA0059",
                     "Dates": {
@@ -9360,6 +9392,8 @@
             },
             {
                 "@id": "AA0060",
+                "PTM": "Palmitoylation",
+                "AminoAcid": "C",
                 "Header": {
                     "Code": "AA0060",
                     "Dates": {
@@ -10539,6 +10573,8 @@
             },
             {
                 "@id": "AA0067",
+                "PTM": "Methylation",
+                "AminoAcid": "R",
                 "Header": {
                     "Code": "AA0067",
                     "Dates": {
@@ -10674,6 +10710,8 @@
             },
             {
                 "@id": "AA0068",
+                "PTM": "Methylation",
+                "AminoAcid": "R",
                 "Header": {
                     "Code": "AA0068",
                     "Dates": {
@@ -10829,6 +10867,8 @@
             },
             {
                 "@id": "AA0069",
+                "PTM": "Methylation",
+                "AminoAcid": "R",
                 "Header": {
                     "Code": "AA0069",
                     "Dates": {
@@ -11105,6 +11145,8 @@
             },
             {
                 "@id": "AA0071",
+                "PTM": "Methylation",
+                "AminoAcid": "Q",
                 "Header": {
                     "Code": "AA0071",
                     "Dates": {
@@ -11624,6 +11666,8 @@
             },
             {
                 "@id": "AA0074",
+                "PTM": "Methylation",
+                "AminoAcid": "K",
                 "Header": {
                     "Code": "AA0074",
                     "Dates": {
@@ -11845,6 +11889,8 @@
             },
             {
                 "@id": "AA0075",
+                "PTM": "Methylation",
+                "AminoAcid": "K",
                 "Header": {
                     "Code": "AA0075",
                     "Dates": {
@@ -12023,6 +12069,8 @@
             },
             {
                 "@id": "AA0076",
+                "PTM": "Methylation",
+                "AminoAcid": "K",
                 "Header": {
                     "Code": "AA0076",
                     "Dates": {
@@ -12131,6 +12179,8 @@
             },
             {
                 "@id": "AA0077",
+                "PTM": "Palmitoylation",
+                "AminoAcid": "K",
                 "Header": {
                     "Code": "AA0077",
                     "Dates": {
@@ -12295,6 +12345,8 @@
             },
             {
                 "@id": "AA0078",
+                "PTM": "Myristoylation",
+                "AminoAcid": "K",
                 "Header": {
                     "Code": "AA0078",
                     "Dates": {
@@ -12475,6 +12527,8 @@
             },
             {
                 "@id": "AA0079",
+                "PTM": "Palmitoylation",
+                "AminoAcid": "T",
                 "Header": {
                     "Code": "AA0079",
                     "Dates": {
@@ -12591,6 +12645,8 @@
             },
             {
                 "@id": "AA0080",
+                "PTM": "Palmitoylation",
+                "AminoAcid": "S",
                 "Header": {
                     "Code": "AA0080",
                     "Dates": {
@@ -12756,6 +12812,8 @@
             },
             {
                 "@id": "AA0081",
+                "PTM": "Amidation",
+                "AminoAcid": "A",
                 "Header": {
                     "Code": "AA0081",
                     "Dates": {
@@ -12902,6 +12960,8 @@
             },
             {
                 "@id": "AA0082",
+                "PTM": "Amidation",
+                "AminoAcid": "R",
                 "Header": {
                     "Code": "AA0082",
                     "Dates": {
@@ -13030,6 +13090,8 @@
             },
             {
                 "@id": "AA0083",
+                "PTM": "Amidation",
+                "AminoAcid": "N",
                 "Header": {
                     "Code": "AA0083",
                     "Dates": {
@@ -13288,6 +13350,8 @@
             },
             {
                 "@id": "AA0085",
+                "PTM": "Amidation",
+                "AminoAcid": "C",
                 "Header": {
                     "Code": "AA0085",
                     "Dates": {
@@ -13679,6 +13743,8 @@
             },
             {
                 "@id": "AA0088",
+                "PTM": "Amidation",
+                "AminoAcid": "G",
                 "Header": {
                     "Code": "AA0088",
                     "Dates": {
@@ -13923,6 +13989,8 @@
             },
             {
                 "@id": "AA0090",
+                "PTM": "Amidation",
+                "AminoAcid": "I",
                 "Header": {
                     "Code": "AA0090",
                     "Dates": {
@@ -14017,6 +14085,8 @@
             },
             {
                 "@id": "AA0091",
+                "PTM": "Amidation",
+                "AminoAcid": "L",
                 "Header": {
                     "Code": "AA0091",
                     "Dates": {
@@ -14309,6 +14379,8 @@
             },
             {
                 "@id": "AA0094",
+                "PTM": "Amidation",
+                "AminoAcid": "F",
                 "Header": {
                     "Code": "AA0094",
                     "Dates": {
@@ -14782,6 +14854,8 @@
             },
             {
                 "@id": "AA0098",
+                "PTM": "Amidation",
+                "AminoAcid": "W",
                 "Header": {
                     "Code": "AA0098",
                     "Dates": {
@@ -15014,6 +15088,8 @@
             },
             {
                 "@id": "AA0100",
+                "PTM": "Amidation",
+                "AminoAcid": "V",
                 "Header": {
                     "Code": "AA0100",
                     "Dates": {
@@ -15288,6 +15364,8 @@
             },
             {
                 "@id": "AA0102",
+                "PTM": "Palmitoylation",
+                "AminoAcid": "C",
                 "Header": {
                     "Code": "AA0102",
                     "Dates": {
@@ -15572,6 +15650,8 @@
             },
             {
                 "@id": "AA0104",
+                "PTM": "Palmitoylation",
+                "AminoAcid": "C",
                 "Header": {
                     "Code": "AA0104",
                     "Dates": {
@@ -15685,6 +15765,8 @@
             },
             {
                 "@id": "AA0105",
+                "PTM": "Methylation",
+                "AminoAcid": "C",
                 "Header": {
                     "Code": "AA0105",
                     "Dates": {
@@ -15806,6 +15888,8 @@
             },
             {
                 "@id": "AA0106",
+                "PTM": "Palmitoylation",
+                "AminoAcid": ["S", "C"],
                 "Header": {
                     "Code": "AA0106",
                     "Dates": {
@@ -16031,6 +16115,8 @@
             },
             {
                 "@id": "AA0107",
+                "PTM": "S-diacylglycerol",
+                "AminoAcid": "C",
                 "Header": {
                     "Code": "AA0107",
                     "Dates": {
@@ -16928,6 +17014,8 @@
             },
             {
                 "@id": "AA0113",
+                "PTM": "Ubiquitination",
+                "AminoAcid": "Y",
                 "Header": {
                     "Code": "AA0113",
                     "Dates": {
@@ -17071,6 +17159,8 @@
             },
             {
                 "@id": "AA0114",
+                "PTM": "Carboxylation",
+                "AminoAcid": "K",
                 "Header": {
                     "Code": "AA0114",
                     "Dates": {
@@ -17705,6 +17795,8 @@
             },
             {
                 "@id": "AA0118",
+                "PTM": "Lipoylation",
+                "AminoAcid": "K",
                 "Header": {
                     "Code": "AA0118",
                     "Dates": {
@@ -17859,6 +17951,7 @@
             },
             {
                 "@id": "AA0119",
+                "AminoAcid": "K",
                 "Header": {
                     "Code": "AA0119",
                     "Dates": {
@@ -17951,6 +18044,7 @@
             },
             {
                 "@id": "AA0120",
+                "AminoAcid": "K",
                 "Header": {
                     "Code": "AA0120",
                     "Dates": {
@@ -18947,6 +19041,8 @@
             },
             {
                 "@id": "AA0125",
+                "PTM": "Sumoylation",
+                "AminoAcid": "K",
                 "Header": {
                     "Code": "AA0125",
                     "Dates": {
@@ -19222,6 +19318,8 @@
             },
             {
                 "@id": "AA0127",
+                "PTM": "Pyruvate",
+                "AminoAcid": ["C","S"],
                 "Header": {
                     "Code": "AA0127",
                     "Dates": {
@@ -22878,6 +22976,8 @@
             },
             {
                 "@id": "AA0150",
+                "PTM": "Phosphorylation",
+                "AminoAcid": "S",
                 "Header": {
                     "Code": "AA0150",
                     "Dates": {
@@ -23378,6 +23478,8 @@
             },
             {
                 "@id": "AA0152",
+                "PTM": "S-linked Glycosylation",
+                "AminoAcid": "C",
                 "Header": {
                     "Code": "AA0152",
                     "Dates": {
@@ -24310,6 +24412,8 @@
             },
             {
                 "@id": "AA0158",
+                "PTM": "GPI-anchor",
+                "AminoAcid": "N",
                 "Header": {
                     "Code": "AA0158",
                     "Dates": {
@@ -24416,6 +24520,8 @@
             },
             {
                 "@id": "AA0159",
+                "PTM": "GPI-anchor",
+                "AminoAcid": "D",
                 "Header": {
                     "Code": "AA0159",
                     "Dates": {
@@ -24506,6 +24612,8 @@
             },
             {
                 "@id": "AA0160",
+                "PTM": "GPI-anchor",
+                "AminoAcid": "C",
                 "Header": {
                     "Code": "AA0160",
                     "Dates": {
@@ -24599,6 +24707,8 @@
             },
             {
                 "@id": "AA0161",
+                "PTM": "GPI-anchor",
+                "AminoAcid": "G",
                 "Header": {
                     "Code": "AA0161",
                     "Dates": {
@@ -24686,6 +24796,8 @@
             },
             {
                 "@id": "AA0162",
+                "PTM": "GPI-anchor",
+                "AminoAcid": "S",
                 "Header": {
                     "Code": "AA0162",
                     "Dates": {
@@ -24795,6 +24907,8 @@
             },
             {
                 "@id": "AA0163",
+                "PTM": "GPI-anchor",
+                "AminoAcid": "A",
                 "Header": {
                     "Code": "AA0163",
                     "Dates": {
@@ -25091,6 +25205,8 @@
             },
             {
                 "@id": "AA0166",
+                "PTM": "GPI-anchor",
+                "AminoAcid": "S",
                 "Header": {
                     "Code": "AA0166",
                     "Dates": {
@@ -25931,6 +26047,8 @@
             },
             {
                 "@id": "AA0172",
+                "PTM": "Sulfation",
+                "AminoAcid": "Y",
                 "Header": {
                     "Code": "AA0172",
                     "Dates": {
@@ -26983,6 +27101,8 @@
             },
             {
                 "@id": "AA0181",
+                "PTM": "Hydroxylation",
+                "AminoAcid": "S",
                 "Header": {
                     "Code": "AA0181",
                     "Dates": {
@@ -28214,6 +28334,8 @@
             },
             {
                 "@id": "AA0187",
+                "PTM": "Ubiquitination",
+                "AminoAcid": "A",
                 "Header": {
                     "Code": "AA0187",
                     "Dates": {
@@ -32089,6 +32211,8 @@
             },
             {
                 "@id": "AA0214",
+                "PTM": "Citrullination",
+                "AminoAcid": "R",
                 "Header": {
                     "Code": "AA0214",
                     "Dates": {
@@ -32466,6 +32590,8 @@
             },
             {
                 "@id": "AA0217",
+                "PTM": "C-linked Glycosylation",
+                "AminoAcid": "W",
                 "Header": {
                     "Code": "AA0217",
                     "Dates": {
@@ -34071,6 +34197,8 @@
             },
             {
                 "@id": "AA0229",
+                "PTM": "Glutathionylation",
+                "AminoAcid": "C",
                 "Header": {
                     "Code": "AA0229",
                     "Dates": {
@@ -34186,6 +34314,8 @@
             },
             {
                 "@id": "AA0230",
+                "PTM": "S-nitrosylation",
+                "AminoAcid": "C",
                 "Header": {
                     "Code": "AA0230",
                     "Dates": {
@@ -34467,6 +34597,8 @@
             },
             {
                 "@id": "AA0232",
+                "PTM": "Methylation",
+                "AminoAcid": "D",
                 "Header": {
                     "Code": "AA0232",
                     "Dates": {
@@ -35729,6 +35861,8 @@
             },
             {
                 "@id": "AA0241",
+                "PTM": "Ubiquitination",
+                "AminoAcid": "G",
                 "Header": {
                     "Code": "AA0241",
                     "Dates": {
@@ -35853,6 +35987,8 @@
             },
             {
                 "@id": "AA0242",
+                "PTM": "Ubiquitination",
+                "AminoAcid": "S",
                 "Header": {
                     "Code": "AA0242",
                     "Dates": {
@@ -36118,6 +36254,8 @@
             },
             {
                 "@id": "AA0244",
+                "PTM": "Ubiquitination",
+                "AminoAcid": "C",
                 "Header": {
                     "Code": "AA0244",
                     "Dates": {
@@ -37051,6 +37189,8 @@
             },
             {
                 "@id": "AA0251",
+                "PTM": "Oxidation",
+                "AminoAcid": "M",
                 "Header": {
                     "Code": "AA0251",
                     "Dates": {
@@ -37178,6 +37318,8 @@
             },
             {
                 "@id": "AA0252",
+                "PTM": "Pyrrolylation",
+                "AminoAcid": "S",
                 "Header": {
                     "Code": "AA0252",
                     "Dates": {
@@ -39759,6 +39901,8 @@
             },
             {
                 "@id": "AA0270",
+                "PTM": "Ubiquitination",
+                "AminoAcid": "H",
                 "Header": {
                     "Code": "AA0270",
                     "Dates": {
@@ -40022,6 +40166,8 @@
             },
             {
                 "@id": "AA0272",
+                "PTM": "Methylation",
+                "AminoAcid": "R",
                 "Header": {
                     "Code": "AA0272",
                     "Dates": {
@@ -41294,6 +41440,8 @@
             },
             {
                 "@id": "AA0282",
+                "PTM": "Ubiquitination",
+                "AminoAcid": "P",
                 "Header": {
                     "Code": "AA0282",
                     "Dates": {
@@ -42639,6 +42787,8 @@
             },
             {
                 "@id": "AA0294",
+                "PTM": "Ubiquitination",
+                "AminoAcid": ["K", "D"],
                 "Header": {
                     "Code": "AA0294",
                     "Dates": {
@@ -48830,6 +48980,8 @@
             },
             {
                 "@id": "AA0339",
+                "PTM": "Palmitoylation",
+                "AminoAcid": "G",
                 "Header": {
                     "Code": "AA0339",
                     "Dates": {
@@ -53895,6 +54047,8 @@
             },
             {
                 "@id": "AA0378",
+                "PTM": "Ubiquitination",
+                "AminoAcid": "Q",
                 "Header": {
                     "Code": "AA0378",
                     "Dates": {
@@ -54052,6 +54206,8 @@
             },
             {
                 "@id": "AA0379",
+                "PTM": "Ubiquitination",
+                "AminoAcid": "M",
                 "Header": {
                     "Code": "AA0379",
                     "Dates": {
@@ -55711,6 +55867,8 @@
             },
             {
                 "@id": "AA0392",
+                "PTM": "S-linked Glycosylation",
+                "AminoAcid": "C",
                 "Header": {
                     "Code": "AA0392",
                     "Dates": {
@@ -56440,6 +56598,8 @@
             },
             {
                 "@id": "AA0398",
+                "PTM": "O-linked Glycosylation",
+                "AminoAcid": "S",
                 "Header": {
                     "Code": "AA0398",
                     "Dates": {
@@ -56630,6 +56790,8 @@
             },
             {
                 "@id": "AA0399",
+                "PTM": "O-linked Glycosylation",
+                "AminoAcid": "T",
                 "Header": {
                     "Code": "AA0399",
                     "Dates": {
@@ -57024,6 +57186,8 @@
             },
             {
                 "@id": "AA0402",
+                "PTM": "O-linked Glycosylation",
+                "AminoAcid": "S",
                 "Header": {
                     "Code": "AA0402",
                     "Dates": {
@@ -57141,6 +57305,8 @@
             },
             {
                 "@id": "AA0403",
+                "PTM": "O-linked Glycosylation",
+                "AminoAcid": "T",
                 "Header": {
                     "Code": "AA0403",
                     "Dates": {
@@ -57254,6 +57420,8 @@
             },
             {
                 "@id": "AA0404",
+                "PTM": "O-linked Glycosylation",
+                "AminoAcid": "S",
                 "Header": {
                     "Code": "AA0404",
                     "Dates": {
@@ -57443,6 +57611,8 @@
             },
             {
                 "@id": "AA0405",
+                "PTM": "O-linked Glycosylation",
+                "AminoAcid": "T",
                 "Header": {
                     "Code": "AA0405",
                     "Dates": {
@@ -59597,6 +59767,8 @@
             },
             {
                 "@id": "AA0425",
+                "PTM": "GPI-anchor",
+                "AminoAcid": "N",
                 "Header": {
                     "Code": "AA0425",
                     "Dates": {
@@ -63047,6 +63219,8 @@
             },
             {
                 "@id": "AA0451",
+                "PTM": "Ubiquitination",
+                "AminoAcid": "W",
                 "Header": {
                     "Code": "AA0451",
                     "Dates": {
@@ -63204,6 +63378,8 @@
             },
             {
                 "@id": "AA0455",
+                "PTM": "Palmitoylation",
+                "AminoAcid": "S",
                 "Header": {
                     "Code": "AA0455",
                     "Dates": {
@@ -64376,6 +64552,8 @@
             },
             {
                 "@id": "AA0466",
+                "PTM": "Ubiquitination",
+                "AminoAcid": "I",
                 "Header": {
                     "Code": "AA0466",
                     "Dates": {
@@ -64488,6 +64666,8 @@
             },
             {
                 "@id": "AA0467",
+                "PTM": "Ubiquitination",
+                "AminoAcid": "V",
                 "Header": {
                     "Code": "AA0467",
                     "Dates": {
@@ -64720,6 +64900,8 @@
             },
             {
                 "@id": "AA0469",
+                "PTM": "Ubiquitination",
+                "AminoAcid": "N",
                 "Header": {
                     "Code": "AA0469",
                     "Dates": {
@@ -66449,6 +66631,8 @@
             },
             {
                 "@id": "AA0483",
+                "PTM": "Ubiquitination",
+                "AminoAcid": "T",
                 "Header": {
                     "Code": "AA0483",
                     "Dates": {
@@ -66602,6 +66786,8 @@
             },
             {
                 "@id": "AA0484",
+                "PTM": "Ubiquitination",
+                "AminoAcid": "F",
                 "Header": {
                     "Code": "AA0484",
                     "Dates": {
@@ -73819,6 +74005,8 @@
             },
             {
                 "@id": "AA0541",
+                "PTM": "Ubiquitination",
+                "AminoAcid": "E",
                 "Header": {
                     "Code": "AA0541",
                     "Dates": {
@@ -74290,6 +74478,8 @@
             },
             {
                 "@id": "AA0545",
+                "PTM": "Succinylation",
+                "AminoAcid": "K",
                 "Header": {
                     "Code": "AA0545",
                     "Dates": {
@@ -76192,6 +76382,8 @@
             },
             {
                 "@id": "AA0560",
+                "PTM": "S-linked Glycosylation",
+                "AminoAcid": "C",
                 "Header": {
                     "Code": "AA0560",
                     "Dates": {
@@ -77065,6 +77257,8 @@
             },
             {
                 "@id": "AA0567",
+                "PTM": "Crotonylation",
+                "AminoAcid": "R",
                 "Header": {
                     "Code": "AA0567",
                     "Dates": {
@@ -77167,6 +77361,8 @@
             },
             {
                 "@id": "AA0568",
+                "PTM": "Malonylation",
+                "AminoAcid": "K",
                 "Header": {
                     "Code": "AA0568",
                     "Dates": {
@@ -77320,6 +77516,8 @@
             },
             {
                 "@id": "AA0569",
+                "PTM": "Methylation",
+                "AminoAcid": "R",
                 "Header": {
                     "Code": "AA0569",
                     "Dates": {
@@ -77441,6 +77639,8 @@
             },
             {
                 "@id": "AA0570",
+                "PTM": "Ubiquitination",
+                "AminoAcid": "R",
                 "Header": {
                     "Code": "AA0570",
                     "Dates": {

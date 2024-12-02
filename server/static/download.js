@@ -96,6 +96,7 @@ async function displayTablesList() {
 }
 
 async function displayTableAndDownload() {
+
     document.getElementById('ptmTable').innerHTML = '';
     document.getElementById('ptmTable').classList.add('lds-dual-ring');
     document.getElementById('download').style.display = 'block';
@@ -118,6 +119,36 @@ async function displayTableAndDownload() {
 }
 
 function displayTable(data) {
+    let mapping = document.getElementById('tableSelect').value;
+    let maps = {
+        'Frequency': 'freq',
+        'Log Odd (base e)': 'log-e',
+        'Log Odd (base 2)': 'log2'
+    }
+    mapping = maps[mapping];
+    var colorMapping = (value) => {};
+    if (mapping === 'freq') {
+        colorMapping = (value) => {
+            value = Math.min(Math.max(value, 0), 1);
+            const alpha = Math.min(1, value);
+            return `rgba(255, 0, 0, ${alpha})`;
+        }
+    } else if (mapping === 'log-e') {
+        colorMapping = (value) => {
+            let adjValue = Math.exp(value);
+            adjValue = Math.min(Math.max(adjValue, 0), 1);
+            const alpha = Math.min(1, adjValue);
+            return `rgba(255, 0, 0, ${alpha})`;
+        }
+    } else if (mapping === 'log2') {
+        colorMapping = (value) => {
+            let adjValue = Math.pow(2, value);
+            adjValue = Math.min(Math.max(adjValue, 0), 1);
+            const alpha = Math.min(1, adjValue);
+            return `rgba(255, 0, 0, ${alpha})`;
+        }
+    }
+
     currentData = data;
     const tableData = document.createElement('table');
     tableData.classList.add('table');
@@ -186,21 +217,28 @@ function displayTable(data) {
                 cell.textContent = "-inf";
             // Set border lines for table
             if (index == Object.keys(KEYS).length - 1)
-                cell.setAttribute("style", "border-right: 3px solid black; text-align: center; width: 60px; height: 20px;")
+                cell.setAttribute("style", "border-right: 3px solid black; text-align: center;")
             if (outer == AA.length - 1)
-                cell.setAttribute("style", "border-bottom: 3px solid black; text-align: center; width: 60px; height: 20px;")
+                cell.setAttribute("style", "border-bottom: 3px solid black; text-align: center;")
             if (index == Object.keys(KEYS).length - 1 && outer == AA.length - 1)
-                cell.setAttribute("style", "border-right: 3px solid black; border-bottom: 3px solid black; text-align: center; width: 60px; height: 20px;")
+                cell.setAttribute("style", "border-right: 3px solid black; border-bottom: 3px solid black; text-align: center;")
             // Set colour
-            if (outer%2 == 0)
-                cell.style.backgroundColor = '#F0F0F0';
-            else
-                cell.style.backgroundColor = '#FFFFFF'
+            // if (outer%2 == 0)
+            //     cell.style.backgroundColor = '#F0F0F0';
+            // else {
+            //     cell.style.backgroundColor = '#FFFFFF';
+            // }
             if (index == site_index) {
-                cell.style.backgroundColor = '#F2C998';
+                // cell.style.backgroundColor = '#F2C998';
                 cell.style.borderRight = "2px solid black";
                 cell.style.borderLeft = "2px solid black";
             }
+            if (value !== '-inf') {
+                cell.style.backgroundColor = colorMapping(value)
+                console.log(value, cell.style.backgroundColor);
+            }
+            else
+                cell.style.backgroundColor = `rgba(0, 0, 255, 0.1)`
             cell.style.fontWeight = 700;
             aaHeader.appendChild(cell);
         })

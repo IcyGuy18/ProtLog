@@ -24,6 +24,8 @@ def additive_calculator(vector: list[float | int | str]) -> float:
     for value in vector:
         if isinstance(value, float | int):
             additive_score += value
+    if additive_score == 0.0:
+        additive_score = 'NIL'
     return additive_score
 
 def multiplicative_calculator(vector: list[float | str]) -> tuple[bool, dict]:

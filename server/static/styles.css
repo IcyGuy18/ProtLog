@@ -144,7 +144,8 @@ iframe {
 }
 
 .lds-dual-ring {
-    color: #297fff
+    color: #297fff;
+    margin: auto; 
 }
 .lds-dual-ring,
 .lds-dual-ring:after {
@@ -318,6 +319,10 @@ iframe {
     }
 
     .top-right-window {
+        visibility: hidden;
+    }
+
+    .top-right-window-disclaimer {
         visibility: hidden;
     }
 }
@@ -608,6 +613,7 @@ iframe {
     border-radius: 10px; /* Rounded corners for a soft, modern look */
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Soft shadow for depth */
     margin-top: 20px;
+    margin-bottom: 20px;
     max-width: 90%; /* Responsive width */
     margin: 0 auto; /* Center the panel */
     overflow: hidden; /* Prevent overflow */
@@ -1004,4 +1010,244 @@ iframe {
 
 .protein-ptm-overview__table td a:hover {
     text-decoration: underline;
+}
+
+/* EFFECTS FOR ADDITIONAL BUTTONS */
+/* General Button Styling */
+.additional-button {
+    padding: 10px 20px;
+    font-size: 16px;
+    font-weight: 500;
+    border-radius: 8px;  /* Slightly rounded corners */
+    border: 2px solid transparent; /* Invisible border for initial styling */
+    background-color: #e3f2fd; /* Green background */
+    color: black;
+    cursor: pointer;
+    transition: all 0.3s ease; /* Smooth transition for hover effects */
+    display: inline-block;
+    text-align: center;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+}
+
+/* Button Hover Effect */
+.additional-button:hover {
+    background-color: #c2e3fa; /* Darker green on hover */
+    transform: translateY(-3px); /* Slight lift effect */
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2); /* Slightly stronger shadow on hover */
+}
+
+/* Button Focus Effect */
+.additional-button:focus {
+    outline: none;
+    box-shadow: 0 0 10px #b8e2ff; /* Green outline on focus */
+}
+
+/* Button Active Effect (when clicked) */
+.additional-button:active {
+    transform: translateY(1px); /* Button depresses slightly on click */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15); /* Subtle shadow when clicked */
+}
+
+/*
+    DOUBLE STRUCTURE DISPLAY - USE THIS IN CONJUNCTION WITH MDTRAJ
+*/
+
+/* Container for the two PDB structures */
+#pdbMajor {
+    width: 80%; /* Adjust the width to fit within the screen */
+    height: auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    padding: 20px;
+    border: 2px solid #ddd;
+    border-radius: 10px;
+    background-color: #f9f9f9;
+}
+
+/* Container for the two PDB structures */
+#pdbStructures {
+    display: flex;
+    justify-content: center; /* Centers the content horizontally */
+    align-items: center; /* Centers the content vertically */
+    gap: 20px; /* Optional space between the two viewers */
+    width: 100%; /* Ensure it takes up the full width of the parent */
+    max-width: 100%; /* Make sure it doesn't exceed the parent's width */
+}
+
+/* Set the size of each PDB viewer */
+#afPdbStructure, #rcsbPdbStructure {
+    border: 2px solid #000000;
+    border-radius: 0px;
+    width: 45%;  /* Adjust this value for the size of each viewer */
+    height: 500px; /* Adjust as needed */
+    background-color: #f0f0f0; /* Optional: color for the background of the viewers */
+    position: relative; /* Ensure the canvas is contained within the parent div */
+    overflow: hidden; /* Ensure anything overflowing the div is hidden */
+}
+
+/* Optional: Add some basic styling */
+#pdbMajor {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+
+
+/*
+    USE THIS FOR PROPENSITY TABLES
+*/
+
+.PropensityTable {
+    width: 100%;
+    max-width: 1000px;
+    margin: 20px auto;
+    border-collapse: collapse;
+    background-color: #f8f9fa;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    font-family: 'Arial', sans-serif;
+    table-layout: fixed;
+}
+
+.PropensityTable th {
+    padding: 12px 15px;
+    text-align: center;
+    color: #495057;
+    font-size: 1.2rem;
+    border-bottom: 2px solid #dee2e6;
+}
+
+.PropensityTable td {
+    padding: 12px 15px;
+    border: 1px solid #dee2e6;
+}
+
+.PropensityTable-row {
+    border-bottom: 1px solid #ddd;
+}
+
+.PropensityTable-key {
+    background-color: #f1f3f5;
+    color: #212529;
+    font-weight: 600;
+    text-align: left;
+    border-right: 1px solid #dee2e6;
+    max-width: 200px;
+    word-wrap: break-word;
+}
+
+.PropensityTable-value {
+    background-color: #ffffff;
+    color: #495057;
+    text-align: center;
+    border-right: 1px solid #dee2e6;
+    max-width: 250px;
+    word-wrap: break-word;
+}
+
+.PropensityTable-notes {
+    background-color: #ffffff;
+    color: #495057;
+    text-align: left;
+    max-width: 500px;
+    word-wrap: break-word;
+}
+
+.PropensityTable-row:hover {
+    background-color: #f1f3f5;
+}
+
+.PropensityTable-notes math {
+    font-size: 1rem;
+    line-height: 1.6;
+}
+
+@media (max-width: 991px) {
+    .PropensityTable {
+        width: 100%;
+        padding: 0 10px;
+    }
+
+    .PropensityTable-key,
+    .PropensityTable-value,
+    .PropensityTable-notes {
+        padding: 10px 8px;
+    }
+
+    .PropensityTable th {
+        font-size: 1rem;
+        padding: 10px 12px;
+    }
+}
+
+/*
+    AND DISPLAYING THE VECTOR ITSELF
+*/
+
+#ptmVector {
+    margin-left: auto;
+    margin-right: auto;
+    padding: 40px;
+    max-width: 1000px;
+    width: 100%;
+    margin: 0 auto;
+}
+
+#dataVector {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0 auto;
+    text-align: center;
+}
+
+#dataVector th, #dataVector td {
+    padding: 6px 12px;
+    border: 1px solid #ddd;
+    text-align: center;
+    vertical-align: middle;
+}
+
+#dataVector th {
+    background-color: #A0C4FF;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #495057;
+}
+
+#dataVector td {
+    background-color: #ffffff;
+    font-size: 1rem;
+    color: #495057;
+}
+
+#dataVector td:hover {
+    background-color: #f1f3f5;
+    cursor: pointer;
+}
+
+#dataVector td[style*="background-color: rgb(242, 201, 152)"] {
+    background-color: #F2C99A;
+    font-weight: bold;
+}
+
+#vectorHead {
+    background-color: #A0C4FF;
+    color: white;
+    margin: 0 auto;
+}
+
+@media (max-width: 991px) {
+    #dataVector {
+        width: 100%;
+        font-size: 0.9rem;
+    }
+
+    #dataVector th, #dataVector td {
+        padding: 8px 15px;
+    }
 }

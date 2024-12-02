@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home Page</title>
+    <link rel="stylesheet" href="../static/bootstrap-min.css">
+    <!-- <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script> -->
+    <script id="MathJax-script" async src="../static/tex-mml-chtml.js"></script>
+    <!-- <link rel="stylesheet" href="styles.css"> -->
+    <script src="../static/jquery.min.js"></script>
+    <script src="../static/jquery-ui.js"></script>
+    <script src="../static/bootstrap-min.js"></script>
+    <script src="../static/popper.js" defer></script>
+    <script src="../static/3Dmol.js" defer></script>
+    <script src="../static/propensity.js" defer></script>
+    <link rel="stylesheet" href="../static/styles.css">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm">
+        <div class="container">
+            <a class="navbar-brand">Propensity</a>
+
+            <hr class="navbar-separator">
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/" id="searchLink">Search</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/documentation" id="documentationLink">Documentation</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/integration" id="integrationLink">Integration</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/download" id="downloadLink">Download</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/about" id="aboutLink">About</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid mt-5" style="width: 80%; align-content: center;">
+        <div style="text-align: center; max-width: 600px; margin: 0 auto; font-family: 'Courier New', Courier, monospace;">
+            <p>We use the natural log odds matrix positional frequency of amino acids to calculate the <strong>propensity</strong> of a PTM. It is strictly computed with the natural log odds matrix to ensure magnitude scaling.</p>
+        </div>
+        <div class="alert alert-info text-center" style="width: 600px;">
+            <i class="fa fa-search fa-small"></i><label>Calculate Protein Subsequence Propensity</label>
+            <div class="input-group position-relative">
+                <input class="form-control" id="sequence_value" type="text" placeholder="Enter subsequence (valid windows - 13, 15, 17, 19, 21)" style="font-family: 'Courier New', Courier, monospace; text-align: center; text-transform: uppercase;">
+            </div>
+            <div class="input-group position-relative" style="width: 400px; margin: 0 auto;">
+                <input class="form-control" id="ptm_value" type="text" placeholder="Enter Post-Translational Modification" style="font-family: 'Courier New', Courier, monospace; text-align: center;">
+                <div id="suggestions" class="suggestions-box" style="display: none;"></div>
+            </div>
+            <div>
+                <span class="form-group input-group-btn">
+                    <button type="button" id="form_submit" class="btn btn-primary" onclick="calculate()">Calculate</button>
+                </span>
+            </div>
+        </div>
+    </div>
+    <div id="messageDiv" style="padding: 40px; margin-left: auto; margin-right: auto;"></div>
+
+    <table class="PropensityTable">
+        <tbody id="ptmInfo"></tbody>
+    </table>
+
+    <div id="ptmVector" style="margin-left: auto; margin-right: auto; padding: 40px"></div>
+
+    <div id="ptmTable" style="margin-left: auto; margin-right: auto;"></div>
+
+    <div class="main-content"></div>
+
+    <footer class="footer bg-light py-3">
+        <div class="container text-center">
+            <p class="mb-0"> This website is open for everyone to use. For more information, please contact us.</p>
+            <p class="mb-0"><a href="http://biolabs.lums.edu.pk/birl">© 2024 Biomedical Informatics & Engineering Research Laboratory (BIRL)</a></p>
+        </div>
+    </footer>
+</body>
+</html>

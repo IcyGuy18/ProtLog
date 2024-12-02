@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Body, Query
 from fastapi.templating import Jinja2Templates
 from starlette.responses import Response, FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
@@ -18,6 +18,12 @@ from local_ptm import fetch_identifiers, search_identifier
 from calculator import additive_calculator, multiplicative_calculator
 from response_fetcher import fetch_response_uniprot_trim
 from jpred_prediction import submit_job, get_job
+from mdtraj_calculations import (
+    create_file,
+    get_secondary_structure,
+    get_solvent_accessible_surface_area,
+    get_protein_sequence
+)
 
 app = FastAPI(docs_url='/ptmkb/api')
 templates = Jinja2Templates(directory='templates/')
@@ -43,6 +49,13 @@ def home_page(request: Request):
     return templates.TemplateResponse(
         "index.html", context={"request": request}
     )
+
+@app.get("/propensity", include_in_schema=False)
+def docs_page(request: Request):
+    return templates.TemplateResponse(
+        "propensity.html", context={"request": request}
+    )
+
 
 @app.get("/documentation", include_in_schema=False)
 def docs_page(request: Request):
@@ -70,7 +83,7 @@ def integration_page(request: Request):
 
 ######## PAGE REQUESTS ########
 
-@app.get('/ptmkb/autofill', include_in_schema=False)
+@app.get('/ptmkb/protein_autofill', include_in_schema=False)
 async def search(_id: str, request: Request):
     # Probably best to insert elements in a database
     ids = fetch_identifiers(_id)
@@ -92,13 +105,31 @@ async def search(request: Request):
     # We're just going to load the HTML file here to include in the iframe.
     with open('./templates/protein.html', 'r', encoding='utf-8') as f:
         html_page = f.read()
-    if not isinstance(results['Accession Number'], str):
-        results['Accession Number'] = ''
+    if found:
+        if not isinstance(results['Accession Number'], str):
+            results['Accession Number'] = ''
     return {
         'found': found,
         'result': results,
         'html': html_page
     }
+
+@app.post('/ptmkb/structure_calculations', include_in_schema=False)
+async def get_structure_calculations(data: dict = Body(...)):
+    raw_bytes = data.get('raw_pdb_data', None)
+    if data is None:
+        return {'message': "Please submit a PDB file in bytes."}
+    traj = create_file(raw_bytes.encode('utf-8'))
+    response = dict()
+    ss = get_secondary_structure(traj)
+    sasa = get_solvent_accessible_surface_area(traj, 'residue')
+    response.update(ss)
+    response.update(sasa)
+    response.update({
+        'sequence': get_protein_sequence(traj)
+    })
+    return response
+
 
 # I look at this function and cry every single night.
 # This was the best I could do given the time constraint
@@ -228,6 +259,74 @@ def get_amino_acids(request: Request, ptm: str):
         'data': data
     }
 
+@app.get('/ptmkb/getPTM', include_in_schema=False)
+async def get_ptm_details(request: Request, resid: str = None, ptm: str = None, aa: str = None):
+    # Read the file initially
+    with open('./data/resid/residues.json', 'r') as f:
+        entries = json.load(f)['Database']['Entry']
+    # Check whether RESID ID or both PTM and Residue are given.
+    # Both will be handled differently.
+    entry = None
+    if resid:
+        resid = resid.upper()
+        entry = [entry for entry in entries if entry['@id'] == resid]
+        # If caught entry,
+        if entry:
+            _id = entry[0]['@id']
+            # going to send image and model files as raw data.
+            with open(
+                f"./data/resid/images/{_id}.GIF", 'rb'
+            ) as f:
+                entry[0]['Image'] = {}
+                entry[0]['Image']['Data'] = f.read().decode('latin-1')
+                entry[0]['Image']['Encoding'] = 'latin-1'
+                entry[0]['Image']['FileType'] = '.GIF'
+            with open(
+                f"./data/resid/models/{_id}.PDB", 'rb'
+            ) as f:
+                entry[0]['Model'] = {}
+                entry[0]['Model']['Data'] = f.read().decode()
+                entry[0]['Model']['Encoding'] = 'utf-8'
+                entry[0]['Model']['FileType'] = '.PDB'
+
+    elif (ptm and aa):
+        aa = aa.upper()
+        entry = [
+            entry for entry in entries
+            if entry.get('PTM', None) == ptm and (
+                (
+                    isinstance(entry.get('AminoAcid', None), str) and
+                    entry.get('AminoAcid', None) == aa
+                ) or
+                (
+                    isinstance(entry.get('AminoAcid', None), list) and
+                    aa in entry.get('AminoAcid', None)
+                )
+            )
+        ]
+        if entry:
+            for i in range(len(entry)):
+                _id = entry[i]['@id']
+                # going to send image and model files as raw data.
+                with open(
+                    f"./data/resid/images/{_id}.GIF", 'rb'
+                ) as f:
+                    entry[i]['Image'] = {}
+                    entry[i]['Image']['Data'] = f.read().decode('latin-1')
+                    entry[i]['Image']['Encoding'] = 'latin-1'
+                    entry[i]['Image']['FileType'] = '.GIF'
+                with open(
+                    f"./data/resid/models/{_id}.PDB", 'rb'
+                ) as f:
+                    entry[i]['Model'] = {}
+                    entry[i]['Model']['Data'] = f.read().decode()
+                    entry[i]['Model']['Encoding'] = 'utf-8'
+                    entry[i]['Model']['FileType'] = '.PDB'
+    else:
+        return {'message': "Please enter either a RESID ID or a PTM name along with a residue!"}
+
+    return {'response': entry}
+
 
 ######## API CALLS ########
 
@@ -240,8 +339,52 @@ async def get_jpred_prediction(request: Request):
 def get_jpred_prediction(request: Request, jobid: str):
     return get_job(jobid)
 
+@app.get('/ptmkb/api/get-ptm-details')
+def get_ptm_details(request: Request, resid: str = Query('', example='AA0039')):
+    """
+    Get information on a Post-Translational Modification using RESID ID.
+
+    **Parameters**
+    - **resid**: A RESID Database-based unique identifier. (type: *str*)
+
+    **Returns:**
+    - Detailed information on a Post-Translational Modification. (type: *JSON*)
+    """
+    print(resid)
+    # Let's do some input validation first.
+    resid = resid.upper() # And that's about it.
+
+    # We can read the file per operation since it's not a large file
+    # (only barely 3 megabytes)
+    with open('./data/resid/residues.json', 'r') as f:
+        entries = json.load(f)['Database']['Entry']
+        entries = [_id for _id in entries if _id['@id'] == resid]
+
+    # We also have to include raw bytes of PDB and image
+    for i in range(len(entries)):
+        _id = entries[i]["@id"]
+        with open(
+            f"./data/resid/images/{_id}.GIF", 'rb'
+        ) as f:
+            entries[i]['Image'] = {}
+            entries[i]['Image']['Data'] = f.read().decode('latin-1')
+            entries[i]['Image']['Encoding'] = 'latin-1'
+            entries[i]['Image']['FileType'] = '.GIF'
+        with open(
+            f"./data/resid/models/{_id}.PDB", 'rb'
+        ) as f:
+            entries[i]['Model'] = {}
+            entries[i]['Model']['Data'] = f.read().decode()
+            entries[i]['Model']['Encoding'] = 'utf-8'
+            entries[i]['Model']['FileType'] = '.PDB'
+    if entries:
+        print(entries[0])
+        return {resid: entries[0]}
+    return {}
+
+
 @app.get("/ptmkb/api/get-protein-details")
-def get_protein(request: Request, upid: str = None, upac: str = None):
+def get_protein(request: Request, upid: str = Query(None, example='AF9_HUMAN'), upac: str = Query(None, example='O14746')):
     """
     Get the details of a protein and its Post-Translational Modifications (PTMs),
     given a UniProt Protein Identifier or Accession Number.
@@ -255,6 +398,7 @@ def get_protein(request: Request, upid: str = None, upac: str = None):
     **Returns:**
     - Detailed Post-Translational Modification details of a protein. (type: *JSON*)
     """
+
     if not upid and not upac:
         return {'result': '', 'message': 'Please enter a protein identifier or an accession number first!'}
     _id = upid or upac
@@ -272,11 +416,12 @@ async def get_options():
     **Returns:**
     - A list of available PTMs paired with a key. (type: *JSON*)
     """
+
     options = [i.split("\\")[-1] for i in glob.glob(r'data\tables\*')]
     return {'ptms': options}
 
 @app.get("/ptmkb/api/get-positional-frequency-matrix")
-async def get_data(request: Request, selection: str = None, aa: str = None, table: str = 'log-e'):
+async def get_data(request: Request, selection: str = Query('', example='Phosphorylation'), aa: str =  Query('', example='S'), table: str = Query('log-e', example='freq')):
     """
     Get the positional frequency matrix of a Post-Translational Modification (PTM),
     given the PTM, amino acid, and matrix table.
@@ -289,7 +434,7 @@ async def get_data(request: Request, selection: str = None, aa: str = None, tabl
     **Returns:**
     - The Positional Frequency Matrix of the Post-Translational Modification for the specified amino acid. (type: *JSON*)
     """
-    print(os.path.exists(f'./data/tables/{selection}/{table}/{aa}.json'))
+    
     if not selection:
         ptms = [i.split("\\")[-1] for i in glob.glob(r'data\tables\*')]
         response = {ptm: [] for ptm in ptms}
@@ -330,3 +475,56 @@ async def get_data(request: Request, selection: str = None, aa: str = None, tabl
                 selection=selection, aa=aa, table=table
             )
         )
+
+@app.post('/ptmkb/api/calculate-propensity')
+async def propensity_calculator(data: dict = Body(..., example={'ptm': 'Phosphorylation', 'subsequence': 'WKLLPENNVLSPLPSQAMDDW'})) -> dict:
+    """
+    Calculate the Propensity of a residue for a Post-Translational Modification.
+
+    **Parameters:**
+    - **ptm**: The Post-Translational Modification to use for calculation. (type: *str*)
+    - **subsequence**: The subsequence to use for propensity calculation. (type: *str*)
+
+    **Returns:**
+    - The Additive, Multiplicative, and *-Multiplicative Propensity Scores. (type: *JSON*)
+    """
+    ptm = data.get('ptm', None)
+    subsequence = data.get('subsequence', None)
+    if ptm is None or subsequence is None:
+        return {
+            'message': "Please provide both the subsequence and the PTM to use for Propensity calculation."
+        }
+    if len(subsequence) < 13 or len(subsequence) > 21:
+        return {
+            'message': f"Please ensure that the length of the subsequence is at leats 13 residues long."
+        }
+    if len(subsequence) % 2 != 1:
+        return {
+            'message': f"Please ensure that the window size of the subsequence is either 13, 15, 17, 19, or 21 (current length is {len(subsequence)})"
+        }
+    char = subsequence[len(subsequence) // 2]
+    if not os.path.exists(f'./data/tables/{ptm}/log-e/{char}.json'):
+        return {
+            'message': f"No such propensity calculator exists for {ptm} of residue {char}."
+        }
+    
+    # With all input validation done, proceed with the calculation.
+    with open(f'./data/tables/{ptm}/log-e/{char}.json', 'r') as f:
+        table = json.load(f)
+
+    KEYS = []
+
+    for i in range(-(len(subsequence) // 2), (len(subsequence) // 2) + 1):
+        key = f"+{i}" if i > 0 else str(i)
+        KEYS.append(key)
+
+    vector = []
+    print(KEYS)
+    for index, key in enumerate(KEYS):
+        vector.append(table[key][subsequence[index]])
+    print(vector)
+    response = {
+        'additive_score':additive_calculator(vector)
+    }
+    response.update(multiplicative_calculator(vector)[1])
+    return response
