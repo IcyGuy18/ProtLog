@@ -5,6 +5,14 @@ document.addEventListener("DOMContentLoaded", async () => {
     const data = await res.json();
     suggestions = data['ptms'];
     // Set up an autocomplete function
+    $('#sequence_value').on('input', async function () {
+        var requestTerm = $(this).val();
+        if (requestTerm.length > 21) {
+            requestTerm = requestTerm.slice(0, 21);
+            $(this).val(requestTerm);
+        }
+        document.getElementById('sequenceLength').textContent = requestTerm.length;
+    });
     $('#ptm_value').on('input', async function() {
         const requestTerm = $(this).val();
         if (requestTerm.length < 1) {
@@ -58,100 +66,60 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
 });
 
-var controller = null;
-var timeoutId = null;
-
 async function calculate() {
-    if (controller !== null) {
-        controller.abort();
-        clearTimeout(timeoutId);
-        messageDiv.innerHTML = "";
-    }
+    const AA = "A C D E F G H I K L M N P Q R S T V W Y".split(' ');
+    document.getElementById('messageDiv').innerHTML = "";
 
     console.log("Work your magic here.");
     const subsequence = document.getElementById('sequence_value').value;
     const ptm = document.getElementById('ptm_value').value;
 
-    if (subsequence.length < 13 || subsequence.length > 21) {
-        messageDiv.innerHTML = "<h5>Please enter a subsequence length between 13 and 21 residues!</h5>";
-        controller = new AbortController();
-        timeoutId = setTimeout(() => {
-            messageDiv.innerHTML = "";
-        }, 7000);
+    var validAA = new Boolean(true);
+    subsequence.split('').forEach(aa => {
+        if (!AA.includes(aa.toUpperCase())) {
+            validAA = false;
+        }
+    });
 
-        try {
-            await new Promise((_, reject) => {
-                controller.signal.addEventListener('abort', () => reject('Cancelled'));
-            });
-        } catch (error) {
-            // Do nothing
-        }
+    if (!validAA) {
+        document.getElementById('messageDiv').innerHTML = "<h5>Please make sure all residues are correct one-letter amino acid representations!</h5>";
     } else {
-        if (subsequence.length % 2 !== 1) {
-            messageDiv.innerHTML = "<h5>Please make sure the subsequence is of the correct window size!</h5>";
-            controller = new AbortController();
-            timeoutId = setTimeout(() => {
-                messageDiv.innerHTML = "";
-            }, 7000);
-    
-            try {
-                await new Promise((_, reject) => {
-                    controller.signal.addEventListener('abort', () => reject('Cancelled'));
-                });
-            } catch (error) {
-                // Do nothing
-            }
-        }
-        let temp = []
-        suggestions.forEach(s => {
-            if (s.toLowerCase() === ptm.toLowerCase()) {
-                temp.push(s);
-            }
-        })
-        if (temp.length === 0) {
-            messageDiv.innerHTML = "<h5>Please enter a valid Post-Translational Modification!</h5>";
-            controller = new AbortController();
-            timeoutId = setTimeout(() => {
-                messageDiv.innerHTML = "";
-            }, 7000);
-    
-            try {
-                await new Promise((_, reject) => {
-                    controller.signal.addEventListener('abort', () => reject('Cancelled'));
-                });
-            } catch (error) {
-                // Do nothing
-            }
+        if (subsequence.length < 13 || subsequence.length > 21) {
+            document.getElementById('messageDiv').innerHTML = "<h5>Please enter a subsequence length between 13 and 21 residues!</h5>";
         } else {
-            // Perform search here based on the middle sequence and the PTM
-            const residue = subsequence[Math.floor(subsequence.length / 2)];
-            const data = await fetch(
-                encodeURI(
-                    `/ptmkb/api/get-positional-frequency-matrix?selection=${ptm}&aa=${residue}&table=log-e`
-                )
-            ).then(res => {
-                return res.json();
-            }).catch(error => {
-                console.log(error);
-            });
-            if (data.message) { // This means there was no table.
-                messageDiv.innerHTML = `<h5>No log odds matrix exists for ${ptm} for residue ${residue}!</h5>`;
-                controller = new AbortController();
-                timeoutId = setTimeout(() => {
-                    messageDiv.innerHTML = "";
-                }, 7000);
-        
-                try {
-                    await new Promise((_, reject) => {
-                        controller.signal.addEventListener('abort', () => reject('Cancelled'));
+            if (subsequence.length % 2 !== 1) {
+                document.getElementById('messageDiv').innerHTML = "<h5>Please make sure the subsequence is of the correct window size!</h5>";
+            } else {
+            let temp = []
+                suggestions.forEach(s => {
+                    if (s.toLowerCase() === ptm.toLowerCase()) {
+                        temp.push(s);
+                    }
+                })
+                if (temp.length === 0) {
+                    document.getElementById('messageDiv').innerHTML = "<h5>Please enter a valid Post-Translational Modification!</h5>";
+                } else {
+                    // Perform search here based on the middle sequence and the PTM
+                    const residue = subsequence[Math.floor(subsequence.length / 2)];
+                    const data = await fetch(
+                        encodeURI(
+                            `/ptmkb/api/get-positional-frequency-matrix?selection=${ptm}&aa=${residue}&table=log-e`
+                        )
+                    ).then(res => {
+                        return res.json();
+                    }).catch(error => {
+                        console.log(error);
                     });
-                } catch (error) {
-                    // Do nothing
+                    if (data.message) { // This means there was no table.
+                        document.getElementById('messageDiv').innerHTML = `<h5>No log odds matrix exists for ${ptm} for residue ${residue.toUpperCase()}!</h5>`;
+                    } else {
+                        // Now, finally, display the calculations, table, and vector
+                        document.getElementById('subsequenceDiv').innerHTML = `<h2 style="text-align: center; font-size: 28px; color: #444; font-weight: bold;">${subsequence.toUpperCase()}</h2>`
+                        document.getElementById('ptmVector').innerHTML = await displayVector(data, subsequence);
+                        document.getElementById('ptmTable').innerHTML = displayTable(data, ptm, residue, subsequence);
+                    }
                 }
             }
-            // Now, finally, display the calculations, table, and vector
-            document.getElementById('ptmVector').innerHTML = await displayVector(data, subsequence);
-            document.getElementById('ptmTable').innerHTML = displayTable(data, ptm, residue, subsequence);
         }
     }
 }
@@ -271,9 +239,8 @@ async function displayVector(data, subsequence) {
                     return json;
                 });
     var json = {
-        "additiveScore": scores['a_score'],
-        "multiplicativeScore": scores['m_score'],
-        "*-MultiplicativeScore": scores['*_m_score']
+        "logSum": scores['a_score'],
+        "log-LogProduct": scores['*_m_score']
     }
 
     // Now I'll work on the general info on the PTM
@@ -284,6 +251,7 @@ async function displayVector(data, subsequence) {
         row.className = "PropensityTable-row";
         const keyCell = document.createElement('td');
         keyCell.className = "PropensityTable-key";
+        keyCell.style.width = '300px';
         keyCell.style.fontWeight = 1000;
         const valueCell = document.createElement('td');
         valueCell.className = "PropensityTable-value";
@@ -292,6 +260,7 @@ async function displayVector(data, subsequence) {
                                 .replace(/^./, function(str){ return str.toUpperCase(); })
         keyCell.className = 'key';
         valueCell.className = 'value';
+        valueCell.style.width = '200px';
         valueCell.textContent = value;
         row.appendChild(keyCell);
         row.appendChild(valueCell);
@@ -300,14 +269,14 @@ async function displayVector(data, subsequence) {
 
         // Make notes
         var tag = new String();
-        if (key === "additiveScore") {
+        if (key === "logSum") {
             tag = "<math><munderover><mo>∑</mo><mn>i=1</mn><mi>n</mi></munderover><msub><mi>x</mi><mi>i</mi></msub><mtext>, where&nbsp;</mtext><msub><mi>x</mi><mi>i</mi></msub><mo>≠</mo><mtext>'-inf'</mtext></math>";
         }
-        else if (key === "multiplicativeScore") {
-            tag = "<math><munderover><mo>∏</mo><mi>i=1</mi><mn>n</mn></munderover><msub><mi>x</mi><mi>i</mi></msub><mtext>, where&nbsp;</mtext><msub><mi>x</mi><mi>i</mi></msub><mo>≠</mo><mtext>'-inf' and&nbsp;</mtext><msub><mi>x</mi><mi>i</mi></msub><mo>≠</mo><mtext>0</mtext></math>";
-        }
+        // else if (key === "multiplicativeScore") {
+        //     tag = "<math><munderover><mo>∏</mo><mi>i=1</mi><mn>n</mn></munderover><msub><mi>x</mi><mi>i</mi></msub><mtext>, where&nbsp;</mtext><msub><mi>x</mi><mi>i</mi></msub><mo>≠</mo><mtext>'-inf' and&nbsp;</mtext><msub><mi>x</mi><mi>i</mi></msub><mo>≠</mo><mtext>0</mtext></math>";
+        // }
         else {
-            tag = "<math><mrow><mo>ln</mo><mo>(</mo><mfrac><mn>1</mn><mrow><mrow><mn>-1</mn><mo>×</mo></mrow><munderover><mo>∏</mo><mi>i=1</mi><mn>n</mn></munderover><msub><mi>x</mi><mi>i</mi></msub></mrow></mfrac><mo>)</mo></mrow><mtext>, where&nbsp;</mtext><msub><mi>x</mi><mi>i</mi></msub><mo>≠</mo><mtext>'-inf' and&nbsp;</mtext><msub><mi>x</mi><mi>i</mi></msub><mo>≠</mo><mtext>0</mtext></math>";
+            tag = "<math><mrow><mo>ln</mo><mo>(</mo><mfrac><mn>1</mn><mrow><mrow><mn>-1</mn><mo>×</mo></mrow><munderover><mo>∏</mo><mi>i=1</mi><mn>n</mn></munderover><msub><mi>x</mi><mi>i</mi></msub></mrow></mfrac><mo>)</mo></mrow><mtext>, where&nbsp;</mtext><msub><mi>x</mi><mi>i</mi></msub><mo>≠</mo><mtext>'-inf' and&nbsp;</mtext><mi>i</mi><mo>≠</mo><mtext>floor(N/2)</mtext></math>";
         }
         notes.innerHTML = tag;
         row.appendChild(notes);
@@ -317,7 +286,6 @@ async function displayVector(data, subsequence) {
     // Append and return
     vectorTag.appendChild(vectorHead);
     vectorTag.appendChild(vectorBody);
-    vectorTag.style.display = 'block';
 
     return vectorTag.outerHTML;
 }
@@ -470,7 +438,7 @@ function displayTable(data, ptm, site, subsequence) {
     head.appendChild(link);
     dataTable.style.display = 'table';
     const title = document.createElement('h3')
-    title.innerHTML = `${ptm} at site ${site}`;
+    title.innerHTML = `${ptm} at site ${site.toUpperCase()}`;
     title.style.textAlign = 'center';
     body.append(title);
     body.appendChild(dataTable);

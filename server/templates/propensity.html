@@ -50,16 +50,17 @@
     </nav>
 
     <div class="container-fluid mt-5" style="width: 80%; align-content: center;">
-        <div style="text-align: center; max-width: 600px; margin: 0 auto; font-family: 'Courier New', Courier, monospace;">
+        <div style="text-align: center; max-width: 600px; margin: 0 auto;">
             <p>We use the natural log odds matrix positional frequency of amino acids to calculate the <strong>propensity</strong> of a PTM. It is strictly computed with the natural log odds matrix to ensure magnitude scaling.</p>
         </div>
         <div class="alert alert-info text-center" style="width: 600px;">
-            <i class="fa fa-search fa-small"></i><label>Calculate Protein Subsequence Propensity</label>
+            <i class="fa fa-search fa-small"></i><label><strong>Calculate Protein Subsequence Propensity</strong></label>
             <div class="input-group position-relative">
-                <input class="form-control" id="sequence_value" type="text" placeholder="Enter subsequence (valid windows - 13, 15, 17, 19, 21)" style="font-family: 'Courier New', Courier, monospace; text-align: center; text-transform: uppercase;">
+                <input class="form-control" id="sequence_value" type="text" placeholder="Enter subsequence (valid windows - 13, 15, 17, 19, 21)" style="text-align: center; text-transform: uppercase;">
+                <p id="sequenceLength" style="display: inline-block; width: 40px; height: 40px; line-height: 40px; text-align: center; font-family: 'Courier New', Courier, monospace; font-size: 16px; background-color: #f0f0f0; border: 2px solid #ddd; border-radius: 8px; margin: 0; color: #333;">0</p>
             </div>
             <div class="input-group position-relative" style="width: 400px; margin: 0 auto;">
-                <input class="form-control" id="ptm_value" type="text" placeholder="Enter Post-Translational Modification" style="font-family: 'Courier New', Courier, monospace; text-align: center;">
+                <input class="form-control" id="ptm_value" type="text" placeholder="Enter Post-Translational Modification" style="text-align: center;">
                 <div id="suggestions" class="suggestions-box" style="display: none;"></div>
             </div>
             <div>
@@ -70,6 +71,8 @@
         </div>
     </div>
     <div id="messageDiv" style="padding: 40px; margin-left: auto; margin-right: auto;"></div>
+
+    <div id="subsequenceDiv" style="padding: 40px; margin-left: auto; margin-right: auto;"></div>
 
     <table class="PropensityTable">
         <tbody id="ptmInfo"></tbody>

@@ -97,6 +97,14 @@ iframe {
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Add shadow for depth */
 }
 
+#iFrameData {
+    text-align: center;
+    margin-bottom: 30px;
+    font-size: 28px;
+    color: #444;
+    font-weight: bold;
+}
+
 .alert {
     width: 500px;
     max-width: 1050px; /* Maximum width */
@@ -114,7 +122,7 @@ iframe {
 }
 
 .navbar-nav .nav-link.active {
-    color: #007bff !important; /* Change color to make it stand out */
+    color: #000000 !important; /* Change color to make it stand out */
     font-weight: bold; /* Make the active link bold */
 }
 
@@ -131,8 +139,8 @@ iframe {
     }
 }
 
-.navbar-nav .nav-link:hover {
-    color: #0056b3; /* Hover effect color */
+.navbar-nav .nav-item .nav-link:hover {
+    color: #000000; /* Hover effect color */
 }
 
 .btn-primary {
@@ -176,7 +184,9 @@ iframe {
     }
 }
 
-/* Going to use this to display general protein information here */
+/*
+    Going to use this to display general protein information here
+*/
 
 /* Specific styles for the custom table container */
 .protein-info-container {
@@ -474,10 +484,11 @@ iframe {
     box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.1); 
     overflow: hidden;
     flex-grow: 1;
-    width: 100%;
+    width: 95%;
     box-sizing: border-box;
     justify-items: left;
     justify-content: left;
+    margin: 0 auto;
 }
 
 /* Each individual block of sequence */
@@ -512,7 +523,7 @@ iframe {
     text-overflow: ellipsis;
     max-width: 100%;
     pointer-events: none;
-    user-select: none;
+    /* user-select: none; */
 }
 
 /* Styling for the block number */
@@ -608,12 +619,11 @@ iframe {
 
 .details-panel {
     padding: 20px;
-    background-color: #ffffff; /* White background for contrast */
+    background-color: linear-gradient(135deg, #f4f4f9 0%, #e0e0e0 100%); 
     border: 1px solid #ddd; /* Light border for separation */
     border-radius: 10px; /* Rounded corners for a soft, modern look */
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Soft shadow for depth */
-    margin-top: 20px;
-    margin-bottom: 20px;
+    margin-bottom: 40px;
     max-width: 90%; /* Responsive width */
     margin: 0 auto; /* Center the panel */
     overflow: hidden; /* Prevent overflow */
@@ -630,6 +640,8 @@ iframe {
 
 .details-panel .localized-sequence {
     font-family: 'Courier New', Courier, monospace; /* Monospace font for sequence */
+    max-width: 450px;
+    margin: 0 auto;
     font-size: 24px; /* Clear font size for better readability */
     line-height: 1.8; /* Increase line height for better spacing */
     color: #333; /* Darker text for contrast */
@@ -1195,18 +1207,19 @@ iframe {
     padding: 40px;
     max-width: 1000px;
     width: 100%;
-    margin: 0 auto;
+    display: block;
 }
 
 #dataVector {
     width: 100%;
     border-collapse: collapse;
-    margin: 0 auto;
     text-align: center;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 #dataVector th, #dataVector td {
-    padding: 6px 12px;
+    padding: 2px 4px;
     border: 1px solid #ddd;
     text-align: center;
     vertical-align: middle;
@@ -1238,7 +1251,6 @@ iframe {
 #vectorHead {
     background-color: #A0C4FF;
     color: white;
-    margin: 0 auto;
 }
 
 @media (max-width: 991px) {

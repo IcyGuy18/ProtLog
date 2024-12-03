@@ -44,6 +44,11 @@ def sort_ids(strings: list[str], substring: str):
 
 ######## PAGES ########
 
+@app.get('/favicon.ico', include_in_schema=False)
+async def favicon():
+    print("Making call.")
+    return FileResponse('./icon.ico')
+
 @app.get("/", include_in_schema=False)
 def home_page(request: Request):
     return templates.TemplateResponse(
@@ -510,7 +515,7 @@ async def propensity_calculator(data: dict = Body(..., example={'ptm': 'Phosphor
     
     # With all input validation done, proceed with the calculation.
     with open(f'./data/tables/{ptm}/log-e/{char}.json', 'r') as f:
-        table = json.load(f)
+        table: dict[str, dict[str, int|str]] = json.load(f)
 
     KEYS = []
 
@@ -519,10 +524,11 @@ async def propensity_calculator(data: dict = Body(..., example={'ptm': 'Phosphor
         KEYS.append(key)
 
     vector = []
-    print(KEYS)
     for index, key in enumerate(KEYS):
-        vector.append(table[key][subsequence[index]])
-    print(vector)
+        vector.append(
+            table.get(key, {})
+            .get(subsequence[index], '-inf')
+        )
     response = {
         'additive_score':additive_calculator(vector)
     }

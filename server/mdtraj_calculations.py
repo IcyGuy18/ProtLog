@@ -32,8 +32,6 @@ def create_file(pdb_data: bytes) -> Trajectory:
     file = tempfile.NamedTemporaryFile(suffix='.pdb', delete=False)
     file.write(pdb_data)
     traj: Trajectory = md.load(file.name)
-    
-    traj.atom_slice(atom_indices=traj.topology.select('chainid 0'), inplace=True)
 
     file.close()
     os.unlink(file.name)
@@ -59,5 +57,5 @@ def get_protein_sequence(
     sequence = ''
     for i in range(traj.n_residues):
         residue: Residue = traj.topology.residue(i)
-        sequence += aa_dict[residue.name]
+        sequence += aa_dict.get(residue.name, '')
     return sequence
