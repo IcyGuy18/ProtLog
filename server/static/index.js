@@ -340,8 +340,9 @@ function generateHtmlForJPred(data, acc, ptms) {
         newWindow.document.write(alignmentBox.outerHTML);
         newWindow.document.close()
     });
+    alignmentPopup.textContent = "Click here to view JPred Alignments!";
     alignmentPopup.setAttribute('style', "color: #1a0dab; text-decoration: underline; font-weight: normal; cursor: pointer;");
-    jpredAlignment.appendChild(alignmentPopup); // = `<a onclick="windowOpener()" >Click here to view JPred Alignments!</a>`;
+    jpredAlignment.appendChild(alignmentPopup); // = `<a onclick="windowOpener()" ></a>`;
     htmlContent.appendChild(jpredAlignment);
 
     // Now make a popup here.
