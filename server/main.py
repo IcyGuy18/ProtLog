@@ -499,15 +499,27 @@ async def propensity_calculator(data: dict = Body(..., example={'ptm': 'Phosphor
         return {
             'message': "Please provide both the subsequence and the PTM to use for Propensity calculation."
         }
+    if not isinstance(ptm, str):
+        return {
+            'message': "Please ensure that the Post-Translational Modification input is a string."
+        }
+    if not isinstance(subsequence, str):
+        return {
+            'message': "Please ensure that the Subsequence input is a string."
+        }
     if len(subsequence) < 13 or len(subsequence) > 21:
         return {
             'message': f"Please ensure that the length of the subsequence is at leats 13 residues long."
         }
     if len(subsequence) % 2 != 1:
         return {
-            'message': f"Please ensure that the window size of the subsequence is either 13, 15, 17, 19, or 21 (current length is {len(subsequence)})"
+            'message': f"Please ensure that the window size of the subsequence is either 13, 15, 17, 19, or 21 (current length is {len(subsequence)})."
         }
     char = subsequence[len(subsequence) // 2]
+    if not os.path.exists(f'./data/tables/{ptm}'):
+        return {
+            'message': f"No such Post-Translational Modification by the name of {ptm} exists."
+        }
     if not os.path.exists(f'./data/tables/{ptm}/log-e/{char}.json'):
         return {
             'message': f"No such propensity calculator exists for {ptm} of residue {char}."

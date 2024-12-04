@@ -3,51 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Home Page</title>
+    <title>PTMKB - Search</title>
     <link rel="stylesheet" href="../static/bootstrap-min.css">
-    <!-- <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script> -->
     <script id="MathJax-script" async src="../static/tex-mml-chtml.js"></script>
-    <!-- <link rel="stylesheet" href="styles.css"> -->
     <script src="../static/jquery.min.js"></script>
     <script src="../static/jquery-ui.js"></script>
     <script src="../static/bootstrap-min.js"></script>
     <script src="../static/popper.js" defer></script>
     <script src="../static/3Dmol.js" defer></script>
     <script src="../static/index.js" defer></script>
+    <script src="../static/toggler.js" defer></script>
     <link rel="stylesheet" href="../static/styles.css">
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm">
-        <div class="container">
-            <a class="navbar-brand">Search</a>
-
-            <hr class="navbar-separator">
-            
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="/propensity" id="propensityLink">Propensity</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/documentation" id="documentationLink">Documentation</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/integration" id="integrationLink">Integration</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/download" id="downloadLink">Download</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/about" id="aboutLink">About</a>
-                    </li>
-                </ul>
-            </div>
-        </div>
+    <nav class="navbar">
+        <div class="logo">PTMKB</div>
+        <button class="navbar-toggler" onclick="toggleNavbar()">☰</button>
+        <ul class="navbar-items">
+            <li><a class="nav-link active"><span class="nav-item-box">Search</span></a></li>
+            <li><a href="/propensity" class="nav-link"><span class="nav-item-box">Propensity</span></a></li>
+            <li><a href="/documentation" class="nav-link"><span class="nav-item-box">Documentation</span></a></li>
+            <li><a href="/integration" class="nav-link"><span class="nav-item-box">Integration</span></a></li>
+            <li><a href="/download" class="nav-link"><span class="nav-item-box">Download</span></a></li>
+            <li><a href="/about" class="nav-link"><span class="nav-item-box">About</span></a></li>
+        </ul>
     </nav>
+
+    <script>
+    </script>
 
     <div class="container-fluid mt-5" style="width: 80%; align-content: center;">
 

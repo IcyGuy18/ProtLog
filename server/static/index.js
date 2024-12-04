@@ -334,12 +334,14 @@ function generateHtmlForJPred(data, acc, ptms) {
     });
 
     const jpredAlignment = document.createElement('h5');
-    let _ = function() {
+    const alignmentPopup = document.createElement('a');
+    alignmentPopup.addEventListener('click', function() {
         const newWindow = window.open('', '_blank', 'width=800, height=600');
         newWindow.document.write(alignmentBox.outerHTML);
         newWindow.document.close()
-    };
-    jpredAlignment.innerHTML = `<a onclick="_()" style="color: #1a0dab; text-decoration: underline; font-weight: normal; cursor: pointer;">Click here to view JPred Alignments!</a>`;
+    });
+    alignmentPopup.setAttribute('style', "color: #1a0dab; text-decoration: underline; font-weight: normal; cursor: pointer;");
+    jpredAlignment.appendChild(alignmentPopup); // = `<a onclick="windowOpener()" >Click here to view JPred Alignments!</a>`;
     htmlContent.appendChild(jpredAlignment);
 
     // Now make a popup here.
@@ -360,6 +362,7 @@ function generateHtmlForJPred(data, acc, ptms) {
 
     // Create the sequences box for the prediction section (with scrolling)
     const predictionSequencesBox = document.createElement('div');
+    predictionSequencesBox.setAttribute('id', 'jpredSequenceBox');
     predictionSequencesBox.setAttribute('style', `background-color: #f4f4f4; padding: 15px; border-radius: 5px; font-family: monospace; flex: 2; font-size: ${fontSize}; white-space: nowrap; max-height: 400px; overflow-y: hidden;`);
     predictionScrollContainer.appendChild(predictionSequencesBox);
 
@@ -409,14 +412,12 @@ function generateHtmlForJPred(data, acc, ptms) {
                             .join(', ');
                     
                         // Apply the generated linear gradient to the background
-                        const backgroundColor = `linear-gradient(to bottom, ${gradient})`;
-                        console.log(backgroundColor);
-                        console.log(uniquePtms, typeof(uniquePtms));
-                        font.style.backgroundColor = backgroundColor;
-                        font.style.backgroundSize = '100% 100%';
                         font.setAttribute('data-ptm', uniquePtms.join(';'));
+                        font.style.background = `linear-gradient(to bottom, ${gradient})`;
+                        font.style.backgroundSize = '100% 100%';
                     } else {
-                        font.style.backgroundColor = uniquePtms[0];
+                        console.log(uniquePtms[0]);
+                        font.style.backgroundColor = ptmColors[0];
                     }
 
                     font.addEventListener("mouseenter", (e) => {
@@ -456,8 +457,23 @@ function generateHtmlForJPred(data, acc, ptms) {
                     });
 
                     // One more event to highlight everything below it.
-                    font.addEventListener('click', () => {
-                        console.log(this);
+                    font.addEventListener('click', (e) => {
+                        let idx = Number.parseInt(e.target.getAttribute('data-idx'));
+                        const divs = document.getElementById('jpredSequenceBox').querySelectorAll('div');
+                        divs.forEach((div, outerIdx) => {
+                            if (outerIdx !== 1) { // We will not mess with OrigSeq div
+                                const spans =  div.querySelectorAll('span');
+                                spans.forEach((span, innerIdx) => {
+                                    if (innerIdx === idx) {
+                                        span.classList.add('highlighted');
+                                    } else {
+                                        if (span.className === 'highlighted') {
+                                            span.classList.remove('highlighted');
+                                        }
+                                    }
+                                });
+                            }
+                        });
                     });
 
                 }
@@ -468,11 +484,11 @@ function generateHtmlForJPred(data, acc, ptms) {
             let htmlString = '';
             data.prediction[key].split('').forEach((char, idx) => {
                 if (char === 'H') {
-                    htmlString += `<font data-idx="${idx}" color="e900055">${char}</font>`
+                    htmlString += `<span data-idx="${idx}" style="color: #e90055;">${char}</span>`
                 } else if (char === 'E') {
-                    htmlString += `<font data-idx="${idx}" color="ffa800">${char}</font>`
+                    htmlString += `<span data-idx="${idx}" style="color: #ffa800;">${char}</span>`
                 } else {
-                    htmlString += `<font data-idx="${idx}">${char}</font>`
+                    htmlString += `<span data-idx="${idx}">${char}</span>`
                 }
             });
             predictionSequenceDiv.innerHTML = htmlString;
@@ -480,9 +496,9 @@ function generateHtmlForJPred(data, acc, ptms) {
             let htmlString = '';
             data.prediction[key].split('').forEach((char, idx) => {
                 if (char === 'B') {
-                    htmlString += `<font data-idx="${idx}" color="aa0000">${char}</font>`
+                    htmlString += `<span data-idx="${idx}" style="color: #aa0000;">${char}</span>`
                 } else {
-                    htmlString += `<font data-idx="${idx}">${char}</font>`
+                    htmlString += `<span data-idx="${idx}">${char}</span>`
                 }
             });
             predictionSequenceDiv.innerHTML = htmlString;
@@ -490,15 +506,15 @@ function generateHtmlForJPred(data, acc, ptms) {
             let htmlString = '';
             data.prediction[key].split('').forEach((char, idx) => {
                 if (char === '9' || char === '8' || char === '7') {
-                    htmlString += `<font data-idx="${idx}" color="00aa00">${char}</font>`
+                    htmlString += `<span data-idx="${idx}" style="color: #00aa00;">${char}</span>`
                 } else {
-                    htmlString += `<font data-idx="${idx}">${char}</font>`
+                    htmlString += `<span data-idx="${idx}">${char}</span>`
                 }
             });
             predictionSequenceDiv.innerHTML = htmlString;
         } else {
             data.prediction[key].split('').forEach((char, idx) => {
-                predictionSequenceDiv.innerHTML += `<font data-idx="${idx}">${char}</font>`;
+                predictionSequenceDiv.innerHTML += `<span data-idx="${idx}">${char}</span>`;
             });
             
         }

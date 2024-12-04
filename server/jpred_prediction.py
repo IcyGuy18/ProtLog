@@ -39,7 +39,7 @@ def get_job(jobid: str) -> str:
         response = requests.get(f'http://www.compbio.dundee.ac.uk/jpred4/cgi-bin/rest/job/id/{jobid}')
     except:
         return {'response': False}
-    if 'finished' not in response.text.lower():
+    if 'finished' not in response.text.lower() or "your job is 100" in response.text.lower():
         return {'response': False}
     results_url = response.text.split('Results available at the following URL:')[-1].strip().split('.results')[0] + '.html'
     response = requests.get(results_url)
