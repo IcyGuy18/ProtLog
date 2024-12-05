@@ -274,9 +274,20 @@ function formatJpredResponse(response, acc, ptms) {
 }
 
 function generateHtmlForJPred(data, acc, ptms) {
+    // Going to populate the data JSON with another value.
+    data['ptms'] = {};
+
+
     let indices = new Set();
     ptms.forEach(ptm => {
         indices.add(ptm[0]);
+        if (data['ptms'][ptm[0]]) { // If it already exists..
+            if (!data['ptms'][ptm[0]].includes(ptm[1])) { // If the PTM doesn't already exist in the list,
+                data['ptms'][ptm[0]].push(ptm[1]); // add it
+            }
+        } else { // Else make a new array
+            data['ptms'][ptm[0]] = [ptm[1]];
+        }
     });
     indices = Array.from(indices);
     document.getElementById('jpredInfo').innerHTML = '';
@@ -311,25 +322,105 @@ function generateHtmlForJPred(data, acc, ptms) {
 
     // Append labels and sequences for the alignment data
     Object.keys(data.alignment).forEach(key => {
-        // Create label div
+        // Add functionality to highlight sequences for the entire stuff
+        // Already have the code - just need to implement it
         const labelDiv = document.createElement('div');
         labelDiv.setAttribute('style', `font-weight: bold; margin-bottom: 10px; white-space: nowrap; color: ${key.includes('QUERY') ? 'red' : 'black'};`);
-        if (key === 'QUERY') {
-            labelDiv.innerHTML = `<a>${key}</a>`;
-        } else {
+        const aUri = document.createElement('a');
+        aUri.textContent = key;
+        if (key !== 'QUERY') {
             let keyUri = key;
             if (keyUri.includes('_UPI')) {
                 keyUri = keyUri.replace('UniRef90_', '')
             }
-            labelDiv.innerHTML = `<a href="https://www.ebi.ac.uk/ebisearch/search.ebi?db=allebi&query=${keyUri}" target="_blank" rel="noopener noreferrer" style="cursor: pointer;">${key}</a>`;
+            aUri.setAttribute('href', `https://www.ebi.ac.uk/ebisearch/search.ebi?db=allebi&query=${keyUri}`);
+            aUri.setAttribute('target', `_blank`);
+            aUri.setAttribute('rel', `noopener noreferrer`);
+            aUri.setAttribute('style', `cursor: pointer;`);
         }
-        
+        labelDiv.appendChild(aUri);
         labelsBox.appendChild(labelDiv);
 
         // Create sequence div
         const sequenceDiv = document.createElement('div');
         sequenceDiv.setAttribute('style', 'white-space: nowrap; margin-bottom: 10px;');
-        sequenceDiv.textContent = data.alignment[key];
+        data.alignment[key].split('').forEach((char, idx) => {
+            const span = document.createElement('span');
+            span.textContent = char;
+            if (indices.includes(idx+1)) {
+                if (key === 'QUERY') {
+                    span.classList.add('highlighted');
+                    let uniquePtms = new Set();
+                    ptms.forEach(ptm => {
+                        if (ptm[0] === idx+1) {
+                            uniquePtms.add(ptm[1]);
+                        }
+                    });
+                    uniquePtms = Array.from(uniquePtms);
+                    // Use the PTMs list for color
+                    const ptmColors = uniquePtms.map(ptmType => ptmColorMapping[ptmType] || '#f39c12');
+                    if (uniquePtms.length > 1) {
+                        // Dynamically calculate the percentage for each color block based on the number of colors
+                        const percentagePerColor = 100 / ptmColors.length;
+                        
+                        // Create the gradient by mapping over ptmColors
+                        const gradient = ptmColors
+                            .map((color, idx) => {
+                                const startPercentage = idx * percentagePerColor; // Starting percentage for this color block
+                                const endPercentage = startPercentage + percentagePerColor; // Ending percentage for this color block
+                                return `${color} ${startPercentage}% ${endPercentage}%`; // Define the color block from start to end
+                            })
+                            .join(', ');
+                    
+                        // Apply the generated linear gradient to the background
+                        span.setAttribute('data-ptm', uniquePtms.join(';'));
+                        span.style.background = `linear-gradient(to bottom, ${gradient})`;
+                        span.style.backgroundSize = '100% 100%';
+                    } else {
+                        span.style.backgroundColor = ptmColors[0];
+                    }
+                    span.addEventListener("mouseenter", (e) => {
+                        if (uniquePtms.length > 0) {
+                            // Create a tooltip element
+                            const tooltip = document.createElement("div");
+                            tooltip.classList.add("custom-tooltip");
+                            tooltip.textContent = uniquePtms.join(", ");  // Display all PTMs for this position
+                            if (key !== "QUERY")
+                                tooltip.textContent = "Potentially " + tooltip.textContent;
+        
+                            // Append the tooltip to the body
+                            document.body.appendChild(tooltip);
+        
+                            // Position the tooltip near the character
+                            const rect = e.target.getBoundingClientRect(); // Get the character's position
+                            tooltip.style.position = "absolute";
+                            tooltip.style.left = `${rect.left + window.scrollX}px`; // Adjust for any page scroll
+                            tooltip.style.top = `${rect.top + window.scrollY - 30}px`; // Position above the character
+                            tooltip.style.zIndex = 10; // Ensure it's above other content
+        
+                            // Add the 'visible' class to the tooltip to show it
+                            setTimeout(() => {
+                                tooltip.classList.add("visible");
+                            }, 10); // Small delay for the transition to kick in
+        
+                            // Store tooltip for later removal
+                            e.target.tooltip = tooltip;
+                        }
+                    });
+    
+                    // Add mouseleave event to remove the tooltip
+                    span.addEventListener("mouseleave", (e) => {
+                        const tooltip = e.target.tooltip;
+                        if (tooltip) {
+                            tooltip.remove(); // Remove the tooltip when the mouse leaves
+                            delete e.target.tooltip; // Clean up the tooltip reference
+                        }
+                    });
+                }
+            }
+            sequenceDiv.appendChild(span);
+        });
+        // sequenceDiv.textContent = data.alignment[key];
         sequencesBox.appendChild(sequenceDiv);
     });
 
@@ -337,7 +428,8 @@ function generateHtmlForJPred(data, acc, ptms) {
     const alignmentPopup = document.createElement('a');
     alignmentPopup.addEventListener('click', function() {
         const newWindow = window.open('', '_blank', 'width=800, height=600');
-        newWindow.document.write(alignmentBox.outerHTML);
+        newWindow.document.write('<link rel="stylesheet" type="text/css" href="../static/styles.css">');
+        newWindow.document.write('<body>' + alignmentBox.outerHTML + '</body>');
         newWindow.document.close()
     });
     alignmentPopup.textContent = "Click here to view JPred Alignments!";
@@ -417,7 +509,6 @@ function generateHtmlForJPred(data, acc, ptms) {
                         font.style.background = `linear-gradient(to bottom, ${gradient})`;
                         font.style.backgroundSize = '100% 100%';
                     } else {
-                        console.log(uniquePtms[0]);
                         font.style.backgroundColor = ptmColors[0];
                     }
 
@@ -532,7 +623,7 @@ function generateHtmlForJPred(data, acc, ptms) {
     targetDiv.appendChild(predictionBox);
     const jpredDownloadBtn = document.createElement('button');
     jpredDownloadBtn.classList.add('additional-button');
-    jpredDownloadBtn.textContent = "Download Alignments and Predictions as JSON"
+    jpredDownloadBtn.textContent = `Download Alignments and Predictions for ${acc} as JSON`;
     jpredDownloadBtn.addEventListener('click', () => {
         var jsonString = JSON.stringify(data, null, 2);
         var blob = new Blob([jsonString], { type: 'application/json' });
@@ -786,10 +877,9 @@ async function preparePTMDetails(localizedSequence, localizedSequenceInfo, ptmsD
             }).catch(error => {
                 console.error(error);
             });
-            // console.log(scores);
 
-            const logSum = typeof(scores['additive_score']) === 'string' ? "NIL" : scores['additive_score'].toFixed(2);
-            const logLogProduct = typeof(scores['adjusted_multiplicative_score']) === 'string' ? "NIL" : scores['adjusted_multiplicative_score'].toFixed(2);
+            const logSum = typeof(scores['logSum']) === 'string' ? "NIL" : scores['logSum'].toFixed(2);
+            const logLogProduct = typeof(scores['logLogProduct']) === 'string' ? "NIL" : scores['logLogProduct'].toFixed(2);
 
             scoreValueCell.innerHTML = `<strong>Log Sum:</strong> ${logSum} <br><strong>Log-Log Product:</strong> ${logLogProduct}`;
 
@@ -968,7 +1058,7 @@ function initializePTMClickListenersForPTMSequence() {
 }
 
 // Function to display the protein sequence with color-coded PTM highlights
-function displayProteinSequence(sequence, modificationData, additionalUniprotInfo, lastUpdate) {
+function displayProteinSequence(sequence, modificationData, additionalUniprotInfo, lastUpdate, acc) {
     // Display additional information about the protein sequence
     // KEYS
             // "length": 568,
@@ -1007,7 +1097,6 @@ function displayProteinSequence(sequence, modificationData, additionalUniprotInf
         } else {
             value = additionalUniprotInfo[key];
         }
-        console.log(key, value);
         valueCell.textContent = value;
     
         // Append the cells to the row
@@ -1020,6 +1109,19 @@ function displayProteinSequence(sequence, modificationData, additionalUniprotInf
     
     // Append the table to the uniprotSequence container
     document.getElementById('uniprotSequence').appendChild(uniprotTable);
+    
+    const ptmDownloadBtn = document.createElement('button');
+    ptmDownloadBtn.classList.add('additional-button');
+    ptmDownloadBtn.textContent = `Download PTM data for ${acc} as JSON`
+    ptmDownloadBtn.addEventListener('click', () => {
+        var jsonString = JSON.stringify(modificationData, null, 2);
+        var blob = new Blob([jsonString], { type: 'application/json' });
+        var link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `${acc}_ptms.json`;
+        link.click();
+    });
+    document.getElementById('uniprotSequence').appendChild(ptmDownloadBtn);
 
     // Add protein sequence with highlights based on PTMs
     const container = document.getElementById("sequenceDisplayer");
@@ -1349,6 +1451,8 @@ function generatePTMHtmlTable() {
 */
 
 async function displayPDBStructures(uniprotAC, alphafoldPdbData, proteinSequence) {
+    document.getElementById('afPdbStructure').classList.add('lds-dual-ring');
+    document.getElementById('rcsbPdbStructure').classList.add('lds-dual-ring');
     // We also have to collect it for RCSB data
     let responseStr = ``;
     const rcsbJson = {
@@ -1394,7 +1498,7 @@ async function displayPDBStructures(uniprotAC, alphafoldPdbData, proteinSequence
         }).then(async (res) => {
             return await res.json();
         });
-        generateHtmlForPdbStructure(await afCalculations, 'afInfo');
+        // generateHtmlForPdbStructure(await afCalculations, 'afInfo');
         const viewer = $3Dmol.createViewer("afPdbStructure", { defaultcolors: $3Dmol.rasmolElementColors });
         canvas = viewer.getCanvas();
         canvas.classList.add('viewer_3Dmoljs');
@@ -1402,10 +1506,13 @@ async function displayPDBStructures(uniprotAC, alphafoldPdbData, proteinSequence
         
         viewer.setStyle( {}, { cartoon: { color: 'spectrum' } });
         viewer.zoomTo();
+        document.getElementById('afPdbStructure').classList.remove('lds-dual-ring');
         viewer.render();
-        responseStr += `<h5>Predicted Structure (Left, <a href="https://alphafold.ebi.ac.uk/entry/${uniprotAC}" target="_blank">AlphaFold</a>)`
+        document.getElementById('afHRef').innerHTML = `<a href="https://alphafold.ebi.ac.uk/entry/${uniprotAC}" target="_blank">AlphaFold Predicted Structure</a>`
+        // responseStr += `<h5>Predicted Structure (Left, <a href="https://alphafold.ebi.ac.uk/entry/${uniprotAC}" target="_blank">AlphaFold</a>)`
     } else {
-        responseStr += `<h5>Error: no PDB entry found in AlphaFold.`
+        document.getElementById('afHRef').innerHTML = `<h5>No AlphaFold Structure exists.</h5>`;
+        // responseStr += `<h5>Error: no PDB entry found in AlphaFold.`
     }
 
     let rcsbData = await fetch(
@@ -1415,7 +1522,7 @@ async function displayPDBStructures(uniprotAC, alphafoldPdbData, proteinSequence
         return res.json();
     }).catch(error => {
         console.error(error);
-        responseStr += `- Error: no PDB entry found in RCSB.</h5>`
+        // responseStr += `- Error: no PDB entry found in RCSB.</h5>`
     });
     let response = getValue(rcsbData, 'result_set');
     var identifiers = []
@@ -1423,7 +1530,6 @@ async function displayPDBStructures(uniprotAC, alphafoldPdbData, proteinSequence
     if (response !== null) {
         identifiers = response.map(item => item.identifier);
         // The 0th index will always have the best result.
-        const score = response[0]['score'];
         const id = response[0]['identifier'];
         // We will have to use the ID to get the actual PDB entry from the RCSB database.
         rcsbData = await fetch(
@@ -1441,37 +1547,41 @@ async function displayPDBStructures(uniprotAC, alphafoldPdbData, proteinSequence
             }).then(async (res) => {
                 return await res.json();
             });
-            generateHtmlForPdbStructure(await rcsbCalculations, 'rcsbInfo');
+            // generateHtmlForPdbStructure(await rcsbCalculations, 'rcsbInfo');
             const viewer = $3Dmol.createViewer("rcsbPdbStructure", { defaultcolors: $3Dmol.rasmolElementColors });
             viewer.addModel(res, 'pdb');
 
             viewer.setStyle( {}, { cartoon: { color: 'spectrum' } });
             viewer.zoomTo();
+            document.getElementById('rcsbPdbStructure').classList.remove('lds-dual-ring');
             viewer.render();
-            responseStr += `- Actual Structure (Right, <a id="PDB_${id}" href="https://www.rcsb.org/structure/${id}" target="_blank">RCSB</a>).</h5>`
+            document.getElementById('rcsbHRef').innerHTML = `<a href="https://www.rcsb.org/structure/${id}" target="_blank">RCSB Verified Structure</a>`
+            // responseStr += `- Actual Structure (Right, <a id="PDB_${id}" href="https://www.rcsb.org/structure/${id}" target="_blank">RCSB</a>).</h5>`
         }).catch(error => {
+            document.getElementById('rcsbHRef').innerHTML = `<h5>No RCSB Structure exists.</h5>`;
             console.error(error);
-            responseStr += `- Error: no PDB entry found in RCSB.</h5>`
+            // responseStr += `- Error: no PDB entry found in RCSB.</h5>`
         });
 
-        document.getElementById('pdbInfo').innerHTML = responseStr + '<select id="pdbDropdownSelect"></select>';
         document.getElementById('pdbDropdownSelect').innerHTML = '';
 
-        identifiers.forEach(identifier => {
+        identifiers.forEach((identifier, idx) => {
             const option = document.createElement('option');
             option.text = identifier;
             document.getElementById('pdbDropdownSelect').add(option);
         });
 
         document.getElementById('pdbDropdownSelect').addEventListener('change', async function(event) {
+            document.getElementById('rcsbPdbStructure').classList.add('lds-dual-ring');
             const selectedValue = event.target.value;
+            const score = event.target.getAttribute('data-score');
             
             rcsbData = await fetch(
                 encodeURI(`https://files.rcsb.org/download/${selectedValue}.pdb`)
             ).then(async (res) => {
                 // Use this PDB data to display actual PDB structure.
                 res = await res.text();
-                const rcsbCalculations = fetch('/ptmkb/structure_calculations', {
+                const rcsbCalculations = fetch('/ptmkb/structure_calculations', { // Use this later on
                     method: 'POST',
                     headers: {
                         "Accept": "application/json",
@@ -1487,23 +1597,18 @@ async function displayPDBStructures(uniprotAC, alphafoldPdbData, proteinSequence
 
                 viewer.setStyle( {}, { cartoon: { color: 'spectrum' } });
                 viewer.zoomTo();
+                document.getElementById('rcsbPdbStructure').classList.remove('lds-dual-ring');
                 viewer.render();
-                document.getElementById('pdbInfo')
-                .getElementsByTagName('h5')[0]
-                .getElementsByTagName('a')[1]
-                .setAttribute('href', `https://www.rcsb.org/structure/${selectedValue}`);
-                document.getElementById('pdbInfo')
-                .getElementsByTagName('h5')[0]
-                .getElementsByTagName('a')[1]
-                .setAttribute('id', `PDB_${selectedValue}`);
+                document.getElementById('rcsbHRef').innerHTML = `<a href="https://www.rcsb.org/structure/${selectedValue}" target="_blank">RCSB Verified Structure</a>`
             }).catch(error => {
-                console.error(error);
+                console.log(error);
             });
         });
-
     } else {
-        responseStr += `- Error: no PDB entry found in RCSB.</h5>`
+        document.getElementById('rcsbHRef').innerHTML = `<h5>No RCSB Structure exists.</h5>`;
     }
+    try{document.getElementById('afPdbStructure').classList.remove('lds-dual-ring');} catch(e) {}
+    try{document.getElementById('rcsbPdbStructure').classList.remove('lds-dual-ring');} catch(e) {}
 }
 
 function generateHtmlForPdbStructure(data, target) {
@@ -2067,7 +2172,7 @@ async function search() {
                             
                             let pdbData = await fetchProteinStructure(json.uniProtAC);
                             populateCheckboxesFromResult(updatedPtmData)
-                            displayProteinSequence(json.proteinSequence, updatedPtmData, json.proteinSequenceFull, json.lastUpdate);
+                            displayProteinSequence(json.proteinSequence, updatedPtmData, json.proteinSequenceFull, json.lastUpdate, json.uniProtAC);
                             updateStats(updatedPtmData)
                             getJPredInference(json.proteinSequence, json.uniProtAC, updatedPtmData);
                             displayPDBStructures(json.uniProtAC, pdbData, json.proteinSequence);

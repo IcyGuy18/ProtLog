@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PTMKB - Search</title>
+    <title>PTMKB - Search for a Protein</title>
     <link rel="stylesheet" href="../static/bootstrap-min.css">
     <script id="MathJax-script" async src="../static/tex-mml-chtml.js"></script>
     <script src="../static/jquery.min.js"></script>
@@ -124,14 +124,22 @@
             
             <div id="pdbMajor" class="protein-sequence-container" style="padding: 20px;">
                 <div id="pdbStructures">
-                    <div id="afPdbStructure"></div>
-                    <div id="rcsbPdbStructure"></div>
+                    <div id="afMajor">
+                        <h5 id="afHRef">AlphaFold Predicted Structure</h5>
+                        <div id="afPdbStructure"></div>
+                        <select style="visibility: hidden;"></select>
+                    </div>
+                    <div id="rcsbMajor">
+                        <h5 id="rcsbHRef">RCSB Verified Structure</h5>
+                        <div id="rcsbPdbStructure"></div>
+                        <select id="pdbDropdownSelect"></select>
+                    </div>
                 </div>
                 <div id="pdbInfo"></div>
-                <div id="pdbStructuresInfo">
+                <!-- <div id="pdbStructuresInfo">
                     <div id="afInfo"></div>
                     <div id="rcsbInfo"></div>
-                </div>
+                </div> -->
             </div>
 
             <div id="ptmSiteInfo" style="display: none; align-content: center;">

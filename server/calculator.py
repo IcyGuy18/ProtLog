@@ -44,4 +44,4 @@ def multiplicative_calculator(vector: list[float | str]) -> tuple[bool, dict]:
         if (idx != (len(vector) // 2)): # Skip over the center value.
             multiplicative_score *= value
     adjusted_multiplicative_score = np.log(abs(1 / (-1 * multiplicative_score)))
-    return True, {'multiplicative_score': multiplicative_score, 'adjusted_multiplicative_score': adjusted_multiplicative_score}
+    return True, {'multiplicative_score': multiplicative_score, 'logLogProduct': adjusted_multiplicative_score}

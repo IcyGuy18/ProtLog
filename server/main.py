@@ -542,7 +542,12 @@ async def propensity_calculator(data: dict = Body(..., example={'ptm': 'Phosphor
             .get(subsequence[index], '-inf')
         )
     response = {
-        'additive_score':additive_calculator(vector)
+        'logSum': additive_calculator(vector)
     }
-    response.update(multiplicative_calculator(vector)[1])
+    mult_score = multiplicative_calculator(vector)[1]
+    response.update({
+        'logLogProduct': mult_score.get('logLogProduct', 'NIL')
+    })
+    # A minor change here to account for non-showing of raw multiplicative scores
+    # because the value is too large to be used for anything substantial
     return response
