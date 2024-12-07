@@ -300,7 +300,7 @@ function generateHtmlForJPred(data, acc, ptms) {
 
     // Add first box for Sequence Alignment Data
     const alignmentBox = document.createElement('div');
-    alignmentBox.setAttribute('style', 'font-family: "Courier New", Courier, monospace; margin-bottom: 30px; padding: 20px; border: 2px solid #ddd; border-radius: 10px; background-color: #f9f9f9; white-space:nowrap');
+    alignmentBox.setAttribute('style', 'font-family: "Courier New", Courier, monospace; margin-bottom: 30px; padding: 20px; white-space:nowrap');
     const alignmentHeader = document.createElement('h2');
     alignmentHeader.textContent = 'JPred Alignment';
     alignmentBox.appendChild(alignmentHeader);
@@ -344,11 +344,11 @@ function generateHtmlForJPred(data, acc, ptms) {
         // Create sequence div
         const sequenceDiv = document.createElement('div');
         sequenceDiv.setAttribute('style', 'white-space: nowrap; margin-bottom: 10px;');
-        data.alignment[key].split('').forEach((char, idx) => {
-            const span = document.createElement('span');
-            span.textContent = char;
-            if (indices.includes(idx+1)) {
-                if (key === 'QUERY') {
+        if (key === 'QUERY') {
+            data.alignment[key].split('').forEach((char, idx) => {
+                const span = document.createElement('span');
+                span.textContent = char;
+                if (indices.includes(idx+1)) {
                     span.classList.add('highlighted');
                     let uniquePtms = new Set();
                     ptms.forEach(ptm => {
@@ -385,8 +385,6 @@ function generateHtmlForJPred(data, acc, ptms) {
                             const tooltip = document.createElement("div");
                             tooltip.classList.add("custom-tooltip");
                             tooltip.textContent = uniquePtms.join(", ");  // Display all PTMs for this position
-                            if (key !== "QUERY")
-                                tooltip.textContent = "Potentially " + tooltip.textContent;
         
                             // Append the tooltip to the body
                             document.body.appendChild(tooltip);
@@ -417,9 +415,11 @@ function generateHtmlForJPred(data, acc, ptms) {
                         }
                     });
                 }
-            }
-            sequenceDiv.appendChild(span);
-        });
+                sequenceDiv.appendChild(span);
+            });
+        } else {
+            sequenceDiv.textContent = data.alignment[key];
+        }
         // sequenceDiv.textContent = data.alignment[key];
         sequencesBox.appendChild(sequenceDiv);
     });
@@ -558,9 +558,11 @@ function generateHtmlForJPred(data, acc, ptms) {
                                 spans.forEach((span, innerIdx) => {
                                     if (innerIdx === idx) {
                                         span.classList.add('highlighted');
+                                        span.style.backgroundColor = "#e3e272";
                                     } else {
                                         if (span.className === 'highlighted') {
                                             span.classList.remove('highlighted');
+                                            span.style.backgroundColor = "";
                                         }
                                     }
                                 });
@@ -792,7 +794,7 @@ async function preparePTMDetails(localizedSequence, localizedSequenceInfo, ptmsD
 
         const keyCell = document.createElement('td');
         keyCell.classList.add('key');
-        keyCell.textContent = 'PTM Type';
+        keyCell.textContent = 'PTM';
         
         const valueCell = document.createElement('td');
         valueCell.classList.add('value');
@@ -1450,7 +1452,15 @@ function generatePTMHtmlTable() {
     GOING TO SHOW PREDICTED (AlphaFold) VS ACTUAL (RCSB Database) STRUCTURES
 */
 
-async function displayPDBStructures(uniprotAC, alphafoldPdbData, proteinSequence) {
+async function displayPDBStructures(uniprotAC, alphafoldPdbData, ptms) {
+    document.getElementById('rcsbPdbInfo').innerHTML = '';
+    let indices = new Set();
+    ptms.forEach(ptm => {
+        indices.add(ptm[0]);
+    });
+    indices = Array.from(indices);
+
+
     document.getElementById('afPdbStructure').classList.add('lds-dual-ring');
     document.getElementById('rcsbPdbStructure').classList.add('lds-dual-ring');
     // We also have to collect it for RCSB data
@@ -1488,7 +1498,7 @@ async function displayPDBStructures(uniprotAC, alphafoldPdbData, proteinSequence
 
     if (alphafoldPdbData) {
         // First and foremost - get calculations
-        const afCalculations = fetch('/ptmkb/structure_calculations', {
+        const afCalculations = await fetch('/ptmkb/structure_calculations', {
             method: 'POST',
             headers: {
                 "Accept": "application/json",
@@ -1498,21 +1508,182 @@ async function displayPDBStructures(uniprotAC, alphafoldPdbData, proteinSequence
         }).then(async (res) => {
             return await res.json();
         });
-        // generateHtmlForPdbStructure(await afCalculations, 'afInfo');
-        const viewer = $3Dmol.createViewer("afPdbStructure", { defaultcolors: $3Dmol.rasmolElementColors });
-        canvas = viewer.getCanvas();
-        canvas.classList.add('viewer_3Dmoljs');
-        viewer.addModel(alphafoldPdbData, 'pdb');
         
-        viewer.setStyle( {}, { cartoon: { color: 'spectrum' } });
-        viewer.zoomTo();
-        document.getElementById('afPdbStructure').classList.remove('lds-dual-ring');
-        viewer.render();
+        $3Dmol.createViewer("afPdbStructure", {
+            defaultcolors: $3Dmol.rasmolElementColors,
+            callback: (e) => {
+                e.addModel(alphafoldPdbData, 'pdb', { vibrate: true });
+
+                // show/hide indices
+                let idxLabels = []
+                document.getElementById('afShowIndices').addEventListener('click', () => {
+                    if (document.getElementById('afShowIndices').getAttribute('data-showing') === 'false') {
+                        // create indices labels
+                        var residues = {};
+                        const atoms = e.getAtomsFromSel({});
+                        atoms.forEach(function(atom) {
+                            if (!residues[atom.resi]) {
+                                if (atom.atom === 'CA') {
+                                    residues[atom.resi] = atom;
+                                }
+                            }
+                        });
+                        residues = Object.values(residues);
+                        
+                        residues.forEach(res => {
+                            idxLabels.push(
+                                e.addLabel(
+                                    res.resi,
+                                    {
+                                        position: res,
+                                        showBackground: false,
+                                        fontColor: 'black',
+                                        fontSize: 14,
+                                        alignment: 'center',
+                                    },
+                                    {resi: res.resi},
+                                    true
+                                )
+                            );
+                        });
+                        document.getElementById('afShowIndices').setAttribute('data-showing', 'true');
+                    } else {
+                        // just delete all indices labels using the stored information
+                        idxLabels.forEach((idxLabel) => {
+                            e.removeLabel(idxLabel);
+                        });
+                        idxLabels.splice(0, idxLabels.length);
+                        document.getElementById('afShowIndices').setAttribute('data-showing', 'false');
+                    }
+                    e.render();
+                });
+                e.setStyle( {}, { cartoon: { colorscheme: 'ssPyMol' } }); // Default style is 2
+                e.zoomTo();
+                document.getElementById('afPdbStructure').classList.remove('lds-dual-ring');
+                let labels = []
+                        
+                // Going to set another event listener here
+                document.getElementById('afClearLabels').addEventListener('click', () => {
+                    labels.forEach(l => {
+                        e.removeLabel(l);
+                    });
+                    labels.splice(0, labels.length);
+                });
+                        
+                // And another event listener here
+                document.getElementById('afShowDetails').addEventListener('click', () => {
+                    if (document.getElementById('afShowDetails').getAttribute('data-type') === "3") {
+                        e.setStyle( {}, { stick: { radius: 0.15 } } );
+                        e.render();
+                        document.getElementById('afShowDetails').setAttribute('data-type', "1");
+                    } else if (document.getElementById('afShowDetails').getAttribute('data-type') === "1") {
+                        e.setStyle( {}, { cartoon: { colorscheme: 'ssPyMol' } } );
+                        e.render();
+                        document.getElementById('afShowDetails').setAttribute('data-type', "2");
+                    } else {
+                        e.setStyle( { stick: { radius: 0.15 }, cartoon: { colorscheme: 'ssPyMol' } } );
+                        e.render();
+                        document.getElementById('afShowDetails').setAttribute('data-type', "3");
+                    }
+                });
+                        
+                // ... and another one...
+                document.getElementById('afCenter').addEventListener('click', () => {
+                    e.zoomTo();
+                    e.center();
+                });
+
+                e.setClickable(
+                    {},
+                    true,
+                    function(atom, viewer, event, container) {
+                        const labelIndices = labels.map((lab) => {
+                            return lab.stylespec.position.resi;
+                        });
+                        if (!labelIndices.includes(atom.resi)) {
+                            var label = `${atom.resi} - ${atom.resn}`;
+                            if (indices.includes(atom.resi)) {
+                                // Set up the label to include everything
+                                // Gather all PTMs
+                                label += '('
+                                let uniquePtms = new Set();
+                                ptms.forEach(ptm => {
+                                    if (ptm[0] === atom.resi) {
+                                        uniquePtms.add(ptm[1]);
+                                    }
+                                });
+                                uniquePtms = Array.from(uniquePtms);
+                                uniquePtms.forEach(ptm => {
+                                    label += `${ptm}, `;
+                                });
+                                label = label.slice(0, label.length-2);
+                                label += ")";
+                            }
+
+                            // Use DSSP and Shrake-Rupley values
+                            const idx = (atom.resi - 1);
+                            try{
+                                label += ` --- SASA: ${afCalculations['SASA'][idx].toFixed(3)} - DSSP: ${afCalculations['simplified'][idx]}`;
+                            } catch (e) {}
+                            if (afCalculations['detailed'][idx] !== ' ') {
+                                label += ` (${afCalculations['detailed'][idx]})`;
+                            }
+                            const labelObj = viewer.addLabel(
+                                label, {
+                                    position: atom,
+                                    backgroundColor: 'black',
+                                    backgroundOpacity: 1.0,
+                                    fontColor: 'white',
+                                    fontSize: 12,
+                                }
+                            );
+                            labels.push(
+                                labelObj
+                            );
+                        } else {
+                            var labelToDelete = labels.map(l => {
+                                if (l.stylespec.position.resi === atom.resi) {
+                                    return l;
+                                } else {
+                                    return null;
+                                }
+                            });
+                            labelToDelete = labelToDelete.find(e => { return e !== null; });
+                            viewer.removeLabel(labelToDelete);
+                            const indexToDelete = labels.indexOf(labelToDelete)
+                            if (indexToDelete !== -1) {
+                                labels.splice(indexToDelete, 1);
+                            }
+                        }
+                    }
+                );
+                e.render();
+            }
+        });
+        document.getElementById('afPdbInfo').innerHTML = `
+            <h3 style="text-align: center; font-size: 28px; color: #444; font-weight: bold;">AlphaFold PDB Info</h3>
+            <table class="table">
+                <tr>
+                    <td class="key">Sequence</td>
+                    <td class="value">${afCalculations['sequence']}</td>
+                </tr>
+                <tr>
+                    <td class="key">Structure (Simple)</td>
+                    <td class="value">${afCalculations['simplified'].join('')}</td>
+                </tr>
+                <tr>
+                    <td class="key">Structure (Detailed)</td>
+                    <td class="value">${String(afCalculations['detailed'].join('')).replaceAll(' ', '-')}</td>
+                </tr>
+                <tr>
+                    <td class="key">Solvent Accessible Surface Area (Å²)</td>
+                    <td class="value">${afCalculations['SASA'].map(sasa => sasa.toFixed(3)).join(' - ')}</td>
+                </tr>
+            </table>
+        `;
         document.getElementById('afHRef').innerHTML = `<a href="https://alphafold.ebi.ac.uk/entry/${uniprotAC}" target="_blank">AlphaFold Predicted Structure</a>`
-        // responseStr += `<h5>Predicted Structure (Left, <a href="https://alphafold.ebi.ac.uk/entry/${uniprotAC}" target="_blank">AlphaFold</a>)`
     } else {
         document.getElementById('afHRef').innerHTML = `<h5>No AlphaFold Structure exists.</h5>`;
-        // responseStr += `<h5>Error: no PDB entry found in AlphaFold.`
     }
 
     let rcsbData = await fetch(
@@ -1522,8 +1693,8 @@ async function displayPDBStructures(uniprotAC, alphafoldPdbData, proteinSequence
         return res.json();
     }).catch(error => {
         console.error(error);
-        // responseStr += `- Error: no PDB entry found in RCSB.</h5>`
     });
+
     let response = getValue(rcsbData, 'result_set');
     var identifiers = []
 
@@ -1537,7 +1708,7 @@ async function displayPDBStructures(uniprotAC, alphafoldPdbData, proteinSequence
         ).then(async (res) => {
             // Use this PDB data to display actual PDB structure.
             res = await res.text();
-            const rcsbCalculations = fetch('/ptmkb/structure_calculations', {
+            const rcsbCalculations = await fetch('/ptmkb/structure_calculations', {
                 method: 'POST',
                 headers: {
                     "Accept": "application/json",
@@ -1547,15 +1718,186 @@ async function displayPDBStructures(uniprotAC, alphafoldPdbData, proteinSequence
             }).then(async (res) => {
                 return await res.json();
             });
-            // generateHtmlForPdbStructure(await rcsbCalculations, 'rcsbInfo');
-            const viewer = $3Dmol.createViewer("rcsbPdbStructure", { defaultcolors: $3Dmol.rasmolElementColors });
-            viewer.addModel(res, 'pdb');
+            
+            $3Dmol.createViewer("rcsbPdbStructure", {
+                defaultcolors: $3Dmol.rasmolElementColors,
+                callback: (e) => {
+                    e.addModel(res, 'pdb');
+                    
+                    // For indices and showing labels and stuff
+                    var residues = {};
+                    const atoms = e.getAtomsFromSel({});
+                    var minIndex = null;
+                    atoms.forEach(function(atom, index) {
+                        if (!residues[atom.resi] && atom.chain === 'A') {
+                            if (minIndex === null) {
+                                minIndex = atom.resi;
+                            }
+                            residues[atom.resi] = atom;
+                        }
+                    });
+                    residues = Object.values(residues);
 
-            viewer.setStyle( {}, { cartoon: { color: 'spectrum' } });
-            viewer.zoomTo();
-            document.getElementById('rcsbPdbStructure').classList.remove('lds-dual-ring');
-            viewer.render();
-            document.getElementById('rcsbHRef').innerHTML = `<a href="https://www.rcsb.org/structure/${id}" target="_blank">RCSB Verified Structure</a>`
+                    // show/hide indices
+                    let idxLabels = []
+                    document.getElementById('rcsbShowIndices').addEventListener('click', () => {
+                        if (document.getElementById('rcsbShowIndices').getAttribute('data-showing') === 'false') {
+                            // create indices labels
+                            
+                            residues.forEach((res) => {
+                                idxLabels.push(
+                                    e.addLabel(
+                                        res.resi,
+                                        {
+                                            position: res,
+                                            showBackground: false,
+                                            fontColor: 'black',
+                                            fontSize: 14,
+                                            alignment: 'center',
+                                        },
+                                        {resi: res.resi},
+                                        true
+                                    )
+                                );
+                            });
+                            document.getElementById('rcsbShowIndices').setAttribute('data-showing', 'true');
+                        } else {
+                            // just delete all indices labels using the stored information
+                            idxLabels.forEach((idxLabel) => {
+                                e.removeLabel(idxLabel);
+                            });
+                            idxLabels.splice(0, idxLabels.length);
+                            document.getElementById('rcsbShowIndices').setAttribute('data-showing', 'false');
+                        }
+                        e.render();
+                    });
+                    e.setStyle( {chain: 'A'}, { cartoon: { colorscheme: 'ssPyMol' } }); // Default style is 2
+                    e.zoomTo();
+                    document.getElementById('rcsbPdbStructure').classList.remove('lds-dual-ring');
+                    let labels = []
+                            
+                    // Going to set another event listener here
+                    document.getElementById('rcsbClearLabels').addEventListener('click', () => {
+                        labels.forEach(l => {
+                            e.removeLabel(l);
+                        });
+                        labels.splice(0, labels.length);
+                    });
+                            
+                    // And another event listener here
+                    document.getElementById('rcsbShowDetails').addEventListener('click', () => {
+                        if (document.getElementById('rcsbShowDetails').getAttribute('data-type') === "3") {
+                            e.setStyle( {chain: 'A'}, { stick: { radius: 0.15 } } );
+                            e.render();
+                            document.getElementById('rcsbShowDetails').setAttribute('data-type', "1");
+                        } else if (document.getElementById('rcsbShowDetails').getAttribute('data-type') === "1") {
+                            e.setStyle( {chain: 'A'}, { cartoon: { colorscheme: 'ssPyMol' } } );
+                            e.render();
+                            document.getElementById('rcsbShowDetails').setAttribute('data-type', "2");
+                        } else {
+                            e.setStyle( {chain: 'A'}, { stick: { radius: 0.15 }, cartoon: { colorscheme: 'ssPyMol' } } );
+                            e.render();
+                            document.getElementById('rcsbShowDetails').setAttribute('data-type', "3");
+                        }
+                    });
+                    // ... and another one...
+                    document.getElementById('rcsbCenter').addEventListener('click', () => {
+                        e.zoomTo();
+                        e.center();
+                    });
+    
+                    e.setClickable(
+                        {chain: 'A'},
+                        true,
+                        function(atom, viewer, event, container) {
+                            // Map by residue ID and find one that isn't null
+                            // That will be the basis for selection
+                            var currResidues = residues.map((res) => {
+                                if (res.resi === atom.resi) {
+                                    return res;
+                                } else {
+                                    return null;
+                                }
+                            });
+                            const currRes = currResidues.find(e => { return e !== null; });
+                            // Check if a residue has been picked
+                            if (currRes) {
+                                // Now check if a label exists already for it in the labels array
+                                const labelIndices = labels.map(lab => {
+                                    return lab.stylespec.position.resi;
+                                });
+                                if (!labelIndices.includes(currRes.resi)) {
+                                    // If it doesn't, make one
+                                    // At this point, Cognitive Complexity be damned
+                                    var label = `${atom.resi} - ${atom.resn}`;
+        
+                                    // Use DSSP and Shrake-Rupley values
+                                    var idx = residues.map(res => {
+                                        return res.resi;
+                                    });
+                                    idx = idx.indexOf(currRes.resi);
+                                    try{
+                                        label += ` --- SASA: ${rcsbCalculations['SASA'][idx].toFixed(3)} - DSSP: ${rcsbCalculations['simplified'][idx]}`;
+                                    } catch (e) {}
+                                    if (rcsbCalculations['detailed'][idx] !== ' ') {
+                                        label += ` (${rcsbCalculations['detailed'][idx]})`;
+                                    }
+                                    const labelObj = viewer.addLabel(
+                                        label, {
+                                            position: atom,
+                                            backgroundColor: 'black',
+                                            backgroundOpacity: 1.0,
+                                            fontColor: 'white',
+                                            fontSize: 12,
+                                        }
+                                    );
+                                    labels.push(
+                                        labelObj
+                                    );
+                                } else {
+                                    // Otherwise, remove it.
+                                    var labelToDelete = labels.map(l => {
+                                        if (l.stylespec.position.resi === atom.resi) {
+                                            return l;
+                                        } else {
+                                            return null;
+                                        }
+                                    });
+                                    labelToDelete = labelToDelete.find(e => { return e !== null; });
+                                    viewer.removeLabel(labelToDelete);
+                                    const indexToDelete = labels.indexOf(labelToDelete)
+                                    if (indexToDelete !== -1) {
+                                        labels.splice(indexToDelete, 1);
+                                    }
+                                }
+                            }
+                        }
+                    );
+                    e.render();
+                }
+            });
+            document.getElementById('rcsbPdbInfo').innerHTML = `
+                <h3 style="text-align: center; font-size: 28px; color: #444; font-weight: bold;">RCSB PDB Info</h3>
+                <table class="table">
+                    <tr>
+                        <td class="key">Sequence</td>
+                        <td class="value">${rcsbCalculations['sequence']}</td>
+                    </tr>
+                    <tr>
+                        <td class="key">Structure (Simple)</td>
+                        <td class="value">${rcsbCalculations['simplified'].join('')}</td>
+                    </tr>
+                    <tr>
+                        <td class="key">Structure (Detailed)</td>
+                        <td class="value">${String(rcsbCalculations['detailed'].join('')).replaceAll(' ', '-')}</td>
+                    </tr>
+                    <tr>
+                        <td class="key">Solvent Accessible Surface Area (Å²)</td>
+                        <td class="value">${rcsbCalculations['SASA'].map(sasa => sasa.toFixed(3)).join(' - ')}</td>
+                    </tr>
+                </table>
+            `;
+            document.getElementById('rcsbHRef').innerHTML = `<a href="https://www.rcsb.org/structure/${id}" target="_blank">RCSB Verified Structure</a>`;
             // responseStr += `- Actual Structure (Right, <a id="PDB_${id}" href="https://www.rcsb.org/structure/${id}" target="_blank">RCSB</a>).</h5>`
         }).catch(error => {
             document.getElementById('rcsbHRef').innerHTML = `<h5>No RCSB Structure exists.</h5>`;
@@ -1573,15 +1915,15 @@ async function displayPDBStructures(uniprotAC, alphafoldPdbData, proteinSequence
 
         document.getElementById('pdbDropdownSelect').addEventListener('change', async function(event) {
             document.getElementById('rcsbPdbStructure').classList.add('lds-dual-ring');
+            document.getElementById('rcsbPdbInfo').innerHTML = ``;
             const selectedValue = event.target.value;
-            const score = event.target.getAttribute('data-score');
             
             rcsbData = await fetch(
                 encodeURI(`https://files.rcsb.org/download/${selectedValue}.pdb`)
             ).then(async (res) => {
                 // Use this PDB data to display actual PDB structure.
                 res = await res.text();
-                const rcsbCalculations = fetch('/ptmkb/structure_calculations', { // Use this later on
+                const rcsbCalculations = await fetch('/ptmkb/structure_calculations', { // Use this later on
                     method: 'POST',
                     headers: {
                         "Accept": "application/json",
@@ -1592,86 +1934,348 @@ async function displayPDBStructures(uniprotAC, alphafoldPdbData, proteinSequence
                     return await res.json();
                 });
                 
-                const viewer = $3Dmol.createViewer("rcsbPdbStructure", { defaultcolors: $3Dmol.rasmolElementColors });
-                viewer.addModel(res, 'pdb');
-
-                viewer.setStyle( {}, { cartoon: { color: 'spectrum' } });
-                viewer.zoomTo();
-                document.getElementById('rcsbPdbStructure').classList.remove('lds-dual-ring');
-                viewer.render();
-                document.getElementById('rcsbHRef').innerHTML = `<a href="https://www.rcsb.org/structure/${selectedValue}" target="_blank">RCSB Verified Structure</a>`
+                $3Dmol.createViewer("rcsbPdbStructure", {
+                    defaultcolors: $3Dmol.rasmolElementColors,
+                    callback: (e) => {
+                        e.addModel(res, 'pdb');
+                        
+                        // For indices and showing labels and stuff
+                        var residues = {};
+                        const atoms = e.getAtomsFromSel({});
+                        var minIndex = null;
+                        var counter = 0;
+                        atoms.forEach(function(atom) {
+                            if (!residues[atom.resi] && atom.chain === 'A') {
+                                if (minIndex === null) {
+                                    minIndex = atom.resi;
+                                }
+                                residues[atom.resi] = atom;
+                            }
+                        });
+                        residues = Object.values(residues);
+    
+                        // show/hide indices
+                        let idxLabels = [];
+                        document.getElementById('rcsbShowIndices').addEventListener('click', () => {
+                            if (document.getElementById('rcsbShowIndices').getAttribute('data-showing') === 'false') {
+                                // create indices labels
+                                
+                                residues.forEach((res) => {
+                                    idxLabels.push(
+                                        e.addLabel(
+                                            res.resi,
+                                            {
+                                                position: res,
+                                                showBackground: false,
+                                                fontColor: 'black',
+                                                fontSize: 14,
+                                                alignment: 'center',
+                                            },
+                                            {resi: res.resi},
+                                            true
+                                        )
+                                    );
+                                });
+                                document.getElementById('rcsbShowIndices').setAttribute('data-showing', 'true');
+                            } else {
+                                // just delete all indices labels using the stored information
+                                idxLabels.forEach((idxLabel) => {
+                                    e.removeLabel(idxLabel);
+                                });
+                                idxLabels.splice(0, idxLabels.length);
+                                document.getElementById('rcsbShowIndices').setAttribute('data-showing', 'false');
+                            }
+                            e.render();
+                        });
+                        e.setStyle( {chain: 'A'}, { cartoon: { colorscheme: 'ssPyMol' } }); // Default style is 2
+                        e.zoomTo();
+                        document.getElementById('rcsbPdbStructure').classList.remove('lds-dual-ring');
+                        let labels = []
+                                
+                        // Going to set another event listener here
+                        document.getElementById('rcsbClearLabels').addEventListener('click', () => {
+                            labels.forEach(l => {
+                                e.removeLabel(l);
+                            });
+                            labels.splice(0, labels.length);
+                        });
+                                
+                        // And another event listener here
+                        document.getElementById('rcsbShowDetails').addEventListener('click', () => {
+                            if (document.getElementById('rcsbShowDetails').getAttribute('data-type') === "3") {
+                                e.setStyle( {chain: 'A'}, { stick: { radius: 0.15 } } );
+                                e.render();
+                                document.getElementById('rcsbShowDetails').setAttribute('data-type', "1");
+                            } else if (document.getElementById('rcsbShowDetails').getAttribute('data-type') === "1") {
+                                e.setStyle( {chain: 'A'}, { cartoon: { colorscheme: 'ssPyMol' } } );
+                                e.render();
+                                document.getElementById('rcsbShowDetails').setAttribute('data-type', "2");
+                            } else {
+                                e.setStyle( {chain: 'A'}, { stick: { radius: 0.15 }, cartoon: { colorscheme: 'ssPyMol' } } );
+                                e.render();
+                                document.getElementById('rcsbShowDetails').setAttribute('data-type', "3");
+                            }
+                        });
+                        // ... and another one...
+                        document.getElementById('rcsbCenter').addEventListener('click', () => {
+                            e.zoomTo();
+                            e.center();
+                        });
+        
+                        e.setClickable(
+                            {chain: 'A'},
+                            true,
+                            function(atom, viewer, event, container) {
+                                // Map by residue ID and find one that isn't null
+                                // That will be the basis for selection
+                                var currResidues = residues.map((res) => {
+                                    if (res.resi === atom.resi) {
+                                        return res;
+                                    } else {
+                                        return null;
+                                    }
+                                });
+                                const currRes = currResidues.find(e => { return e !== null; });
+                                // Check if a residue has been picked
+                                if (currRes) {
+                                    // Now check if a label exists already for it in the labels array
+                                    const labelIndices = labels.map(lab => {
+                                        return lab.stylespec.position.resi;
+                                    });
+                                    if (!labelIndices.includes(currRes.resi)) {
+                                        // If it doesn't, make one
+                                        // At this point, Cognitive Complexity be damned
+                                        var label = `${atom.resi} - ${atom.resn}`;
+            
+                                        // Use DSSP and Shrake-Rupley values
+                                        var idx = residues.map(res => {
+                                            return res.resi;
+                                        });
+                                        idx = idx.indexOf(currRes.resi);
+                                        try{
+                                            label += ` --- SASA: ${rcsbCalculations['SASA'][idx].toFixed(3)} - DSSP: ${rcsbCalculations['simplified'][idx]}`;
+                                        } catch (e) {}
+                                        if (rcsbCalculations['detailed'][idx] !== ' ') {
+                                            label += ` (${rcsbCalculations['detailed'][idx]})`;
+                                        }
+                                        const labelObj = viewer.addLabel(
+                                            label, {
+                                                position: atom,
+                                                backgroundColor: 'black',
+                                                backgroundOpacity: 1.0,
+                                                fontColor: 'white',
+                                                fontSize: 12,
+                                            }
+                                        );
+                                        labels.push(
+                                            labelObj
+                                        );
+                                    } else {
+                                        // Otherwise, remove it.
+                                        var labelToDelete = labels.map(l => {
+                                            if (l.stylespec.position.resi === atom.resi) {
+                                                return l;
+                                            } else {
+                                                return null;
+                                            }
+                                        });
+                                        labelToDelete = labelToDelete.find(e => { return e !== null; });
+                                        viewer.removeLabel(labelToDelete);
+                                        const indexToDelete = labels.indexOf(labelToDelete)
+                                        if (indexToDelete !== -1) {
+                                            labels.splice(indexToDelete, 1);
+                                        }
+                                    }
+                                }
+                            }
+                        );
+                        e.render();
+                    }
+                });
+                document.getElementById('rcsbPdbInfo').innerHTML = `
+                    <h3 style="text-align: center; font-size: 28px; color: #444; font-weight: bold;">RCSB PDB Info</h3>
+                    <table class="table">
+                        <tr>
+                            <td class="key">Sequence</td>
+                            <td class="value">${rcsbCalculations['sequence']}</td>
+                        </tr>
+                        <tr>
+                            <td class="key">Structure (Simple)</td>
+                            <td class="value">${rcsbCalculations['simplified'].join('')}</td>
+                        </tr>
+                        <tr>
+                            <td class="key">Structure (Detailed)</td>
+                            <td class="value">${String(rcsbCalculations['detailed'].join('')).replaceAll(' ', '-')}</td>
+                        </tr>
+                        <tr>
+                            <td class="key">Solvent Accessible Surface Area (Å²)</td>
+                            <td class="value">${rcsbCalculations['SASA'].map(sasa => sasa.toFixed(3)).join(' - ')}</td>
+                        </tr>
+                    </table>
+                `;
+                document.getElementById('rcsbHRef').innerHTML = `<a href="https://www.rcsb.org/structure/${selectedValue}" target="_blank">RCSB Verified Structure</a>`;
             }).catch(error => {
+                document.getElementById('rcsbHRef').innerHTML = `<h5>Internet connection error - try again!</h5>`;
                 console.log(error);
             });
         });
     } else {
-        document.getElementById('rcsbHRef').innerHTML = `<h5>No RCSB Structure exists.</h5>`;
+        document.getElementById('rcsbHRef').innerHTML = `<h5>No RCSB Structure exists for ${uniprotAC}.</h5>`;
     }
     try{document.getElementById('afPdbStructure').classList.remove('lds-dual-ring');} catch(e) {}
     try{document.getElementById('rcsbPdbStructure').classList.remove('lds-dual-ring');} catch(e) {}
 }
 
-function generateHtmlForPdbStructure(data, target) {
-    const fontSize = '14px';
+function generateHtmlForPdbStructure(data, target, ptms) {
+    const additionalContent = document.createElement('div');
+    additionalContent.setAttribute('style', "width: 500px;");
 
-    // Create the main HTML structure
-    const htmlContent = document.createElement('div');
-    htmlContent.setAttribute('style', 'padding: 20px;');
-
-    // Create the structure box
+    // Add a box for Sequence, Simplified Structure, Detailed Structure, and SASA
     const structureBox = document.createElement('div');
-    structureBox.setAttribute('style', 'font-family: "Courier New", Courier, monospace; margin-bottom: 30px; padding: 20px; white-space: pre; border: 2px solid #ddd; border-radius: 10px;');
+    structureBox.setAttribute('style', 'padding: 20px; border: 2px solid #ddd; border-radius: 10px; background-color: #f9f9f9; margin-bottom: 30px; width: 500px;');
 
-    // Create the scrollable container for simplified, detailed, SASA, and sequence data
-    const structureScrollContainer = document.createElement('div');
-    structureScrollContainer.setAttribute('style', 'display: flex; flex-direction: column; justify-content: flex-start; align-items: flex-start; margin-top: 20px; max-width: 400px; overflow-y: auto; white-space: pre;');
-    structureBox.appendChild(structureScrollContainer);
+    // Create the scrollable container for the new content
+    const scrollContainer = document.createElement('div');
+    scrollContainer.setAttribute('style', 'display: flex; justify-content: flex-start; align-items: flex-start; margin-top: 20px; padding-right: 10px; width: 500px;');
+    structureBox.appendChild(scrollContainer);
 
-    // Utility function to handle empty strings and formatting
-    function formatSequence(sequence) {
-        return sequence.map(item => item === " " ? " " : item).join('    ');
-    }
+    // Create the labels box for the new section
+    const labelsBox = document.createElement('div');
+    labelsBox.setAttribute('style', 'background-color: #f4f4f4; padding: 15px; border-radius: 5px; font-family: monospace; flex: 1; font-size: 14px; max-width: 100px; margin-right: 20px;');
+    scrollContainer.appendChild(labelsBox);
 
-    // Format SASA values: round them to 2 decimal places and ensure they take up 4 characters
-    function formatSASA(sasaData) {
-        return sasaData.map(value => {
-            if (!isNaN(value)) {
-                return value.toFixed(2).padStart(4, ' ');
-            }
-            return value === " " ? "    " : value; // Handle empty string for SASA as a period
-        }).join(' ');
-    }
+    // Create the sequences box for the new section
+    const sequencesBox = document.createElement('div');
+    sequencesBox.setAttribute('style', 'background-color: #f4f4f4; padding: 15px; border-radius: 5px; font-family: monospace; flex: 2; font-size: 14px; white-space: pre-wrap; overflow-x: auto;');
+    scrollContainer.appendChild(sequencesBox);
 
-    // Create a box for the simplified data sequence
-    const simplifiedBox = document.createElement('div');
-    simplifiedBox.setAttribute('style', `padding: 15px; border-radius: 5px; font-family: monospace; font-size: ${fontSize}; margin-bottom: 10px; white-space: pre;`);
-    structureScrollContainer.appendChild(simplifiedBox);
-    simplifiedBox.textContent = formatSequence(data.simplified);
+    // Add the labels and sequences for the new section
+    // Iterate over the new keys: "sequence", "simplified", "detailed", "SASA"
+    const labels = ['sequence', 'simplified', 'detailed'];
+    labels.forEach((label) => {
+        // Add label to the labels box
+        const labelDiv = document.createElement('div');
+        labelDiv.setAttribute('style', 'font-weight: bold; margin-bottom: 10px; white-space: nowrap;');
+        labelDiv.textContent = label.charAt(0).toUpperCase() + label.slice(1);  // Capitalize first letter
+        labelsBox.appendChild(labelDiv);
 
-    // Create a box for the detailed data sequence
-    const detailedBox = document.createElement('div');
-    detailedBox.setAttribute('style', `padding: 15px; border-radius: 5px; font-family: monospace; font-size: ${fontSize}; margin-bottom: 10px; white-space: pre;`);
-    structureScrollContainer.appendChild(detailedBox);
-    detailedBox.textContent = formatSequence(data.detailed);
+        // Create corresponding sequence div
+        const sequenceDiv = document.createElement('div');
+        sequenceDiv.setAttribute('style', 'white-space: nowrap; margin-bottom: 10px;');
 
-    // Create a box for the SASA data sequence
-    const sasaBox = document.createElement('div');
-    sasaBox.setAttribute('style', `padding: 15px; border-radius: 5px; font-family: monospace; font-size: ${fontSize}; margin-bottom: 10px; white-space: pre;`);
-    structureScrollContainer.appendChild(sasaBox);
-    sasaBox.textContent = formatSASA(data.SASA);
+        // if (label === 'pos') {
+        //     for (i = 0; i < data['sequence'].length; i++) {
+        //         const span = document.createElement('span');
+        //         span.textContent = (i+1);
+        //         sequenceDiv.appendChild(span);
+        //     }
+        // } else if (label === 'SASA') {
+        //     // For SASA, display the values as numbers
+        //     data[label].forEach((value, idx) => {
+        //         const span = document.createElement('span');
+        //         span.textContent = value.toFixed(2) + '\u00A0|\u00A0';  // Display as fixed-point numbers
+        //         sequenceDiv.appendChild(span);
+        //     });
+        if (label !== 'sequence') {
+            data[label].forEach((char) => {
+                const span = document.createElement('span');
+                if (char === ' ')
+                    char = '.';
+                span.textContent = char;
+                sequenceDiv.appendChild(span);
+            });
+        } else {
+            let indices = new Set();
+            ptms.forEach(ptm => {
+                indices.add(ptm[0]);
+            });
+            indices = Array.from(indices);
 
-    // Create a box for the sequence data
-    const sequenceBox = document.createElement('div');
-    sequenceBox.setAttribute('style', `padding: 15px; border-radius: 5px; font-family: monospace; font-size: ${fontSize}; margin-bottom: 10px; white-space: pre;`);
-    structureScrollContainer.appendChild(sequenceBox);
-    sequenceBox.textContent = formatSequence(data.sequence.split(''));
+            data[label].split('').forEach((char, idx) => {
+                const span = document.createElement('span');
+                span.textContent = char;
+                
+                if (indices.includes(idx + 1)) { // We found PTM
+                    span.classList.add('highlighted');
+                    let uniquePtms = new Set();
+                    ptms.forEach(ptm => {
+                        if (ptm[0] === idx+1) {
+                            uniquePtms.add(ptm[1]);
+                        }
+                    });
+                    uniquePtms = Array.from(uniquePtms);
+                    // Use the PTMs list for color
+                    const ptmColors = uniquePtms.map(ptmType => ptmColorMapping[ptmType] || '#f39c12');
+                    if (uniquePtms.length > 1) {
+                        // Dynamically calculate the percentage for each color block based on the number of colors
+                        const percentagePerColor = 100 / ptmColors.length;
+                        
+                        // Create the gradient by mapping over ptmColors
+                        const gradient = ptmColors
+                            .map((color, idx) => {
+                                const startPercentage = idx * percentagePerColor; // Starting percentage for this color block
+                                const endPercentage = startPercentage + percentagePerColor; // Ending percentage for this color block
+                                return `${color} ${startPercentage}% ${endPercentage}%`; // Define the color block from start to end
+                            })
+                            .join(', ');
+                    
+                        // Apply the generated linear gradient to the background
+                        span.setAttribute('data-ptm', uniquePtms.join(';'));
+                        span.style.background = `linear-gradient(to bottom, ${gradient})`;
+                        span.style.backgroundSize = '100% 100%';
+                    } else {
+                        span.style.backgroundColor = ptmColors[0];
+                    }
+                    span.addEventListener("mouseenter", (e) => {
+                        if (uniquePtms.length > 0) {
+                            // Create a tooltip element
+                            const tooltip = document.createElement("div");
+                            tooltip.classList.add("custom-tooltip");
+                            tooltip.textContent = uniquePtms.join(", ");  // Display all PTMs for this position
+        
+                            // Append the tooltip to the body
+                            document.body.appendChild(tooltip);
+        
+                            // Position the tooltip near the character
+                            const rect = e.target.getBoundingClientRect(); // Get the character's position
+                            tooltip.style.position = "absolute";
+                            tooltip.style.left = `${rect.left + window.scrollX}px`; // Adjust for any page scroll
+                            tooltip.style.top = `${rect.top + window.scrollY - 30}px`; // Position above the character
+                            tooltip.style.zIndex = 10; // Ensure it's above other content
+        
+                            // Add the 'visible' class to the tooltip to show it
+                            setTimeout(() => {
+                                tooltip.classList.add("visible");
+                            }, 10); // Small delay for the transition to kick in
+        
+                            // Store tooltip for later removal
+                            e.target.tooltip = tooltip;
+                        }
+                    });
+    
+                    // Add mouseleave event to remove the tooltip
+                    span.addEventListener("mouseleave", (e) => {
+                        const tooltip = e.target.tooltip;
+                        if (tooltip) {
+                            tooltip.remove(); // Remove the tooltip when the mouse leaves
+                            delete e.target.tooltip; // Clean up the tooltip reference
+                        }
+                    });
+                }
 
-    // Append the structure box to the main container
-    htmlContent.appendChild(structureBox);
+                sequenceDiv.appendChild(span);
+            });
+        }
 
+        sequencesBox.appendChild(sequenceDiv);
+    });
+
+    // Append the entire structure box to the main container
+    additionalContent.appendChild(structureBox);
+
+    // Append the additional content to the target div
     const targetDiv = document.getElementById(target);
-    targetDiv.classList.remove('lds-dual-ring');
-    targetDiv.appendChild(htmlContent);
+    targetDiv.appendChild(additionalContent);
 }
 /*
     THIS IS PURELY FOR DISPLAYING PROTEIN STATISTICS
@@ -2175,7 +2779,7 @@ async function search() {
                             displayProteinSequence(json.proteinSequence, updatedPtmData, json.proteinSequenceFull, json.lastUpdate, json.uniProtAC);
                             updateStats(updatedPtmData)
                             getJPredInference(json.proteinSequence, json.uniProtAC, updatedPtmData);
-                            displayPDBStructures(json.uniProtAC, pdbData, json.proteinSequence);
+                            displayPDBStructures(json.uniProtAC, pdbData, updatedPtmData);
 
                             document.getElementById('sequenceDisplayer').setAttribute('style', "display: block;");
                             document.getElementById('iframeData').textContent = "";

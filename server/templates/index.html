@@ -32,7 +32,7 @@
     <script>
     </script>
 
-    <div class="container-fluid mt-5" style="width: 80%; align-content: center;">
+    <div class="container-fluid mt-5" style="width: 90%; align-content: center;">
 
         <div class="alert alert-info text-center">
             <i class="fa fa-search fa-small"></i>&nbsp;<strong><label>Search</label>&nbsp;(Enter Uniprot Identifier/Accession Number)</strong>
@@ -100,7 +100,7 @@
 
             <div id="foundProtein" style="position: relative; display: none; padding-bottom: 20px;">
                 <div class="protein-sequence-container">
-                    <h1 style="text-align: center; font-size: 28px; color: #444; font-weight: bold;">Protein Sequence</h1>
+                    <h1 style="text-align: center; font-size: 28px; color: #444; font-weight: bold;">Protein PTM Sequence</h1>
                     <div class="protein-info-container" id="uniprotSequence" style="width:70%;"></div>
                     <p id="iframeData2" style="padding-top: 20px;"></p>
                     <div class="sequence-displayer" id="sequenceDisplayer"></div>
@@ -116,40 +116,53 @@
                 </div>
             </div>
 
-            <div id="jpredMajor" class="protein-sequence-container" style="padding: 20px;">
+            <div id="jpredMajor" class="protein-sequence-container" style="margin-bottom: 20px;">
                 <h1 style="text-align: center; font-size: 28px; color: #444; font-weight: bold;">JPred Prediction</h1>
                 <div id="jpredPredictions"></div>
                 <div id="jpredInfo"></div>
             </div>
             
-            <div id="pdbMajor" class="protein-sequence-container" style="padding: 20px;">
+            <div id="pdbMajor" class="protein-sequence-container">
+                <h1 style="text-align: center; font-size: 28px; color: #444; font-weight: bold;">Protein PDB Structures</h1>
                 <div id="pdbStructures">
-                    <div id="afMajor">
+                    <div id="afMajor" style="align-items: flex-start;">
                         <h5 id="afHRef">AlphaFold Predicted Structure</h5>
+                        <button id="afClearLabels" class="additional-button">Clear Selections</button>
+                        <button id="afCenter" class="additional-button">Re-center</button>
+                        <button id="afShowDetails" data-type="2" class="additional-button">Cycle Style</button>
+                        <button id="afShowIndices" data-showing="false" class="additional-button">Toggle Indices</button>
                         <div id="afPdbStructure"></div>
-                        <select style="visibility: hidden;"></select>
+                        <div>
+                            <select style="visibility: hidden;"></select>
+                        </div>
                     </div>
-                    <div id="rcsbMajor">
+                    <div id="rcsbMajor" style="align-items: flex-start;">
                         <h5 id="rcsbHRef">RCSB Verified Structure</h5>
+                        <button id="rcsbClearLabels" class="additional-button">Clear Selections</button>
+                        <button id="rcsbCenter" class="additional-button">Re-center</button>
+                        <button id="rcsbShowDetails" data-type="2" class="additional-button">Cycle Style</button>
+                        <button id="rcsbShowIndices" data-showing="false" class="additional-button">Toggle Indices</button>
                         <div id="rcsbPdbStructure"></div>
-                        <select id="pdbDropdownSelect"></select>
+                        <div>
+                            <span style="padding-left: 10px">Select PDB:</span>
+                            <select id="pdbDropdownSelect" style="height: 30px;"></select>
+                        </div>
+                        
                     </div>
                 </div>
-                <div id="pdbInfo"></div>
-                <!-- <div id="pdbStructuresInfo">
-                    <div id="afInfo"></div>
-                    <div id="rcsbInfo"></div>
-                </div> -->
+                <div>
+                    <div id="afPdbInfo" class="protein-info-container" style="margin-top: 20px;"></div>
+                </div>
+                <div>
+                    <div id="rcsbPdbInfo" class="protein-info-container" style="margin-top: 20px;"></div>
+                </div>
             </div>
 
             <div id="ptmSiteInfo" style="display: none; align-content: center;">
-                <h3>PTM Info</h3>
                 <table class="table table-striped mx-auto">
                     <tbody class="thead-light" id="ptmInfo">
                     </tbody>
                 </table>
-                <h3>PTM Vector Data</h3>
-                <p>This vector data is used to calculate scores mentioned above (substitute the values in the equations).</p>
                 <table class="table table-bordered table-responsive th td" id="dataVector" style="display: none; font-family: Arial, sans-serif;; margin: 0 auto">
                     <thead id="vectorHead" style="text-align: center"></thead>
                     <tbody id="vectorBody" style="text-align: center"></tbody>
@@ -171,7 +184,7 @@
     <footer class="footer bg-light py-3">
         <div class="container text-center">
             <p class="mb-0"> This website is open for everyone to use. For more information, please contact us.</p>
-            <p class="mb-0"><a href="http://biolabs.lums.edu.pk/birl">© 2024 Biomedical Informatics & Engineering Research Laboratory (BIRL)</a></p>
+            <p class="mb-0"><a href="http://birl.lums.edu.pk/">© 2024 Biomedical Informatics & Engineering Research Laboratory (BIRL)</a></p>
         </div>
     </footer>
 </body>

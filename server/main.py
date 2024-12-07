@@ -244,11 +244,10 @@ async def get_log_value(request: Request):
     # Use the above vector to calculate additive and multiplicative scores
     a_score, m_scores = additive_calculator(vector), multiplicative_calculator(vector)
     m_score = m_scores[1]['multiplicative_score']
-    asterisk_m_score = m_scores[1]['adjusted_multiplicative_score']
+    asterisk_m_score = m_scores[1]['logLogProduct']
     return {
-        'a_score': round(a_score, 3) if not isinstance(a_score, str) else a_score,
-        'm_score': round(m_score, 3) if not isinstance(m_score, str) else m_score,
-        '*_m_score': round(asterisk_m_score, 3) if not isinstance(asterisk_m_score, str) else asterisk_m_score
+        'logSum': round(a_score, 3) if not isinstance(a_score, str) else a_score,
+        'logLogProduct': round(asterisk_m_score, 3) if not isinstance(asterisk_m_score, str) else asterisk_m_score
     }
 
 @app.get('/ptmkb/getAminoAcids', include_in_schema=False)

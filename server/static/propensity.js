@@ -239,8 +239,8 @@ async function displayVector(data, subsequence) {
                     return json;
                 });
     var json = {
-        "logSum": scores['a_score'],
-        "log-LogProduct": scores['*_m_score']
+        "logSum": scores['logSum'],
+        "logLogProduct": scores['logLogProduct']
     }
 
     // Now I'll work on the general info on the PTM
