@@ -15,10 +15,13 @@
 
 <body>
     <nav class="navbar">
-        <div class="logo">PTMKB</div>
+        <!-- <div class="logo">PTMKB</div> -->
+        <a href="/">
+            <img src="/picture?picture=ptmkb-1-alt.png" style="width: 150px;" alt="PTMKB">
+        </a>
         <button class="navbar-toggler" onclick="toggleNavbar()">☰</button>
         <ul class="navbar-items">
-            <li><a href="/" class="nav-link"><span class="nav-item-box">Search</span></a></li>
+            <li><a href="/search" class="nav-link"><span class="nav-item-box">Search</span></a></li>
             <li><a href="/propensity" class="nav-link"><span class="nav-item-box">Propensity</span></a></li>
             <li><a class="nav-link active"><span class="nav-item-box">Documentation</span></a></li>
             <li><a href="/integration" class="nav-link"><span class="nav-item-box">Integration</span></a></li>
@@ -27,133 +30,198 @@
         </ul>
     </nav>
 
-    <div class="container mt-5">
+    <div class="container-fluid mt-5" style="max-width: 1280px;">
         <h1>Documentation</h1>
-        <p>This documentation focuses on the information available in tedious detail.</p>
+        <p>This page aims to explain what each and every page is designed for, and  how you can navigate through them.</p>
     </div>
     <div id="markdown">
-        <h2 id="post-translational-modifications">Post-Translational Modifications</h2>
-        <p>As this website hosts PTMs archived in <strong>dbPTM</strong>, the following PTMs exist that can be searched
-            for:</p>
-            <table style="width: 80%; margin: 0 auto; border-collapse: collapse; border: 2px solid black; text-align: center;">
-            <tbod>
+        <h2 style="text-align: center; font-size: 24px; color: #444; font-weight: bold;"><a href="/search">Search</a></h2>
+        
+        <hr>
+        <h2 style="text-align: center; font-size: 24px; color: #444; font-weight: bold;"><a href="/propensity">Propensity</a></h2>
+        <p>We offer an interface to calculate the <strong>Propensity</strong>, or in other words, the tendency of a residue
+            undergoing a certain PTM basedon its neighbouring residues. This tool facilitates users with a calculator that
+            gives the chances of a PTM occurring on a residue, backed by thousands of experimentally-verified observations
+            of PTMs.
+        </p>
+        <div style="margin: 0 auto; display: block; text-align: center;">
+            <img src="/picture?picture=propensity-1.png" style="width: 100%; border: 2px solid black;">
+        </div>
+        <p>Here is the Propensity page interface:</p>
+        <p>
+            In [<a style="color: #ff0000">1</a>], enter the protein subsequence for which you want to calculate the Propensity.
+            This subsequence must have a length between 13 and 21, and must be an odd value to account for equal number of upstream
+            and downstream residues. The counter ([<a style="color: #ff0000">3</a>]) on the right side of the subsequence input
+            lets you know how long your subsequence is.
+        </p>
+        <p>
+            [<a style="color: #ff0000">2</a>] is where you enter the PTM type for the residue you want to calculate the Propensity for.
+            The list of PTMs will be available to you as suggestions while you type in it.
+        </p>
+        <p>
+            Once you have entered both of the required information, proceed to click on the <strong>"Calculate"</strong> button below.
+            You will be presented with something like this:
+        </p>
+        <div style="margin: 0 auto; display: block; text-align: center;">
+            <img src="/picture?picture=propensity-2.png" style="width: 70%; border: 2px solid black;">
+        </div>
+        <p>
+            [<a style="color: #ff0000">1</a>] shows the input subsequence, with the red-color residue denoting the center of the
+            subseuqence - i.e. the residue for which Propensity is being calculated. [<a style="color: #ff0000">2</a>] shows the
+            <strong>Log Sum</strong> and the <strong>Log Log Product</strong> Propensity scores. These give an educated guess on the
+            tendency of a residue to undergo a PTM given its neighbouring residues. How these values are calculated are shown in
+            [<a style="color: #ff0000">3</a>]. The vector data constructed in [<a style="color: #ff0000">4</a>] is passed through
+            the equations for each score. The vector in turn is constructed from the table in [<a style="color: #ff0000">5</a>].
+            The more red a cell is, the higher its probability is, and green cells denote the values which were picked against the
+            residues at their positions relevant to the PTM site.
+        </p>
+        <p>
+            For Log Sum, every value in [<a style="color: #ff0000">4</a>] is added, with the condition that said value must not be
+            <strong>-inf</strong>. This is a straightforward equation designed to show empirically how much of a tendency there can be of a residue
+            undergoing PTM.
+        </p>
+        <p>
+            For Log Log Product, the process is a bit more complex than Log Sum. First, the longest vector is grabbed which contains
+            no <strong>-inf</strong> values. The newly constructed vector must not be smaller than 13 values in length, where a <strong>NIL</strong> value is shown instead.
+            Next, all of the values (minus the residue whose Propensity we wish to calculate) are multiplied together and reciprocated with 1.
+            Finally, the resultant value is passed through the natural logarithm equation to retrieve the Log Log Product.
+        </p>
+        
+        <hr>
+        <h2 style="text-align: center; font-size: 24px; color: #444; font-weight: bold;"><a href="/integration">Integration</a></h2>
+        <p>
+            Integration mainly covers the <strong>RESTful API</strong> side of the website and caters to providing descriptions and examples of each 
+            API call. Five API calls are provided for your convenience, each with its own options on what it accepts as input, how it should be 
+            called, and what it will reurn, along with examples for each API call on how to execute the call. For more information on the API calls,
+            please head over to the Integration page to get started.
+        </p>
+
+        <hr>
+        <h2 style="text-align: center; font-size: 24px; color: #444; font-weight: bold;"><a href="/download">Download</a></h2>
+        <p>This page gives you the option to download one of many Post-Translational Modification (PTM) positional matrices.
+            These matrices allow users to find, through a large amount of PTMs on proteins experimentally verified, what the
+            probability of a PTM occurring on an amino acid is. The data is scraped from the experimentally verified database
+            provided by <strong>dbPTM</strong> and calculated for each PTM on each residue, with relative position of other
+            residues accounted for.
+        </p>
+        <p>As of dbPTM 2025, <strong>72</strong> PTMs are available which have protein sequences as experimental evidences:</p>
+        <div class="protein-info-container" style="margin-bottom: 10px;">
+            <table class="table">
                 <tr>
-                    <td>Acetylation</td>
-                    <td>Biotinylation</td>
-                    <td>Carboxyethylation</td>
+                    <td class="value" style="text-align: center;">Acetylation</td>
+                    <td class="value" style="text-align: center;">ADP-ribosylation</td>
+                    <td class="value" style="text-align: center;">AMPylation</td>
+                    <td class="value" style="text-align: center;">Amidation</td>
                 </tr>
                 <tr>
-                    <td>ADP-ribosylation</td>
-                    <td>Blocked amino end</td>
-                    <td>Carboxylation</td>
+                    <td class="value" style="text-align: center;">Biotinylation</td>
+                    <td class="value" style="text-align: center;">Blocked amino end</td>
+                    <td class="value" style="text-align: center;">Butyrylation</td>
+                    <td class="value" style="text-align: center;">Carbamidation</td>
                 </tr>
                 <tr>
-                    <td>Amidation</td>
-                    <td>Butyrylation</td>
-                    <td>Cholesterol ester</td>
+                    <td class="value" style="text-align: center;">Carboxyethylation</td>
+                    <td class="value" style="text-align: center;">Carboxylation</td>
+                    <td class="value" style="text-align: center;">Cholesterol ester</td>
+                    <td class="value" style="text-align: center;">Citrullination</td>
                 </tr>
                 <tr>
-                    <td>AMPylation</td>
-                    <td>C-linked Glycosylation</td>
-                    <td>Citrullination</td>
+                    <td class="value" style="text-align: center;">C-linked Glycosylation</td>
+                    <td class="value" style="text-align: center;">Crotonylation</td>
+                    <td class="value" style="text-align: center;">Deamidation</td>
+                    <td class="value" style="text-align: center;">Deamination</td>
                 </tr>
                 <tr>
-                    <td>D-glucuronoylation</td>
-                    <td>Crotonylation</td>
-                    <td>Disulfide bond</td>
+                    <td class="value" style="text-align: center;">Decanoylation</td>
+                    <td class="value" style="text-align: center;">Decarboxylation</td>
+                    <td class="value" style="text-align: center;">Dephosphorylation</td>
+                    <td class="value" style="text-align: center;">D-glucuronoylation</td>
                 </tr>
                 <tr>
-                    <td>Deamidation</td>
-                    <td>Decanoylation</td>
-                    <td>Farnesylation</td>
+                    <td class="value" style="text-align: center;">Disulfide bond</td>
+                    <td class="value" style="text-align: center;">Farnesylation</td>
+                    <td class="value" style="text-align: center;">Formation of an isopeptide bond</td>
+                    <td class="value" style="text-align: center;">Formylation</td>
                 </tr>
                 <tr>
-                    <td>Deamination</td>
-                    <td>Decarboxylation</td>
-                    <td>Formation of an isopeptide bond</td>
+                    <td class="value" style="text-align: center;">Gamma-carboxyglutamic acid</td>
+                    <td class="value" style="text-align: center;">Geranylgeranylation</td>
+                    <td class="value" style="text-align: center;">Glutarylation</td>
+                    <td class="value" style="text-align: center;">Glutathionylation</td>
                 </tr>
                 <tr>
-                    <td>Formylation</td>
-                    <td>Gamma-carboxyglutamic acid</td>
-                    <td>Geranylgeranylation</td>
+                    <td class="value" style="text-align: center;">GPI-anchor</td>
+                    <td class="value" style="text-align: center;">Hydroxyceramide ester</td>
+                    <td class="value" style="text-align: center;">Hydroxylation</td>
+                    <td class="value" style="text-align: center;">Iodination</td>
                 </tr>
                 <tr>
-                    <td>Glutarylation</td>
-                    <td>Glutathionylation</td>
-                    <td>Hydroxyceramide ester</td>
+                    <td class="value" style="text-align: center;">Lactoylation</td>
+                    <td class="value" style="text-align: center;">Lactylation</td>
+                    <td class="value" style="text-align: center;">Lipoylation</td>
+                    <td class="value" style="text-align: center;">Malonylation</td>
                 </tr>
                 <tr>
-                    <td>Hydroxylation</td>
-                    <td>Iodination</td>
-                    <td>Lactoylation</td>
+                    <td class="value" style="text-align: center;">Methylation</td>
+                    <td class="value" style="text-align: center;">Myristoylation</td>
+                    <td class="value" style="text-align: center;">N-carbamoylation</td>
+                    <td class="value" style="text-align: center;">Neddylation</td>
                 </tr>
                 <tr>
-                    <td>Lactylation</td>
-                    <td>Lipoylation</td>
-                    <td>Malonylation</td>
+                    <td class="value" style="text-align: center;">Nitration</td>
+                    <td class="value" style="text-align: center;">N-linked Glycosylation</td>
+                    <td class="value" style="text-align: center;">N-palmitoylation</td>
+                    <td class="value" style="text-align: center;">Octanoylation</td>
                 </tr>
                 <tr>
-                    <td>Methylation</td>
-                    <td>Myristoylation</td>
-                    <td>N-carbamoylation</td>
+                    <td class="value" style="text-align: center;">O-linked Glycosylation</td>
+                    <td class="value" style="text-align: center;">O-palmitoleoylation</td>
+                    <td class="value" style="text-align: center;">O-palmitoylation</td>
+                    <td class="value" style="text-align: center;">Oxidation</td>
                 </tr>
                 <tr>
-                    <td>N-linked Glycosylation</td>
-                    <td>N-palmitoylation</td>
-                    <td>Neddylation</td>
+                    <td class="value" style="text-align: center;">Phosphatidylethanolamine amidation</td>
+                    <td class="value" style="text-align: center;">Phosphorylation</td>
+                    <td class="value" style="text-align: center;">Propionylation</td>
+                    <td class="value" style="text-align: center;">Pyrrolidone carboxylic acid</td>
                 </tr>
                 <tr>
-                    <td>Nitration</td>
-                    <td>O-linked Glycosylation</td>
-                    <td>O-palmitoleoylation</td>
+                    <td class="value" style="text-align: center;">Pyrrolylation</td>
+                    <td class="value" style="text-align: center;">Pyruvate</td>
+                    <td class="value" style="text-align: center;">S-archaeol</td>
+                    <td class="value" style="text-align: center;">S-carbamoylation</td>
                 </tr>
                 <tr>
-                    <td>O-palmitoylation</td>
-                    <td>Octanoylation</td>
-                    <td>Oxidation</td>
+                    <td class="value" style="text-align: center;">S-Cyanation</td>
+                    <td class="value" style="text-align: center;">S-cysteinylation</td>
+                    <td class="value" style="text-align: center;">S-diacylglycerol</td>
+                    <td class="value" style="text-align: center;">Serotonylation</td>
                 </tr>
                 <tr>
-                    <td>Phosphatidylethanolamine amidation</td>
-                    <td>Phosphorylation</td>
-                    <td>Propionylation</td>
+                    <td class="value" style="text-align: center;">S-linked Glycosylation</td>
+                    <td class="value" style="text-align: center;">S-nitrosylation</td>
+                    <td class="value" style="text-align: center;">S-palmitoylation</td>
+                    <td class="value" style="text-align: center;">Stearoylation</td>
                 </tr>
                 <tr>
-                    <td>Pyrrolidone carboxylic acid</td>
-                    <td>Pyrrolylation</td>
-                    <td>Pyruvate</td>
+                    <td class="value" style="text-align: center;">Succinylation</td>
+                    <td class="value" style="text-align: center;">Sulfation</td>
+                    <td class="value" style="text-align: center;">Sulfhydration</td>
+                    <td class="value" style="text-align: center;">Sulfoxidation</td>
                 </tr>
                 <tr>
-                    <td>S-archaeol</td>
-                    <td>S-carbamoylation</td>
-                    <td>S-Cyanation</td>
+                    <td class="value" style="text-align: center;">Sumoylation</td>
+                    <td class="value" style="text-align: center;">Thiocarboxylation</td>
+                    <td class="value" style="text-align: center;">Ubiquitination</td>
+                    <td class="value" style="text-align: center;">UMPylation</td>
                 </tr>
-                <tr>
-                    <td>S-cysteinylation</td>
-                    <td>S-diacylglycerol</td>
-                    <td>S-linked Glycosylation</td>
-                </tr>
-                <tr>
-                    <td>S-nitrosylation</td>
-                    <td>S-palmitoylation</td>
-                    <td>Serotonylation</td>
-                </tr>
-                <tr>
-                    <td>Stearoylation</td>
-                    <td>Succinylation</td>
-                    <td>Sulfation</td>
-                </tr>
-                <tr>
-                    <td>Sulfhydration</td>
-                    <td>Sulfoxidation</td>
-                    <td>Sumoylation</td>
-                </tr>
-                <tr>
-                    <td>Thiocarboxylation</td>
-                    <td>Ubiquitination</td>
-                    <td>UMPylation</td>
-                </tr>
-            </tbody>
-        </table>
+            </table>
+        </div>
+        <p>Upon selecting a PTM, a residue, and the type of table, you are displayed with the table and the option to download the table as either a <strong>CSV</strong>, a <strong>PDF</strong>, a <strong>PNG</strong>, a <strong>SVG</strong>, or a <strong>JSON</strong>.</p>
+        
+        <hr>
+        <h2 style="text-align: center; font-size: 24px; color: #444; font-weight: bold;"><a href="/about">About</a></h2>
+        <p>You may view the people working at the prestigious <strong>Biomedical Informatics & Engineering Research Laboratory</strong> (BIRL) and contact us for queries regarding <strong>PTMKB</strong>.</p>
     </div>
 
     <div class="main-content"></div>

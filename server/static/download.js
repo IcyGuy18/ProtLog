@@ -105,7 +105,7 @@ async function displayTableAndDownload() {
     const ptm = document.getElementById('ptmSelect').value;
     const aa = document.getElementById('aaSelect').value;
     const table = document.getElementById('tableSelect').value;
-    fetch(`/ptmkb/api/get-positional-frequency-matrix?selection=${encodeURIComponent(ptm)}&aa=${encodeURIComponent(aa)}&table=${encodeURIComponent(mapping[table])}`)
+    fetch(`/ptmkb/api/get-positional-frequency-matrix?selection=${encodeURIComponent(ptm)}&residue=${encodeURIComponent(aa)}&table=${encodeURIComponent(mapping[table])}`)
     .then(res => {
         return res.json();
     }).then(json => {

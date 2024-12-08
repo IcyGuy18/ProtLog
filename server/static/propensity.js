@@ -1,6 +1,8 @@
 var suggestions = null;
 
 document.addEventListener("DOMContentLoaded", async () => {
+    console.log("Loaded DOM content.");
+
     const res = await fetch(`/ptmkb/api/available-ptms`);
     const data = await res.json();
     suggestions = data['ptms'];
@@ -64,11 +66,27 @@ document.addEventListener("DOMContentLoaded", async () => {
             calculate();
         }
     });
+
+    
+    const urlParams = new URLSearchParams(window.location.search);
+    const ptm = urlParams.get('ptm');
+    const seq = urlParams.get('seq');
+    console.log(ptm, seq);
+    if (ptm && seq) {
+        document.getElementById('sequence_value').value = seq;
+        document.getElementById('ptm_value').value = ptm;
+        await calculate();
+        history.replaceState( { ptm, seq }, '', '/propensity');
+    }
 });
 
 async function calculate() {
     const AA = "A C D E F G H I K L M N P Q R S T V W Y".split(' ');
+    AA.push('-');
+    console.log(AA);
     document.getElementById('messageDiv').innerHTML = "";
+    document.getElementById('vectorInfo').style.display = 'none';
+    document.getElementById('tableInfo').style.display = 'none';
 
     console.log("Work your magic here.");
     const subsequence = document.getElementById('sequence_value').value;
@@ -103,7 +121,7 @@ async function calculate() {
                     const residue = subsequence[Math.floor(subsequence.length / 2)];
                     const data = await fetch(
                         encodeURI(
-                            `/ptmkb/api/get-positional-frequency-matrix?selection=${ptm}&aa=${residue}&table=log-e`
+                            `/ptmkb/api/get-positional-frequency-matrix?selection=${ptm}&residue=${residue}&table=log-e`
                         )
                     ).then(res => {
                         return res.json();
@@ -114,9 +132,19 @@ async function calculate() {
                         document.getElementById('messageDiv').innerHTML = `<h5>No log odds matrix exists for ${ptm} for residue ${residue.toUpperCase()}!</h5>`;
                     } else {
                         // Now, finally, display the calculations, table, and vector
-                        document.getElementById('subsequenceDiv').innerHTML = `<h2 style="text-align: center; font-size: 28px; color: #444; font-weight: bold;">${subsequence.toUpperCase()}</h2>`
+                        document.getElementById('subsequenceDiv').innerHTML  = '';
+                        subsequence.split('').forEach((residue, index) => {
+                            const span = document.createElement('span')
+                            span.textContent = residue;
+                            const color = index === Math.floor(subsequence.length / 2) ? '#ff0000' : '#444';
+                            span.setAttribute('style', `text-align: center; font-size: 28px; color: ${color}; font-weight: bold;`);
+                            document.getElementById('subsequenceDiv').appendChild(span);
+                        });
+                        // document.getElementById('subsequenceDiv').innerHTML = `<h2 style="text-align: center; font-size: 28px; color: #444; font-weight: bold;">${subsequence.toUpperCase()}</h2>`
                         document.getElementById('ptmVector').innerHTML = await displayVector(data, subsequence);
                         document.getElementById('ptmTable').innerHTML = displayTable(data, ptm, residue, subsequence);
+                        document.getElementById('vectorInfo').style.display = 'block';
+                        document.getElementById('tableInfo').style.display = 'block';
                     }
                 }
             }
@@ -140,6 +168,37 @@ async function fetch_ptm_scores(vectorData) {
         scores = {};
     }
     return scores
+}
+
+function getLongestCenteredArray(values) {
+    // Get the middle index
+    const mid = Math.floor(values.length / 2);
+    let leftCount = 0;
+    let rightCount = 0;
+
+    // Count from left (starting at mid)
+    for (let i = mid; i < values.length; i++) {
+        if (values[i] !== '-inf') {
+            leftCount++;
+        } else {
+            break;
+        }
+    }
+
+    // Count from right (starting at mid)
+    for (let i = mid; i >= 0; i--) {
+        if (values[i] !== '-inf') {
+            rightCount++;
+        } else {
+            break;
+        }
+    }
+
+    // Determine the slice to make
+    const sliceToMake = Math.max(leftCount, rightCount);
+
+    // Return the slice
+    return values.slice(sliceToMake, values.length - sliceToMake);
 }
 
 async function displayVector(data, subsequence) {
@@ -169,6 +228,8 @@ async function displayVector(data, subsequence) {
         try {
             let extractedValue = data[key][subsequence[index]];
             if (typeof(extractedValue) !== "number") {
+                if (subsequence[index] === '-')
+                    extractedValue = '-inf';
                 values.push(extractedValue);
             }
             else {
@@ -209,21 +270,34 @@ async function displayVector(data, subsequence) {
     vectorHead.innerHTML = ''
     vectorBody.innerHTML = ''
 
+    let vector = [];
+
     KEYS.forEach((key, index) => {
         const header = document.createElement("th");
         header.textContent = key;
         header.setAttribute("style", "border: 1px solid black; background-color: #A0C4FF;")
         for (let [in_key, value] of Object.entries(vectorData[key])) {
-            const cell = document.createElement("td");
-            cell.textContent = vectorData[key][in_key];
-            if (index == 10)
-                cell.style.backgroundColor = '#F2C998';
-            vectorBody.appendChild(cell);
+            vector.push(
+                vectorData[key][in_key]
+            );
         }
         vectorHead.appendChild(header);
     });
-    let vector = {};
 
+    vector.forEach((dataPoint, index) => {
+        const cell = document.createElement("td");
+        cell.textContent = dataPoint;
+        // Change color of cell
+        if (dataPoint === '-inf')
+            cell.style.backgroundColor = `rgba(0, 0, 255, 0.1)`;
+
+        if (index == 10)
+            cell.style.backgroundColor = '#F2C998';
+        vectorBody.appendChild(cell);
+    });
+    const tdValues = vectorBody.querySelectorAll('td');
+
+    vector = {};
     Object.keys(vectorData).forEach(key => {
         const innerObj = vectorData[key];  // Get the inner object
         Object.values(innerObj).forEach(value => {
@@ -231,8 +305,7 @@ async function displayVector(data, subsequence) {
         });
     });
 
-    // Now let's calculate the additive and multiplicative scores
-    // here...
+    // Now let's calculate the additive and multiplicative scores here...
     // I know, this is a bad idea. I should make an API out of this.
     var scores = await fetch_ptm_scores(vector)
                 .then(json => {
@@ -262,6 +335,7 @@ async function displayVector(data, subsequence) {
         valueCell.className = 'value';
         valueCell.style.width = '200px';
         valueCell.textContent = value;
+
         row.appendChild(keyCell);
         row.appendChild(valueCell);
         const notes = document.createElement('td');

@@ -25,7 +25,10 @@ from mdtraj_calculations import (
     get_protein_sequence
 )
 
-app = FastAPI(docs_url='/ptmkb/api')
+app = FastAPI(
+    docs_url='/ptmkb/api',
+    redoc_url=None
+)
 templates = Jinja2Templates(directory='templates/')
 app.mount('/static', StaticFiles(directory="static"), name="static")
 
@@ -46,13 +49,26 @@ def sort_ids(strings: list[str], substring: str):
 
 @app.get('/favicon.ico', include_in_schema=False)
 async def favicon():
-    print("Making call.")
     return FileResponse('./icon.ico')
+
+@app.get('/download_script', include_in_schema=False)
+async def get_started_script():
+    return FileResponse('./ptmkb_get_started.py')
+
+@app.get('/picture', include_in_schema=False)
+async def picture(picture: str):
+    return FileResponse(f'./help/{picture}')
 
 @app.get("/", include_in_schema=False)
 def home_page(request: Request):
     return templates.TemplateResponse(
         "index.html", context={"request": request}
+    )
+
+@app.get("/search", include_in_schema=False)
+def home_page(request: Request):
+    return templates.TemplateResponse(
+        "search.html", context={"request": request}
     )
 
 @app.get("/propensity", include_in_schema=False)
@@ -356,7 +372,7 @@ def get_ptm_details(request: Request, resid: str = Query('', example='AA0039')):
     """
     print(resid)
     # Let's do some input validation first.
-    resid = resid.upper() # And that's about it.
+    resid = resid.upper().strip() # And that's about it.
 
     # We can read the file per operation since it's not a large file
     # (only barely 3 megabytes)
@@ -382,7 +398,6 @@ def get_ptm_details(request: Request, resid: str = Query('', example='AA0039')):
             entries[i]['Model']['Encoding'] = 'utf-8'
             entries[i]['Model']['FileType'] = '.PDB'
     if entries:
-        print(entries[0])
         return {resid: entries[0]}
     return {}
 
@@ -425,14 +440,14 @@ async def get_options():
     return {'ptms': options}
 
 @app.get("/ptmkb/api/get-positional-frequency-matrix")
-async def get_data(request: Request, selection: str = Query('', example='Phosphorylation'), aa: str =  Query('', example='S'), table: str = Query('log-e', example='freq')):
+async def get_data(request: Request, selection: str = Query('', example='Phosphorylation'), residue: str =  Query('', example='S'), table: str = Query('log-e', example='freq')):
     """
     Get the positional frequency matrix of a Post-Translational Modification (PTM),
     given the PTM, amino acid, and matrix table.
 
     **Parameters:**
     - **selection**: The Post-Translational Modification's table to fetch. (type: *str*)
-    - **aa**: The amino acid to use as the PTM site for the table. (type: *str*)
+    - **residue**: The amino acid as the PTM site for the table. (type: *str*)
     - **table**: The type of table to fetch. (type: *str*)
 
     **Returns:**
@@ -453,7 +468,7 @@ async def get_data(request: Request, selection: str = Query('', example='Phospho
                         }
                     )
         return response
-    elif not aa:
+    elif not residue:
         response = {selection: []}
         AAs = [i.split("\\")[-1].split('.')[0] for i in glob.glob(f'data/tables/{selection}/log-e/*.json')]
         for aa in AAs:
@@ -464,19 +479,19 @@ async def get_data(request: Request, selection: str = Query('', example='Phospho
                     }
                 )
     elif table not in ['log-e', 'log2', 'freq']:
-        if not os.path.exists(f'./data/tables/{selection}/log-e/{aa}.json'):
-            return {'message': f"Could not find matrix of positional frequency of {selection} for {aa}."}
+        if not os.path.exists(f'./data/tables/{selection}/log-e/{residue}.json'):
+            return {'message': f"Could not find matrix of positional frequency of {selection} for {residue}."}
         return FileResponse(
-            './data/tables/{selection}/log-e/{aa}.json'.format(
-                selection=selection, aa=aa
+            './data/tables/{selection}/log-e/{residue}.json'.format(
+                selection=selection, residue=residue
             )
         )
     else:
-        if not os.path.exists(f'./data/tables/{selection}/{table}/{aa}.json'):
-            return {'message': f"Could not find the {table}-based matrix of positional frequency of {selection} for {aa}."}
+        if not os.path.exists(f'./data/tables/{selection}/{table}/{residue}.json'):
+            return {'message': f"Could not find the {table}-based matrix of positional frequency of {selection} for {residue}."}
         return FileResponse(
-            './data/tables/{selection}/{table}/{aa}.json'.format(
-                selection=selection, aa=aa, table=table
+            './data/tables/{selection}/{table}/{residue}.json'.format(
+                selection=selection, residue=residue, table=table
             )
         )
 
@@ -490,7 +505,7 @@ async def propensity_calculator(data: dict = Body(..., example={'ptm': 'Phosphor
     - **subsequence**: The subsequence to use for propensity calculation. (type: *str*)
 
     **Returns:**
-    - The Additive, Multiplicative, and *-Multiplicative Propensity Scores. (type: *JSON*)
+    - The Log Sum and Log Log Product scores. (type: *JSON*)
     """
     ptm = data.get('ptm', None)
     subsequence = data.get('subsequence', None)

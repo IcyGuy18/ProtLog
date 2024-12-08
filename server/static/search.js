@@ -645,7 +645,7 @@ function generateHtmlForJPred(data, acc, ptms) {
 async function fetchData(ptm, char, table) {
     try {
         return await fetch(
-            `/ptmkb/api/get-positional-frequency-matrix?selection=${encodeURIComponent(ptm)}&aa=${encodeURIComponent(char)}&table=${encodeURIComponent(table)}`
+            `/ptmkb/api/get-positional-frequency-matrix?selection=${encodeURIComponent(ptm)}&residue=${encodeURIComponent(char)}&table=${encodeURIComponent(table)}`
         )
         .then(res => res.json());
     } catch (err) {
@@ -854,18 +854,11 @@ async function preparePTMDetails(localizedSequence, localizedSequenceInfo, ptmsD
             const scoreRow = document.createElement('tr');
             const scoreKeyCell = document.createElement('td');
             scoreKeyCell.classList.add('key');
-            scoreKeyCell.innerHTML = '<a>Scores</a>';
-
+            const scoresLabel = document.createElement('a');
+            scoresLabel.textContent = "Scores";
+            scoreKeyCell.appendChild(scoresLabel);
             const scoreValueCell = document.createElement('td');
             scoreValueCell.classList.add('value');
-
-            // // Use the logTableResp to get the values. MIGHT NOT BE NEEDED
-            // let vectorData = []
-            // Object.values(logTableResp).forEach((json, index) => {
-            //     vectorData.push(
-            //         json[localizedSequence[index]]
-            //     );
-            // });
 
             const scores = await fetch(`/ptmkb/api/calculate-propensity`, {
                 method: "POST",
@@ -882,6 +875,60 @@ async function preparePTMDetails(localizedSequence, localizedSequenceInfo, ptmsD
 
             const logSum = typeof(scores['logSum']) === 'string' ? "NIL" : scores['logSum'].toFixed(2);
             const logLogProduct = typeof(scores['logLogProduct']) === 'string' ? "NIL" : scores['logLogProduct'].toFixed(2);
+
+            if (logSum !== 'NIL' || logLogProduct !== 'NIL') {
+                const scoresHelp = document.createElement('a');
+                scoresHelp.classList.add('question-mark');
+                scoresHelp.textContent = "?";
+                scoresHelp.addEventListener('click', (e) => {
+                    // Yes, this is actually the case every single time.
+                    const detailsDiv = e.target.parentNode.parentNode.parentNode.parentNode.parentNode;
+                    // We obtain the sequence this way
+                    var sequence = [];
+                    detailsDiv.querySelector('.localized-sequence').querySelectorAll('span').forEach(span => {
+                        sequence.push(span.textContent);
+                    });
+                    sequence = sequence.join('');
+                    // Now we obtain the PTM
+                    var ptm = detailsDiv.querySelectorAll('.value')[0].textContent.split('[')[0].trim();
+                    // Now we send it over to the new page.
+                    window.location.href = `/propensity?ptm=${ptm}&seq=${sequence}`;
+                });
+
+                scoresHelp.addEventListener('mouseenter', (e) => {
+                    const tooltip = document.createElement("div");
+                    tooltip.classList.add("custom-tooltip");
+                    tooltip.textContent = "Click here to find how the values are calculated.";
+
+                    // Append the tooltip to the body
+                    document.body.appendChild(tooltip);
+
+                    // Position the tooltip near the character
+                    const rect = e.target.getBoundingClientRect(); // Get the character's position
+                    tooltip.style.position = "absolute";
+                    tooltip.style.left = `${rect.left + window.scrollX}px`; // Adjust for any page scroll
+                    tooltip.style.top = `${rect.top + window.scrollY - 30}px`; // Position above the character
+                    tooltip.style.zIndex = 10; // Ensure it's above other content
+
+                    // Add the 'visible' class to the tooltip to show it
+                    setTimeout(() => {
+                        tooltip.classList.add("visible");
+                    }, 10); // Small delay for the transition to kick in
+
+                    // Store tooltip for later removal
+                    e.target.tooltip = tooltip;
+                })
+
+                scoresHelp.addEventListener('mouseleave', (e) => {
+                    const tooltip = e.target.tooltip;
+                    if (tooltip) {
+                        tooltip.remove();
+                        delete e.target.tooltip;
+                    }
+                })
+
+                scoreKeyCell.appendChild(scoresHelp);
+            }
 
             scoreValueCell.innerHTML = `<strong>Log Sum:</strong> ${logSum} <br><strong>Log-Log Product:</strong> ${logLogProduct}`;
 
@@ -1508,6 +1555,19 @@ async function displayPDBStructures(uniprotAC, alphafoldPdbData, ptms) {
         }).then(async (res) => {
             return await res.json();
         });
+
+        const downloadButton = document.createElement('button');
+        downloadButton.setAttribute('id', 'afPdbDownload');
+        downloadButton.classList.add('additional-button');
+        downloadButton.textContent = 'Download DSSP/Shrake-Rupley calculation';
+        downloadButton.addEventListener('click', () => {
+            var jsonString = JSON.stringify(afCalculations, null, 2);
+            var blob = new Blob([jsonString], { type: 'application/json' });
+            var link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `${uniprotAC}_af_pdb.json`;
+            link.click();
+        });
         
         $3Dmol.createViewer("afPdbStructure", {
             defaultcolors: $3Dmol.rasmolElementColors,
@@ -1515,48 +1575,48 @@ async function displayPDBStructures(uniprotAC, alphafoldPdbData, ptms) {
                 e.addModel(alphafoldPdbData, 'pdb', { vibrate: true });
 
                 // show/hide indices
-                let idxLabels = []
-                document.getElementById('afShowIndices').addEventListener('click', () => {
-                    if (document.getElementById('afShowIndices').getAttribute('data-showing') === 'false') {
-                        // create indices labels
-                        var residues = {};
-                        const atoms = e.getAtomsFromSel({});
-                        atoms.forEach(function(atom) {
-                            if (!residues[atom.resi]) {
-                                if (atom.atom === 'CA') {
-                                    residues[atom.resi] = atom;
-                                }
-                            }
-                        });
-                        residues = Object.values(residues);
+                // let idxLabels = []
+                // document.getElementById('afShowIndices').addEventListener('click', () => {
+                //     if (document.getElementById('afShowIndices').getAttribute('data-showing') === 'false') {
+                //         // create indices labels
+                //         var residues = {};
+                //         const atoms = e.getAtomsFromSel({});
+                //         atoms.forEach(function(atom) {
+                //             if (!residues[atom.resi]) {
+                //                 if (atom.atom === 'CA') {
+                //                     residues[atom.resi] = atom;
+                //                 }
+                //             }
+                //         });
+                //         residues = Object.values(residues);
                         
-                        residues.forEach(res => {
-                            idxLabels.push(
-                                e.addLabel(
-                                    res.resi,
-                                    {
-                                        position: res,
-                                        showBackground: false,
-                                        fontColor: 'black',
-                                        fontSize: 14,
-                                        alignment: 'center',
-                                    },
-                                    {resi: res.resi},
-                                    true
-                                )
-                            );
-                        });
-                        document.getElementById('afShowIndices').setAttribute('data-showing', 'true');
-                    } else {
-                        // just delete all indices labels using the stored information
-                        idxLabels.forEach((idxLabel) => {
-                            e.removeLabel(idxLabel);
-                        });
-                        idxLabels.splice(0, idxLabels.length);
-                        document.getElementById('afShowIndices').setAttribute('data-showing', 'false');
-                    }
-                    e.render();
-                });
+                //         residues.forEach(res => {
+                //             idxLabels.push(
+                //                 e.addLabel(
+                //                     res.resi,
+                //                     {
+                //                         position: res,
+                //                         showBackground: false,
+                //                         fontColor: 'black',
+                //                         fontSize: 14,
+                //                         alignment: 'center',
+                //                     },
+                //                     {resi: res.resi},
+                //                     true
+                //                 )
+                //             );
+                //         });
+                //         document.getElementById('afShowIndices').setAttribute('data-showing', 'true');
+                //     } else {
+                //         // just delete all indices labels using the stored information
+                //         idxLabels.forEach((idxLabel) => {
+                //             e.removeLabel(idxLabel);
+                //         });
+                //         idxLabels.splice(0, idxLabels.length);
+                //         document.getElementById('afShowIndices').setAttribute('data-showing', 'false');
+                //     }
+                //     e.render();
+                // });
                 e.setStyle( {}, { cartoon: { colorscheme: 'ssPyMol' } }); // Default style is 2
                 e.zoomTo();
                 document.getElementById('afPdbStructure').classList.remove('lds-dual-ring');
@@ -1681,6 +1741,9 @@ async function displayPDBStructures(uniprotAC, alphafoldPdbData, ptms) {
                 </tr>
             </table>
         `;
+        document.getElementById('afPdbInfo').appendChild(downloadButton);
+
+        document.getElementById('afProfile').style.display = 'block';
         document.getElementById('afHRef').innerHTML = `<a href="https://alphafold.ebi.ac.uk/entry/${uniprotAC}" target="_blank">AlphaFold Predicted Structure</a>`
     } else {
         document.getElementById('afHRef').innerHTML = `<h5>No AlphaFold Structure exists.</h5>`;
@@ -1718,6 +1781,19 @@ async function displayPDBStructures(uniprotAC, alphafoldPdbData, ptms) {
             }).then(async (res) => {
                 return await res.json();
             });
+
+            const downloadButton = document.createElement('button');
+            downloadButton.setAttribute('id', 'rcsbPdbDownload');
+            downloadButton.classList.add('additional-button');
+            downloadButton.textContent = 'Download DSSP/Shrake-Rupley calculation';
+            downloadButton.addEventListener('click', () => {
+                var jsonString = JSON.stringify(rcsbCalculations, null, 2);
+                var blob = new Blob([jsonString], { type: 'application/json' });
+                var link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = `${uniprotAC}_rcsb_pdb_${id}.json`;
+                link.click();
+            });
             
             $3Dmol.createViewer("rcsbPdbStructure", {
                 defaultcolors: $3Dmol.rasmolElementColors,
@@ -1739,38 +1815,38 @@ async function displayPDBStructures(uniprotAC, alphafoldPdbData, ptms) {
                     residues = Object.values(residues);
 
                     // show/hide indices
-                    let idxLabels = []
-                    document.getElementById('rcsbShowIndices').addEventListener('click', () => {
-                        if (document.getElementById('rcsbShowIndices').getAttribute('data-showing') === 'false') {
-                            // create indices labels
+                    // let idxLabels = []
+                    // document.getElementById('rcsbShowIndices').addEventListener('click', () => {
+                    //     if (document.getElementById('rcsbShowIndices').getAttribute('data-showing') === 'false') {
+                    //         // create indices labels
                             
-                            residues.forEach((res) => {
-                                idxLabels.push(
-                                    e.addLabel(
-                                        res.resi,
-                                        {
-                                            position: res,
-                                            showBackground: false,
-                                            fontColor: 'black',
-                                            fontSize: 14,
-                                            alignment: 'center',
-                                        },
-                                        {resi: res.resi},
-                                        true
-                                    )
-                                );
-                            });
-                            document.getElementById('rcsbShowIndices').setAttribute('data-showing', 'true');
-                        } else {
-                            // just delete all indices labels using the stored information
-                            idxLabels.forEach((idxLabel) => {
-                                e.removeLabel(idxLabel);
-                            });
-                            idxLabels.splice(0, idxLabels.length);
-                            document.getElementById('rcsbShowIndices').setAttribute('data-showing', 'false');
-                        }
-                        e.render();
-                    });
+                    //         residues.forEach((res) => {
+                    //             idxLabels.push(
+                    //                 e.addLabel(
+                    //                     res.resi,
+                    //                     {
+                    //                         position: res,
+                    //                         showBackground: false,
+                    //                         fontColor: 'black',
+                    //                         fontSize: 14,
+                    //                         alignment: 'center',
+                    //                     },
+                    //                     {resi: res.resi},
+                    //                     true
+                    //                 )
+                    //             );
+                    //         });
+                    //         document.getElementById('rcsbShowIndices').setAttribute('data-showing', 'true');
+                    //     } else {
+                    //         // just delete all indices labels using the stored information
+                    //         idxLabels.forEach((idxLabel) => {
+                    //             e.removeLabel(idxLabel);
+                    //         });
+                    //         idxLabels.splice(0, idxLabels.length);
+                    //         document.getElementById('rcsbShowIndices').setAttribute('data-showing', 'false');
+                    //     }
+                    //     e.render();
+                    // });
                     e.setStyle( {chain: 'A'}, { cartoon: { colorscheme: 'ssPyMol' } }); // Default style is 2
                     e.zoomTo();
                     document.getElementById('rcsbPdbStructure').classList.remove('lds-dual-ring');
@@ -1897,6 +1973,9 @@ async function displayPDBStructures(uniprotAC, alphafoldPdbData, ptms) {
                     </tr>
                 </table>
             `;
+            document.getElementById('rcsbPdbInfo').appendChild(downloadButton);
+
+            document.getElementById('rcsbProfile').style.display = 'block';
             document.getElementById('rcsbHRef').innerHTML = `<a href="https://www.rcsb.org/structure/${id}" target="_blank">RCSB Verified Structure</a>`;
             // responseStr += `- Actual Structure (Right, <a id="PDB_${id}" href="https://www.rcsb.org/structure/${id}" target="_blank">RCSB</a>).</h5>`
         }).catch(error => {
@@ -1914,6 +1993,7 @@ async function displayPDBStructures(uniprotAC, alphafoldPdbData, ptms) {
         });
 
         document.getElementById('pdbDropdownSelect').addEventListener('change', async function(event) {
+            document.getElementById('rcsbProfile').style.display = 'none';
             document.getElementById('rcsbPdbStructure').classList.add('lds-dual-ring');
             document.getElementById('rcsbPdbInfo').innerHTML = ``;
             const selectedValue = event.target.value;
@@ -1932,6 +2012,19 @@ async function displayPDBStructures(uniprotAC, alphafoldPdbData, ptms) {
                     body: JSON.stringify({ "raw_pdb_data": res })
                 }).then(async (res) => {
                     return await res.json();
+                });
+
+                const downloadButton = document.createElement('button');
+                downloadButton.setAttribute('id', 'afPdbDownload');
+                downloadButton.classList.add('additional-button');
+                downloadButton.textContent = 'Download DSSP/Shrake-Rupley calculation';
+                downloadButton.addEventListener('click', () => {
+                    var jsonString = JSON.stringify(rcsbCalculations, null, 2);
+                    var blob = new Blob([jsonString], { type: 'application/json' });
+                    var link = document.createElement('a');
+                    link.href = URL.createObjectURL(blob);
+                    link.download = `${uniprotAC}_rcsb_pdb_${selectedValue}.json`;
+                    link.click();
                 });
                 
                 $3Dmol.createViewer("rcsbPdbStructure", {
@@ -1956,37 +2049,37 @@ async function displayPDBStructures(uniprotAC, alphafoldPdbData, ptms) {
     
                         // show/hide indices
                         let idxLabels = [];
-                        document.getElementById('rcsbShowIndices').addEventListener('click', () => {
-                            if (document.getElementById('rcsbShowIndices').getAttribute('data-showing') === 'false') {
-                                // create indices labels
+                        // document.getElementById('rcsbShowIndices').addEventListener('click', () => {
+                        //     if (document.getElementById('rcsbShowIndices').getAttribute('data-showing') === 'false') {
+                        //         // create indices labels
                                 
-                                residues.forEach((res) => {
-                                    idxLabels.push(
-                                        e.addLabel(
-                                            res.resi,
-                                            {
-                                                position: res,
-                                                showBackground: false,
-                                                fontColor: 'black',
-                                                fontSize: 14,
-                                                alignment: 'center',
-                                            },
-                                            {resi: res.resi},
-                                            true
-                                        )
-                                    );
-                                });
-                                document.getElementById('rcsbShowIndices').setAttribute('data-showing', 'true');
-                            } else {
-                                // just delete all indices labels using the stored information
-                                idxLabels.forEach((idxLabel) => {
-                                    e.removeLabel(idxLabel);
-                                });
-                                idxLabels.splice(0, idxLabels.length);
-                                document.getElementById('rcsbShowIndices').setAttribute('data-showing', 'false');
-                            }
-                            e.render();
-                        });
+                        //         residues.forEach((res) => {
+                        //             idxLabels.push(
+                        //                 e.addLabel(
+                        //                     res.resi,
+                        //                     {
+                        //                         position: res,
+                        //                         showBackground: false,
+                        //                         fontColor: 'black',
+                        //                         fontSize: 14,
+                        //                         alignment: 'center',
+                        //                     },
+                        //                     {resi: res.resi},
+                        //                     true
+                        //                 )
+                        //             );
+                        //         });
+                        //         document.getElementById('rcsbShowIndices').setAttribute('data-showing', 'true');
+                        //     } else {
+                        //         // just delete all indices labels using the stored information
+                        //         idxLabels.forEach((idxLabel) => {
+                        //             e.removeLabel(idxLabel);
+                        //         });
+                        //         idxLabels.splice(0, idxLabels.length);
+                        //         document.getElementById('rcsbShowIndices').setAttribute('data-showing', 'false');
+                        //     }
+                        //     e.render();
+                        // });
                         e.setStyle( {chain: 'A'}, { cartoon: { colorscheme: 'ssPyMol' } }); // Default style is 2
                         e.zoomTo();
                         document.getElementById('rcsbPdbStructure').classList.remove('lds-dual-ring');
@@ -2113,6 +2206,9 @@ async function displayPDBStructures(uniprotAC, alphafoldPdbData, ptms) {
                         </tr>
                     </table>
                 `;
+                document.getElementById('rcsbPdbInfo').appendChild(downloadButton);
+                
+                document.getElementById('rcsbProfile').style.display = 'block';
                 document.getElementById('rcsbHRef').innerHTML = `<a href="https://www.rcsb.org/structure/${selectedValue}" target="_blank">RCSB Verified Structure</a>`;
             }).catch(error => {
                 document.getElementById('rcsbHRef').innerHTML = `<h5>Internet connection error - try again!</h5>`;
@@ -2569,6 +2665,8 @@ async function search() {
         if (currentJobAbortController) {
             currentJobAbortController.abort();
         }
+        document.getElementById('afProfile').style.display = 'none';
+        document.getElementById('rcsbProfile').style.display = 'none';
         document.getElementById('proteinStatisticsContainer').style.display = 'none';
         document.getElementById('protein3DStructure').innerHTML = '';
         document.getElementById('protein3DStructureInfo').innerHTML = '';

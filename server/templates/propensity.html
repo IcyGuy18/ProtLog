@@ -17,10 +17,13 @@
 </head>
 <body>
     <nav class="navbar">
-        <div class="logo">PTMKB</div>
+        <!-- <div class="logo">PTMKB</div> -->
+        <a href="/">
+            <img src="/picture?picture=ptmkb-1-alt.png" style="width: 150px;" alt="PTMKB">
+        </a>
         <button class="navbar-toggler" onclick="toggleNavbar()">☰</button>
         <ul class="navbar-items">
-            <li><a href="/" class="nav-link"><span class="nav-item-box">Search</span></a></li>
+            <li><a href="/search" class="nav-link"><span class="nav-item-box">Search</span></a></li>
             <li><a class="nav-link active"><span class="nav-item-box">Propensity</span></a></li>
             <li><a href="/documentation" class="nav-link"><span class="nav-item-box">Documentation</span></a></li>
             <li><a href="/integration" class="nav-link"><span class="nav-item-box">Integration</span></a></li>
@@ -30,9 +33,9 @@
     </nav>
 
     <div class="container-fluid mt-5" style="width: 80%; align-content: center;">
-        <div style="text-align: center; max-width: 600px; margin: 0 auto;">
+        <!-- <div style="text-align: center; max-width: 600px; margin: 0 auto;">
             <p>We use the natural log odds matrix positional frequency of amino acids to calculate the <strong>propensity</strong> of a PTM. It is strictly computed with the natural log odds matrix to ensure magnitude scaling.</p>
-        </div>
+        </div> -->
         <div class="alert alert-info text-center" style="width: 600px;">
             <i class="fa fa-search fa-small"></i><label><strong>Calculate Protein Subsequence Propensity</strong></label>
             <div class="input-group position-relative">
@@ -58,8 +61,10 @@
         <tbody id="ptmInfo"></tbody>
     </table>
 
+    <h3 id="vectorInfo" style="text-align: center; font-size: 28px; color: #444; font-weight: bold; display: none; margin-top: 20px; margin-bottom: -20px;">Vector used for calculation</h3>
     <div id="ptmVector" style="margin-left: auto; margin-right: auto; padding: 40px"></div>
 
+    <h3 id="tableInfo" style="text-align: center; font-size: 28px; color: #444; font-weight: bold; display: none; margin-top: 20px;">Table used for Vector formation</h3>
     <div id="ptmTable" style="margin-left: auto; margin-right: auto;"></div>
 
     <div class="main-content"></div>
