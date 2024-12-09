@@ -860,14 +860,8 @@ async function preparePTMDetails(localizedSequence, localizedSequenceInfo, ptmsD
             const scoreValueCell = document.createElement('td');
             scoreValueCell.classList.add('value');
 
-            const scores = await fetch(`/ptmkb/api/calculate-propensity`, {
-                method: "POST",
-                headers: {
-                    "Accept": "application/json",
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({ 'ptm': ptm[1], 'subsequence': localizedSequence })
-            }).then(res => {
+            const scores = await fetch(`/ptmkb/api/calculate-propensity?ptm=${encodeURIComponent(ptm[1])}&subsequence=${encodeURIComponent(localizedSequence)}`)
+            .then(res => {
                 return res.json();
             }).catch(error => {
                 console.error(error);

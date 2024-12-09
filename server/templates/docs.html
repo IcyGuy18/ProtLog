@@ -10,6 +10,7 @@
     <script src="../static/bootstrap-min.js"></script>
     <script src="../static/popper.js" defer></script>
     <script src="../static/toggler.js" defer></script>
+    <script src="../static/docs.js" defer></script>
     <link rel="stylesheet" href="../static/styles.css">
 </head>
 
@@ -36,16 +37,127 @@
     </div>
     <div id="markdown">
         <h2 style="text-align: center; font-size: 24px; color: #444; font-weight: bold;"><a href="/search">Search</a></h2>
-        
+        <p>
+            This page is where you can search for proteins using a UniProt-based Protein Identifier or a UniProt-based Accession Number.
+            Upon accessing the page, you will be presented with this screen:
+        </p>
+        <div style="margin: 0 auto; display: block; text-align: center;">
+            <img src="/picture?picture=search-1.png" style="width: 100%; border: 2px solid black;">
+        </div>
+        <p>
+            You can enter the aforementioned parameter in [<a style="color: #ff0000">1</a>], or click on either of the examples in
+            [<a style="color: #ff0000">2</a>]. As you enter your identifier, the search bar will be filled with suggestions fetched
+            from our database, based on the similarity. Upon entering an ID that is present in our database, the following information
+            will be shown below:
+        </p>
+        <div style="margin: 0 auto; display: block; text-align: center;">
+            <img src="/picture?picture=search-2.png" style="width: 100%; border: 2px solid black;">
+        </div>
+        <p>
+            First, general information about the input protein is displayed. [<a style="color: #ff0000">1</a>] and [<a style="color: #ff0000">2</a>]
+            are hyperlinks to their respective UniProt pages. The following information is displayed:
+            <ul>
+                <li>UniProt Protein Identifier (UniProt ID)</li>
+                <li>UniProt Accession Number (UniProt AC)</li>
+                <li>Protein Name</li>
+                <li>Gene Name</li>
+                <li>Organism</li>
+                <li>Sequence Length</li>
+                <li>Subcellular Localizations</li>
+                <li>Protein Function</li>
+                <li>Protein Sequence</li>
+            </ul>
+            Scrolling down below, you will see the following information:
+        </p>
+        <div style="margin: 0 auto; display: block; text-align: center;">
+            <img src="/picture?picture=search-3.png" style="width: 100%; border: 2px solid black;">
+        </div>
+        <p>
+            [<a style="color: #ff0000">1</a>], [<a style="color: #ff0000">2</a>], and [<a style="color: #ff0000">3</a>] respectively
+            show the number of experimentally verified PTM sites for the protein, the number of unique PTMs experimentally observed on this
+            protein, and the total number of literature recorded across all PTMs. [<a style="color: #ff0000">4</a>] shows the overall
+            summary of all PTMs observed on all residues for the input protein. As for the detailed information about the PTMs of the protein,
+            further down is information about the PTM sequence:
+        </p>
+        <div style="margin: 0 auto; display: block; text-align: center;">
+            <img src="/picture?picture=search-4.png" style="width: 100%; border: 2px solid black;">
+        </div>
+        <p>
+            This shows some UniProt-enabled information about the protein sequence with the option to download the PTM data as a JSON file
+            (see [<a style="color: #ff0000">1</a>]).
+
+            The actual retrieved sequence is displayed just below the general sequence information:
+        </p>
+        <div style="margin: 0 auto; display: block; text-align: center;">
+            <img src="/picture?picture=search-5.png" style="width: 90%; border: 2px solid black;">
+        </div>
+        <p>
+            The PTMs shown on the sequence are colour-coded for convenience (as shown in [<a style="color: #ff0000">1</a>]). Additionally,
+            you can use the checkboxes ([<a style="color: #ff0000">2</a>]) to hide or show certain PTMs in the list. By default, all of them
+            will be enabled.
+        </p>
+        <p>
+            You can hover over a highlighted amino acid/residue (like [<a style="color: #ff0000">1</a>]) to see what PTM is occurring on 
+            it. When you click on the highlighted residue, detailed information about the PTM will be shown in [<a style="color: #ff0000">3</a>]:
+        </p>
+        <div style="margin: 0 auto; display: block; text-align: center;">
+            <img src="/picture?picture=search-6.png" style="width: 90%; border: 2px solid black;">
+        </div>
+        <p>
+            A localised sequence of 21 amino acids is shown in [<a style="color: #ff0000">1</a>], with the position of the center amino acid
+            mentioned in [<a style="color: #ff0000">2</a>]. Below them is the dbPTM-annotated PTM information about the amino acid. If 
+            applicable, a RESID Database ID is also provided alongside the PTM type ([<a style="color: #ff0000">3</a>]). For the PTM,
+            evidence identifiers ([<a style="color: #ff0000">4</a>]) are provided as hyperlinks to their respective PubMed article.
+            The Log Sum and Log-Log Product scores (if applicable) are shown as well (see [<a style="color: #ff0000">6</a>]). If you want to
+            know how these scores are calculated, you can click on the question mark ([<a style="color: #ff0000">5</a>]) and it will lead you
+            to a new page explaining the calculation (see the <a onclick="scrollIntoView('propensity')">Propensity</a> page info below).
+        </p>
+        <p>
+            This is the base information gathered for the proteins. Extra information is also provided by scrolling down:
+        </p>
+        <div style="margin: 0 auto; display: block; text-align: center;">
+            <img src="/picture?picture=search-7.png" style="width: 90%; border: 2px solid black;">
+        </div>
+        <p>
+            We also provide secondary structure predictions by JPred to get an idea of how and why a PTM is occurring on the amino acid.
+            Since JPred takes in requests as jobs, we submit the request upon searching for the protein and put up a disclaimer to wait for 
+            the response from JPred's server when it is done. Once the job is completed, we fetch and process the results.
+        </p>
+        <p>
+            Since JPred also provides hyperlink-embedded alignments, we have shown them as a separate page ([<a style="color: #ff0000">1</a>]).
+            As for the prediction, JPred's own format is followed. Upon clicking on a PTM ([<a style="color: #ff0000">2</a>]), the entire column
+            is highlighted to make it easier for the user to see the secondary structure, any coils, the solvent accessible surface area percentage,
+            and the confidence scores. Finally, all of the aforementioned information can be downloaded as a JSON file ([<a style="color: #ff0000">3</a>]).
+        </p>
+        <p>
+            Finally, we also present predicted and experimentally verified structures for the protein observed from AlphaFoldDB and RCSB Database respectively:
+        </p>
+        <div style="margin: 0 auto; display: block; text-align: center;">
+            <img src="/picture?picture=search-8.png" style="width: 90%; border: 2px solid black;">
+        </div>
+        <p>
+            [<a style="color: #ff0000">1</a>] and [<a style="color: #ff0000">2</a>] are hyperlinks to the respective database for extensive additional
+            information. We use 3Dmol.js to view the PDB structures. Some buttons are provided to cycle through three different styles, 
+            clear all selections made by the user, and re-center the render should the user lose sight of the structure. You can interact with the structure by clicking on a residue,
+            at which point it will display a label that contains the position of the residue in the sequence, the 3-letter code for the residue, any and all PTMs that have been observed on the
+            residue, the Solvent Accessible Surface Area (SASA) in square Angstroms (calculated using the Shrake-Rupley algorithm), and the DSSP-calculated secondary 
+            structure of the PDB (the letter after DSSP denotes the simplified structure, while the letter inside the parentheses denotes the detailed structure of 
+            the residue, if any), all observed in [<a style="color: #ff0000">3</a>].
+        </p>
+        <p>
+            Additionally, for RCSB database, since all PDBs are queried using the UniProt Accession Number, you can select from one of many possible RCSB PDBs in [<a style="color: #ff0000">4</a>].
+
+        </p>
+
         <hr>
-        <h2 style="text-align: center; font-size: 24px; color: #444; font-weight: bold;"><a href="/propensity">Propensity</a></h2>
+        <h2 id="propensity" style="text-align: center; font-size: 24px; color: #444; font-weight: bold;"><a href="/propensity">Propensity</a></h2>
         <p>We offer an interface to calculate the <strong>Propensity</strong>, or in other words, the tendency of a residue
-            undergoing a certain PTM basedon its neighbouring residues. This tool facilitates users with a calculator that
+            undergoing a certain PTM based on its neighbouring residues. This tool facilitates users with a calculator that
             gives the chances of a PTM occurring on a residue, backed by thousands of experimentally-verified observations
             of PTMs.
         </p>
         <div style="margin: 0 auto; display: block; text-align: center;">
-            <img src="/picture?picture=propensity-1.png" style="width: 100%; border: 2px solid black;">
+            <img src="/picture?picture=propensity-1.png" style="width: 80%; border: 2px solid black;">
         </div>
         <p>Here is the Propensity page interface:</p>
         <p>
@@ -104,7 +216,7 @@
             provided by <strong>dbPTM</strong> and calculated for each PTM on each residue, with relative position of other
             residues accounted for.
         </p>
-        <p>As of dbPTM 2025, <strong>72</strong> PTMs are available which have protein sequences as experimental evidences:</p>
+        <p>As of the <a href="https://academic.oup.com/nar/advance-article/doi/10.1093/nar/gkae1005/7889255" target="_blank">dbPTM 2025 update</a>, <strong>72</strong> PTMs are available which have protein sequences with experimental evidences:</p>
         <div class="protein-info-container" style="margin-bottom: 10px;">
             <table class="table">
                 <tr>
