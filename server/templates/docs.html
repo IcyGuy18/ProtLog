@@ -110,7 +110,7 @@
             evidence identifiers ([<a style="color: #ff0000">4</a>]) are provided as hyperlinks to their respective PubMed article.
             The Log Sum and Log-Log Product scores (if applicable) are shown as well (see [<a style="color: #ff0000">6</a>]). If you want to
             know how these scores are calculated, you can click on the question mark ([<a style="color: #ff0000">5</a>]) and it will lead you
-            to a new page explaining the calculation (see the <a onclick="scrollIntoView('propensity')">Propensity</a> page info below).
+            to a new page explaining the calculation (see the <a onclick="scrollToSection('propensity-block')" style="color: #ff0000; cursor: pointer;">Propensity</a> page info below).
         </p>
         <p>
             This is the base information gathered for the proteins. Extra information is also provided by scrolling down:
@@ -120,7 +120,7 @@
         </div>
         <p>
             We also provide secondary structure predictions by JPred to get an idea of how and why a PTM is occurring on the amino acid.
-            Since JPred takes in requests as jobs, we submit the request upon searching for the protein and put up a disclaimer to wait for 
+            Since JPred takes in requests as scheduled jobs, we submit the request upon searching for the protein and put up a disclaimer to wait for 
             the response from JPred's server when it is done. Once the job is completed, we fetch and process the results.
         </p>
         <p>
@@ -138,19 +138,32 @@
         <p>
             [<a style="color: #ff0000">1</a>] and [<a style="color: #ff0000">2</a>] are hyperlinks to the respective database for extensive additional
             information. We use 3Dmol.js to view the PDB structures. Some buttons are provided to cycle through three different styles, 
-            clear all selections made by the user, and re-center the render should the user lose sight of the structure. You can interact with the structure by clicking on a residue,
-            at which point it will display a label that contains the position of the residue in the sequence, the 3-letter code for the residue, any and all PTMs that have been observed on the
-            residue, the Solvent Accessible Surface Area (SASA) in square Angstroms (calculated using the Shrake-Rupley algorithm), and the DSSP-calculated secondary 
-            structure of the PDB (the letter after DSSP denotes the simplified structure, while the letter inside the parentheses denotes the detailed structure of 
-            the residue, if any), all observed in [<a style="color: #ff0000">3</a>].
+            clear all selections made by the user, and re-center the render should the user lose sight of the structure. You can interact with the structure by 
+            clicking on a residue, at which point it will display a label that contains the position of the residue in the sequence, the 3-letter code for the residue,
+            any and all PTMs that have been observed on the residue, the Solvent Accessible Surface Area (SASA) in square Angstroms (calculated using the Shrake-Rupley
+            algorithm), and the DSSP-calculated secondary structure of the PDB (the letter after DSSP denotes the simplified structure, while the letter inside the
+            parentheses denotes the detailed structure of the residue, if any), all observed in [<a style="color: #ff0000">3</a>].
+            Additionally, for RCSB database, since all PDBs are queried using the UniProt Accession Number, you can select from one of many possible RCSB PDBs in [<a style="color: #ff0000">4</a>].
         </p>
         <p>
-            Additionally, for RCSB database, since all PDBs are queried using the UniProt Accession Number, you can select from one of many possible RCSB PDBs in [<a style="color: #ff0000">4</a>].
-
+            Finally, the information can also be viewed in a tabular form:
+        </p>
+        <div style="margin: 0 auto; display: block; text-align: center;">
+            <img src="/picture?picture=search-9.png" style="width: 90%; border: 2px solid black;">
+        </div>
+        <div style="margin: 0 auto; display: block; text-align: center;">
+            <img src="/picture?picture=search-10.png" style="width: 90%; border: 2px solid black;">
+        </div>
+        <p>
+            The sequence, simplified DSSP calculations, detailed DSSP calculations, and the Shrake-Rupley SASA values are given for both the AlphaFoldDB PDB and the RCSB PDB.
+            These can be downloaded individually as a JSON file.
+        </p>
+        <p>
+            This covers the search page functionality.
         </p>
 
-        <hr>
-        <h2 id="propensity" style="text-align: center; font-size: 24px; color: #444; font-weight: bold;"><a href="/propensity">Propensity</a></h2>
+        <hr id="propensity-block">
+        <h2 style="text-align: center; font-size: 24px; color: #444; font-weight: bold;"><a href="/propensity">Propensity</a></h2>
         <p>We offer an interface to calculate the <strong>Propensity</strong>, or in other words, the tendency of a residue
             undergoing a certain PTM based on its neighbouring residues. This tool facilitates users with a calculator that
             gives the chances of a PTM occurring on a residue, backed by thousands of experimentally-verified observations
