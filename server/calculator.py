@@ -37,7 +37,6 @@ def multiplicative_calculator(vector: list[float | str]) -> tuple[bool, dict]:
     # If not, it's NIL.
     # If so, calculate only up to the point it can be allowed.
     vector = get_longest_centered_array(vector)
-    print(vector)
     if len(vector) < 13:
         return False, {'message': "Not enough upstream/downstream amino acids to make accurate calculation!", 'multiplicative_score': 'NIL', 'logLogProduct': 'NIL'}
     multiplicative_score = 1

@@ -30,21 +30,32 @@
             <li><a href="/about" class="nav-link"><span class="nav-item-box">About</span></a></li>
         </ul>
     </nav>
-
-    <div class="container-fluid mt-5" style="max-width: 1280px;">
-        <h1>Documentation</h1>
-        <p>This page aims to explain what each and every page is designed for, and  how you can navigate through them.</p>
+    
     </div>
     <div id="markdown">
+        <h1 style="text-align: center; font-size: 28px; color: #444; font-weight: bold;">Documentation</h1>
+        <p style="text-align: center;"><strong>This page aims to explain what each and every page is designed for, and how you can navigate through them.</strong></p>
+
+        <hr>
+        <h2 style="text-align: center; font-size: 24px; color: #444; font-weight: bold;">Table of Contents</h1>
+        <ul style="align-content: center;">
+            <li onclick="scrollToSection('search-block')"><a style="color: #0051ff; cursor: pointer;">Search</a</li>
+            <li onclick="scrollToSection('propensity-block')"><a style="color: #0051ff; cursor: pointer;">Propensity</a</li>
+            <li onclick="scrollToSection('integration-block')"><a style="color: #0051ff; cursor: pointer;">Integration</a</li>
+            <li onclick="scrollToSection('download-block')"><a style="color: #0051ff; cursor: pointer;">Download</a</li>
+            <li onclick="scrollToSection('about-block')"><a style="color: #0051ff; cursor: pointer;">About</a</li>
+        </ul>
+
+        <hr id="search-block">
         <h2 style="text-align: center; font-size: 24px; color: #444; font-weight: bold;"><a href="/search">Search</a></h2>
-        <p>
+        <p style="text-align: justify;">
             This page is where you can search for proteins using a UniProt-based Protein Identifier or a UniProt-based Accession Number.
             Upon accessing the page, you will be presented with this screen:
         </p>
         <div style="margin: 0 auto; display: block; text-align: center;">
             <img src="/picture?picture=search-1.png" style="width: 100%; border: 2px solid black;">
         </div>
-        <p>
+        <p style="text-align: justify;">
             You can enter the aforementioned parameter in [<a style="color: #ff0000">1</a>], or click on either of the examples in
             [<a style="color: #ff0000">2</a>]. As you enter your identifier, the search bar will be filled with suggestions fetched
             from our database, based on the similarity. Upon entering an ID that is present in our database, the following information
@@ -53,7 +64,7 @@
         <div style="margin: 0 auto; display: block; text-align: center;">
             <img src="/picture?picture=search-2.png" style="width: 100%; border: 2px solid black;">
         </div>
-        <p>
+        <p style="text-align: justify;">
             First, general information about the input protein is displayed. [<a style="color: #ff0000">1</a>] and [<a style="color: #ff0000">2</a>]
             are hyperlinks to their respective UniProt pages. The following information is displayed:
             <ul>
@@ -72,7 +83,7 @@
         <div style="margin: 0 auto; display: block; text-align: center;">
             <img src="/picture?picture=search-3.png" style="width: 100%; border: 2px solid black;">
         </div>
-        <p>
+        <p style="text-align: justify;">
             [<a style="color: #ff0000">1</a>], [<a style="color: #ff0000">2</a>], and [<a style="color: #ff0000">3</a>] respectively
             show the number of experimentally verified PTM sites for the protein, the number of unique PTMs experimentally observed on this
             protein, and the total number of literature recorded across all PTMs. [<a style="color: #ff0000">4</a>] shows the overall
@@ -82,7 +93,7 @@
         <div style="margin: 0 auto; display: block; text-align: center;">
             <img src="/picture?picture=search-4.png" style="width: 100%; border: 2px solid black;">
         </div>
-        <p>
+        <p style="text-align: justify;">
             This shows some UniProt-enabled information about the protein sequence with the option to download the PTM data as a JSON file
             (see [<a style="color: #ff0000">1</a>]).
 
@@ -91,61 +102,61 @@
         <div style="margin: 0 auto; display: block; text-align: center;">
             <img src="/picture?picture=search-5.png" style="width: 90%; border: 2px solid black;">
         </div>
-        <p>
+        <p style="text-align: justify;">
             The PTMs shown on the sequence are colour-coded for convenience (as shown in [<a style="color: #ff0000">1</a>]). Additionally,
             you can use the checkboxes ([<a style="color: #ff0000">2</a>]) to hide or show certain PTMs in the list. By default, all of them
             will be enabled.
         </p>
-        <p>
+        <p style="text-align: justify;">
             You can hover over a highlighted amino acid/residue (like [<a style="color: #ff0000">1</a>]) to see what PTM is occurring on 
             it. When you click on the highlighted residue, detailed information about the PTM will be shown in [<a style="color: #ff0000">3</a>]:
         </p>
         <div style="margin: 0 auto; display: block; text-align: center;">
             <img src="/picture?picture=search-6.png" style="width: 90%; border: 2px solid black;">
         </div>
-        <p>
+        <p style="text-align: justify;">
             A localised sequence of 21 amino acids is shown in [<a style="color: #ff0000">1</a>], with the position of the center amino acid
             mentioned in [<a style="color: #ff0000">2</a>]. Below them is the dbPTM-annotated PTM information about the amino acid. If 
             applicable, a RESID Database ID is also provided alongside the PTM type ([<a style="color: #ff0000">3</a>]). For the PTM,
             evidence identifiers ([<a style="color: #ff0000">4</a>]) are provided as hyperlinks to their respective PubMed article.
             The Log Sum and Log-Log Product scores (if applicable) are shown as well (see [<a style="color: #ff0000">6</a>]). If you want to
             know how these scores are calculated, you can click on the question mark ([<a style="color: #ff0000">5</a>]) and it will lead you
-            to a new page explaining the calculation (see the <a onclick="scrollToSection('propensity-block')" style="color: #ff0000; cursor: pointer;">Propensity</a> page info below).
+            to a new page explaining the calculation (see the <a onclick="scrollToSection('propensity-block')" style="color: #0051ff; cursor: pointer;">Propensity</a> page info below).
         </p>
-        <p>
+        <p style="text-align: justify;">
             This is the base information gathered for the proteins. Extra information is also provided by scrolling down:
         </p>
         <div style="margin: 0 auto; display: block; text-align: center;">
             <img src="/picture?picture=search-7.png" style="width: 90%; border: 2px solid black;">
         </div>
-        <p>
+        <p style="text-align: justify;">
             We also provide secondary structure predictions by JPred to get an idea of how and why a PTM is occurring on the amino acid.
             Since JPred takes in requests as scheduled jobs, we submit the request upon searching for the protein and put up a disclaimer to wait for 
             the response from JPred's server when it is done. Once the job is completed, we fetch and process the results.
         </p>
-        <p>
+        <p style="text-align: justify;">
             Since JPred also provides hyperlink-embedded alignments, we have shown them as a separate page ([<a style="color: #ff0000">1</a>]).
             As for the prediction, JPred's own format is followed. Upon clicking on a PTM ([<a style="color: #ff0000">2</a>]), the entire column
-            is highlighted to make it easier for the user to see the secondary structure, any coils, the solvent accessible surface area percentage,
+            is highlighted to make it easier for the user to see the secondary structure, any coils, the residue burial percentage,
             and the confidence scores. Finally, all of the aforementioned information can be downloaded as a JSON file ([<a style="color: #ff0000">3</a>]).
         </p>
-        <p>
+        <p style="text-align: justify;">
             Finally, we also present predicted and experimentally verified structures for the protein observed from AlphaFoldDB and RCSB Database respectively:
         </p>
         <div style="margin: 0 auto; display: block; text-align: center;">
             <img src="/picture?picture=search-8.png" style="width: 90%; border: 2px solid black;">
         </div>
-        <p>
+        <p style="text-align: justify;">
             [<a style="color: #ff0000">1</a>] and [<a style="color: #ff0000">2</a>] are hyperlinks to the respective database for extensive additional
             information. We use 3Dmol.js to view the PDB structures. Some buttons are provided to cycle through three different styles, 
             clear all selections made by the user, and re-center the render should the user lose sight of the structure. You can interact with the structure by 
-            clicking on a residue, at which point it will display a label that contains the position of the residue in the sequence, the 3-letter code for the residue,
-            any and all PTMs that have been observed on the residue, the Solvent Accessible Surface Area (SASA) in square Angstroms (calculated using the Shrake-Rupley
-            algorithm), and the DSSP-calculated secondary structure of the PDB (the letter after DSSP denotes the simplified structure, while the letter inside the
+            clicking on a residue, at which point it will display a label that contains the position of the residue in the sequence, the <strong>3-letter code for the residue</strong>,
+            any and all <strong>PTMs that have been observed on the residue</strong>, the <strong>Solvent Accessible Surface Area</strong> (SASA) in square Angstroms (Å²) (calculated using the Shrake-Rupley
+            algorithm), and the <strong>DSSP-calculated secondary structure of the PDB</strong> (the letter after DSSP denotes the simplified structure, while the letter inside the
             parentheses denotes the detailed structure of the residue, if any), all observed in [<a style="color: #ff0000">3</a>].
             Additionally, for RCSB database, since all PDBs are queried using the UniProt Accession Number, you can select from one of many possible RCSB PDBs in [<a style="color: #ff0000">4</a>].
         </p>
-        <p>
+        <p style="text-align: justify;">
             Finally, the information can also be viewed in a tabular form:
         </p>
         <div style="margin: 0 auto; display: block; text-align: center;">
@@ -154,17 +165,18 @@
         <div style="margin: 0 auto; display: block; text-align: center;">
             <img src="/picture?picture=search-10.png" style="width: 90%; border: 2px solid black;">
         </div>
-        <p>
+        <p style="text-align: justify;">
             The sequence, simplified DSSP calculations, detailed DSSP calculations, and the Shrake-Rupley SASA values are given for both the AlphaFoldDB PDB and the RCSB PDB.
             These can be downloaded individually as a JSON file.
         </p>
-        <p>
+        <p style="text-align: justify;">
             This covers the search page functionality.
         </p>
 
         <hr id="propensity-block">
         <h2 style="text-align: center; font-size: 24px; color: #444; font-weight: bold;"><a href="/propensity">Propensity</a></h2>
-        <p>We offer an interface to calculate the <strong>Propensity</strong>, or in other words, the tendency of a residue
+        <p style="text-align: justify;">
+            We offer an interface to calculate the <strong>Propensity</strong>, or in other words, the tendency of a residue
             undergoing a certain PTM based on its neighbouring residues. This tool facilitates users with a calculator that
             gives the chances of a PTM occurring on a residue, backed by thousands of experimentally-verified observations
             of PTMs.
@@ -172,25 +184,25 @@
         <div style="margin: 0 auto; display: block; text-align: center;">
             <img src="/picture?picture=propensity-1.png" style="width: 80%; border: 2px solid black;">
         </div>
-        <p>Here is the Propensity page interface:</p>
-        <p>
+        <p style="text-align: justify;">Here is the Propensity page interface:</p>
+        <p style="text-align: justify;">
             In [<a style="color: #ff0000">1</a>], enter the protein subsequence for which you want to calculate the Propensity.
             This subsequence must have a length between 13 and 21, and must be an odd value to account for equal number of upstream
             and downstream residues. The counter ([<a style="color: #ff0000">3</a>]) on the right side of the subsequence input
             lets you know how long your subsequence is.
         </p>
-        <p>
+        <p style="text-align: justify;">
             [<a style="color: #ff0000">2</a>] is where you enter the PTM type for the residue you want to calculate the Propensity for.
             The list of PTMs will be available to you as suggestions while you type in it.
         </p>
-        <p>
+        <p style="text-align: justify;">
             Once you have entered both of the required information, proceed to click on the <strong>"Calculate"</strong> button below.
             You will be presented with something like this:
         </p>
         <div style="margin: 0 auto; display: block; text-align: center;">
             <img src="/picture?picture=propensity-2.png" style="width: 70%; border: 2px solid black;">
         </div>
-        <p>
+        <p style="text-align: justify;">
             [<a style="color: #ff0000">1</a>] shows the input subsequence, with the red-color residue denoting the center of the
             subseuqence - i.e. the residue for which Propensity is being calculated. [<a style="color: #ff0000">2</a>] shows the
             <strong>Log Sum</strong> and the <strong>Log Log Product</strong> Propensity scores. These give an educated guess on the
@@ -200,36 +212,36 @@
             The more red a cell is, the higher its probability is, and green cells denote the values which were picked against the
             residues at their positions relevant to the PTM site.
         </p>
-        <p>
+        <p style="text-align: justify;">
             For Log Sum, every value in [<a style="color: #ff0000">4</a>] is added, with the condition that said value must not be
             <strong>-inf</strong>. This is a straightforward equation designed to show empirically how much of a tendency there can be of a residue
             undergoing PTM.
         </p>
-        <p>
+        <p style="text-align: justify;">
             For Log Log Product, the process is a bit more complex than Log Sum. First, the longest vector is grabbed which contains
             no <strong>-inf</strong> values. The newly constructed vector must not be smaller than 13 values in length, where a <strong>NIL</strong> value is shown instead.
             Next, all of the values (minus the residue whose Propensity we wish to calculate) are multiplied together and reciprocated with 1.
             Finally, the resultant value is passed through the natural logarithm equation to retrieve the Log Log Product.
         </p>
         
-        <hr>
+        <hr id="integration-block">
         <h2 style="text-align: center; font-size: 24px; color: #444; font-weight: bold;"><a href="/integration">Integration</a></h2>
-        <p>
-            Integration mainly covers the <strong>RESTful API</strong> side of the website and caters to providing descriptions and examples of each 
+        <p style="text-align: justify;">
+            The Integration page covers the <strong>RESTful API</strong> side of the website and caters to providing descriptions and examples of each 
             API call. Five API calls are provided for your convenience, each with its own options on what it accepts as input, how it should be 
             called, and what it will reurn, along with examples for each API call on how to execute the call. For more information on the API calls,
             please head over to the Integration page to get started.
         </p>
 
-        <hr>
+        <hr id="download-block">
         <h2 style="text-align: center; font-size: 24px; color: #444; font-weight: bold;"><a href="/download">Download</a></h2>
-        <p>This page gives you the option to download one of many Post-Translational Modification (PTM) positional matrices.
+        <p style="text-align: justify;">This page gives you the option to download one of many Post-Translational Modification (PTM) positional matrices.
             These matrices allow users to find, through a large amount of PTMs on proteins experimentally verified, what the
             probability of a PTM occurring on an amino acid is. The data is scraped from the experimentally verified database
             provided by <strong>dbPTM</strong> and calculated for each PTM on each residue, with relative position of other
             residues accounted for.
         </p>
-        <p>As of the <a href="https://academic.oup.com/nar/advance-article/doi/10.1093/nar/gkae1005/7889255" target="_blank">dbPTM 2025 update</a>, <strong>72</strong> PTMs are available which have protein sequences with experimental evidences:</p>
+        <p style="text-align: justify;">As of the <a href="https://academic.oup.com/nar/advance-article/doi/10.1093/nar/gkae1005/7889255" target="_blank">dbPTM 2025 update</a>, <strong>72</strong> PTMs are available which have protein sequences with experimental evidences:</p>
         <div class="protein-info-container" style="margin-bottom: 10px;">
             <table class="table">
                 <tr>
@@ -342,11 +354,11 @@
                 </tr>
             </table>
         </div>
-        <p>Upon selecting a PTM, a residue, and the type of table, you are displayed with the table and the option to download the table as either a <strong>CSV</strong>, a <strong>PDF</strong>, a <strong>PNG</strong>, a <strong>SVG</strong>, or a <strong>JSON</strong>.</p>
+        <p style="text-align: justify;">Upon selecting a PTM, a residue, and the type of table, you are displayed with the table and the option to download the table as either a <strong>CSV</strong>, a <strong>PDF</strong>, a <strong>PNG</strong>, a <strong>SVG</strong>, or a <strong>JSON</strong>.</p>
         
-        <hr>
+        <hr id="about-block">
         <h2 style="text-align: center; font-size: 24px; color: #444; font-weight: bold;"><a href="/about">About</a></h2>
-        <p>You may view the people working at the prestigious <strong>Biomedical Informatics & Engineering Research Laboratory</strong> (BIRL) and contact us for queries regarding <strong>PTMKB</strong>.</p>
+        <p style="text-align: justify;">You may view the people working at the prestigious <strong>Biomedical Informatics & Engineering Research Laboratory</strong> (BIRL) and contact us for queries regarding <strong>PTMKB</strong>.</p>
     </div>
 
     <div class="main-content"></div>

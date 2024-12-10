@@ -15,7 +15,7 @@ from typing import Annotated
 #### Comment whichever you want to use for the time being
 #### Only use one at a time though
 # from mongo_ptm import fetch_identifiers, search_identifier
-from local_ptm import fetch_identifiers, search_identifier
+from local_ptm import fetch_identifiers, search_identifier, get_all_proteins
 from calculator import additive_calculator, multiplicative_calculator
 from response_fetcher import fetch_response_uniprot_trim
 from jpred_prediction import submit_job, get_job
@@ -25,6 +25,7 @@ from mdtraj_calculations import (
     get_solvent_accessible_surface_area,
     get_protein_sequence
 )
+from constants import PTM_TABLES, RESID_DATABASE
 
 app = FastAPI(
     docs_url=None,
@@ -81,7 +82,6 @@ def docs_page(request: Request):
     return templates.TemplateResponse(
         "propensity.html", context={"request": request}
     )
-
 
 @app.get("/documentation", include_in_schema=False)
 def docs_page(request: Request):
@@ -227,7 +227,6 @@ def save_data(df: pd.DataFrame, format: str) -> bytes:
     with open(f'./temp.{format.lower()}', 'rb') as f:
         raw_data = f.read()
     os.remove(f'./temp.{format.lower()}')
-    print(raw_data)
     return raw_data
 
 @app.post('/ptmkb/download', include_in_schema=False)
@@ -293,16 +292,12 @@ def get_amino_acids(request: Request, ptm: str):
 
 @app.get('/ptmkb/getPTM', include_in_schema=False)
 async def get_ptm_details(request: Request, resid: str = None, ptm: str = None, aa: str = None):
-    
-    # Read the file initially
-    with open('./data/resid/residues.json', 'r') as f:
-        entries = json.load(f)['Database']['Entry']
     # Check whether RESID ID or both PTM and Residue are given.
     # Both will be handled differently.
     entry = None
     if resid:
         resid = resid.upper()
-        entry = [entry for entry in entries if entry['@id'] == resid]
+        entry = [entry for entry in RESID_DATABASE if entry['@id'] == resid]
         # If caught entry,
         if entry:
             _id = entry[0]['@id']
@@ -325,7 +320,7 @@ async def get_ptm_details(request: Request, resid: str = None, ptm: str = None, 
     elif (ptm and aa):
         aa = aa.upper()
         entry = [
-            entry for entry in entries
+            entry for entry in RESID_DATABASE
             if entry.get('PTM', None) == ptm and (
                 (
                     isinstance(entry.get('AminoAcid', None), str) and
@@ -378,120 +373,91 @@ def get_jpred_prediction(request: Request, jobid: str):
         "content": {
             "application/json": {
                 "example": {
-                    "AA0039": {
-                        "@id": "AA0039",
-                        "PTM": "Phosphorylation",
-                        "AminoAcid": "Y",
+                    'resid': {
+                        "@id": 'string',
+                        "PTM": 'string',
+                        "AminoAcid": 'string',
                         "Header": {
-                            "Code": "AA0039",
+                            "Code": 'string',
                             "Dates": {
-                                "CreationDate": "31-Mar-1995",
-                                "StrucRevDate": "31-Mar-1995",
-                                "TextChngDate": "31-Dec-2011"
+                                "CreationDate": 'string',
+                                "StrucRevDate": 'string',
+                                "TextChngDate": 'string'
                             }
                         },
                         "Names": {
-                            "Name": "O4'-phospho-L-tyrosine",
+                            "Name": 'string',
                             "AlternateName": [
-                                "2-amino-3-(4-hydroxyphenyl)propanoic acid 4'-phosphate",
-                                "2-azanyl-3-(4-phosphonooxyphenyl)propanoic acid",
-                                "O4-phosphotyrosine",
-                                "tyrosine phosphate"
+                                'string'
                             ],
-                            "SystematicName": "(2S)-2-amino-3-(4-phosphonooxyphenyl)propanoic acid",
+                            "SystematicName": 'string',
                             "Xref": [
-                                "CAS:21820-51-9",
-                                "ChEBI:61972",
-                                "PDBHET:PTR"
+                                'string'
                             ]
                         },
                         "FormulaBlock": {
-                            "Formula": "C 9 H 10 N 1 O 5 P 1",
+                            "Formula": 'string',
                             "Weight": [
                                 {
-                                    "@type": "chemical",
-                                    "#text": "243.15"
-                                },
-                                {
-                                    "@type": "physical",
-                                    "#text": "243.029659"
+                                    "@type": 'string',
+                                    "#text": 'string'
                                 }
                             ]
                         },
                         "CorrectionBlock": {
-                            "@uids": "AA0019",
-                            "Formula": "C 0 H 1 N 0 O 3 P 1",
+                            "@uids": 'string',
+                            "Formula": 'string',
                             "Weight": [
                                 {
-                                    "@type": "chemical",
-                                    "#text": "79.98"
-                                },
-                                {
-                                    "@type": "physical",
-                                    "#text": "79.966331"
+                                    "@type": 'string',
+                                    "#text": 'string'
                                 }
                             ]
                         },
                         "ReferenceBlock": [
-                        {
-                            "Authors": {
-                                "Author": [
-                                    "Aebersold, R.",
-                                    "Watts, J.D.",
-                                    "Morrison, H.D.",
-                                    "Bures, E.J."
-                                ]
+                            {
+                                "Authors": {
+                                    "Author": [
+                                        'string'
+                                    ]
+                                },
+                                "Citation": 'string',
+                                "Title": 'string',
+                                "Xref": [
+                                    'string'
+                                ],
+                                "Note": 'string'
                             },
-                            "Citation": "Anal. Biochem. 199, 51-60, 1991",
-                            "Title": "Determination of the site of tyrosine phosphorylation at the low picomole level by automated solid-phase sequence analysis.",
-                            "Xref": [
-                                "DOI:10.1016/0003-2697(91)90268-X",
-                                "PMID:1725475"
-                            ],
-                            "Note": "chromatographic detection"
-                        },
-                        {
-                            "Authors": {
-                                "Author": [
-                                    "Wolfender, J.L.",
-                                    "Chu, F.",
-                                    "Ball, H.",
-                                    "Wolfender, F.",
-                                    "Fainzilber, M.",
-                                    "Baldwin, M.A.",
-                                    "Burlingame, A.L."
-                                ]
-                            },
-                            "Citation": "J. Mass Spectrom. 34, 447-454, 1999",
-                            "Title": "Identification of tyrosine sulfation in Conus pennaceus conotoxins alpha-PnIA and alpha-PnIB: further investigation of labile sulfo- and phosphopeptides by electrospray, matrix-assisted laser desorption/ionization (MALDI) and atmospheric pressure MALDI mass spectrometry.",
-                            "Xref": [
-                                "DOI:10.1002/(SICI)1096-9888(199904)34:4<447::AID-JMS801>3.3.CO;2-T",
-                                "PMID:10226369"
-                            ],
-                            "Note": "attempt to distinguish between the essentially isobaric protonated forms of phosphotyrosine and sulfotyrosine (see RESID:AA0172) by negative ion mode MALDI"
-                        }
                         ],
                         "GeneratingEnzyme": {
-                            "EnzymeName": "protein-tyrosine kinase (EC 2.7.1.112)"
+                            "EnzymeName": 'string'
                         },
                         "SequenceCode": {
-                            "SequenceSpec": "Y",
+                            "SequenceSpec": 'string',
                             "Xref": [
-                                "GO:0018108",
-                                "GO:0018334",
-                                "PSI-MOD:00048"
+                                'string'
                             ]
                         },
-                        "Source": "natural",
+                        "Source": 'string',
                         "Keywords": {
-                            "Keyword": "phosphoprotein"
+                            "Keyword": 'string'
                         },
                         "Features": {
                             "Feature": {
-                                "@type": "UniProt",
-                                "@key": "mod_res__phosphotyrosine__y",
-                                "#text": "MOD_RES Phosphotyrosine"
+                                "@type": 'string',
+                                "@key": 'string',
+                                "#text": 'string'
                             }
+                        },
+                        "Image": {
+                            "Data": 'string',
+                            "Encoding": 'string',
+                            "FileType": 'string'
+                        },
+                        "Model": {
+                            "Data": 'string',
+                            "Encoding": 'string',
+                            "FileType": 'string'
                         }
                     }
                 }
@@ -513,31 +479,27 @@ def get_post_translational_modification_details(
     # Let's do some input validation first.
     resid = resid.upper().strip() # And that's about it.
 
-    # We can read the file per operation since it's not a large file
-    # (only barely 3 megabytes)
-    with open('./data/resid/residues.json', 'r') as f:
-        entries = json.load(f)['Database']['Entry']
-        entries = [_id for _id in entries if _id['@id'] == resid]
+    entry = [i for i in RESID_DATABASE if i.get('@id', '') == resid]
 
     # We also have to include raw bytes of PDB and image
-    for i in range(len(entries)):
-        _id = entries[i]["@id"]
+    for i in range(len(entry)):
+        _id = entry[i]["@id"]
         with open(
             f"./data/resid/images/{_id}.GIF", 'rb'
         ) as f:
-            entries[i]['Image'] = {}
-            entries[i]['Image']['Data'] = f.read().decode('latin-1')
-            entries[i]['Image']['Encoding'] = 'latin-1'
-            entries[i]['Image']['FileType'] = '.GIF'
+            entry[i]['Image'] = {}
+            entry[i]['Image']['Data'] = f.read().decode('latin-1')
+            entry[i]['Image']['Encoding'] = 'latin-1'
+            entry[i]['Image']['FileType'] = '.GIF'
         with open(
             f"./data/resid/models/{_id}.PDB", 'rb'
         ) as f:
-            entries[i]['Model'] = {}
-            entries[i]['Model']['Data'] = f.read().decode()
-            entries[i]['Model']['Encoding'] = 'utf-8'
-            entries[i]['Model']['FileType'] = '.PDB'
-    if entries:
-        return {resid: entries[0]}
+            entry[i]['Model'] = {}
+            entry[i]['Model']['Data'] = f.read().decode()
+            entry[i]['Model']['Encoding'] = 'utf-8'
+            entry[i]['Model']['FileType'] = '.PDB'
+    if entry:
+        return {resid: entry[0]}
     return {'message': 'Please provide a valid RESID Database ID.'}
 
 
@@ -549,123 +511,13 @@ def get_post_translational_modification_details(
                 "example": {
                     "result": [
                         {
-                            "Protein Identifier": "TERT_HUMAN",
-                            "Accession Number": "O14746",
+                            "Protein Identifier": 'string',
+                            "Accession Number": 'string',
                             "PTMs": [
                                 [
-                                    1059,
-                                    "Acetylation",
-                                    "30592905"
-                                ],
-                                [
-                                    227,
-                                    "Phosphorylation",
-                                    "22366458;30395287;22817900;10224060"
-                                ],
-                                [
-                                    349,
-                                    "Phosphorylation",
-                                    "25954137;30301811;22964224;17081983"
-                                ],
-                                [
-                                    353,
-                                    "Phosphorylation",
-                                    "24719451"
-                                ],
-                                [
-                                    457,
-                                    "Phosphorylation",
-                                    "30395287;23362280"
-                                ],
-                                [
-                                    707,
-                                    "Phosphorylation",
-                                    "16627250;19147845;30395287;17392301;16247010;19760749;12808100;18042801;17460043;15814878;14654914;23362280;9443919;15082768;17264120;12869302;15857955;16990594;16332973;22512499;17785587;15885610;17296728;20211239;19777057;22817900;21483807;9389643;21436073;21602826;17026956;18829466"
-                                ],
-                                [
-                                    797,
-                                    "Phosphorylation",
-                                    "16565220"
-                                ],
-                                [
-                                    824,
-                                    "Phosphorylation",
-                                    "22817900;10224060"
-                                ],
-                                [
-                                    1101,
-                                    "Phosphorylation",
-                                    "16094384"
-                                ],
-                                [
-                                    1113,
-                                    "Phosphorylation",
-                                    "16094384;22817900"
-                                ],
-                                [
-                                    1125,
-                                    "Phosphorylation",
-                                    "16094384;22817900"
-                                ],
-                                [
-                                    679,
-                                    "Phosphorylation",
-                                    "27251275"
-                                ],
-                                [
-                                    692,
-                                    "Phosphorylation",
-                                    "27251275"
-                                ],
-                                [
-                                    1045,
-                                    "Phosphorylation",
-                                    "24719451"
-                                ],
-                                [
-                                    1095,
-                                    "Phosphorylation",
-                                    "24719451"
-                                ],
-                                [
-                                    283,
-                                    "Phosphorylation",
-                                    "22210691"
-                                ],
-                                [
-                                    284,
-                                    "Phosphorylation",
-                                    "22210691"
-                                ],
-                                [
-                                    344,
-                                    "Phosphorylation",
-                                    "30622161"
-                                ],
-                                [
-                                    348,
-                                    "Phosphorylation",
-                                    "17081983;30301811;24719451;30622161"
-                                ],
-                                [
-                                    480,
-                                    "Phosphorylation",
-                                    "24719451"
-                                ],
-                                [
-                                    618,
-                                    "Phosphorylation",
-                                    "24719451"
-                                ],
-                                [
-                                    731,
-                                    "Phosphorylation",
-                                    "24719451"
-                                ],
-                                [
-                                    707,
-                                    "Phosphorylation",
-                                    "12808100"
+                                    'int',
+                                    'string',
+                                    'string'
                                 ]
                             ]
                         }
@@ -705,78 +557,7 @@ def get_protein_details(
             "application/json": {
                 "example": {
                     "ptms": [
-                        "Acetylation",
-                        "ADP-ribosylation",
-                        "Amidation",
-                        "AMPylation",
-                        "Biotinylation",
-                        "Blocked amino end",
-                        "Butyrylation",
-                        "C-linked Glycosylation",
-                        "Carbamidation",
-                        "Carboxyethylation",
-                        "Carboxylation",
-                        "Cholesterol ester",
-                        "Citrullination",
-                        "Crotonylation",
-                        "D-glucuronoylation",
-                        "Deamidation",
-                        "Deamination",
-                        "Decanoylation",
-                        "Decarboxylation",
-                        "Dephosphorylation",
-                        "Disulfide bond",
-                        "Farnesylation",
-                        "Formation of an isopeptide bond",
-                        "Formylation",
-                        "Gamma-carboxyglutamic acid",
-                        "Geranylgeranylation",
-                        "Glutarylation",
-                        "Glutathionylation",
-                        "GPI-anchor",
-                        "Hydroxyceramide ester",
-                        "Hydroxylation",
-                        "Iodination",
-                        "Lactoylation",
-                        "Lactylation",
-                        "Lipoylation",
-                        "Malonylation",
-                        "Methylation",
-                        "Myristoylation",
-                        "N-carbamoylation",
-                        "N-linked Glycosylation",
-                        "N-palmitoylation",
-                        "Neddylation",
-                        "Nitration",
-                        "O-linked Glycosylation",
-                        "O-palmitoleoylation",
-                        "O-palmitoylation",
-                        "Octanoylation",
-                        "Oxidation",
-                        "Phosphatidylethanolamine amidation",
-                        "Phosphorylation",
-                        "Propionylation",
-                        "Pyrrolidone carboxylic acid",
-                        "Pyrrolylation",
-                        "Pyruvate",
-                        "S-archaeol",
-                        "S-carbamoylation",
-                        "S-Cyanation",
-                        "S-cysteinylation",
-                        "S-diacylglycerol",
-                        "S-linked Glycosylation",
-                        "S-nitrosylation",
-                        "S-palmitoylation",
-                        "Serotonylation",
-                        "Stearoylation",
-                        "Succinylation",
-                        "Sulfation",
-                        "Sulfhydration",
-                        "Sulfoxidation",
-                        "Sumoylation",
-                        "Thiocarboxylation",
-                        "Ubiquitination",
-                        "UMPylation"
+                        'string'
                     ]
                 }
             }
@@ -801,466 +582,466 @@ async def get_available_post_translational_modifications():
             "application/json": {
                 "example": {
                     "-10": {
-                        "A": 0.07007255857134956,
-                        "C": 0.009577767683828496,
-                        "D": 0.052707641452041806,
-                        "E": 0.07040710952509177,
-                        "F": 0.02385647492091814,
-                        "G": 0.06497178982946968,
-                        "H": 0.021027751409601884,
-                        "I": 0.033014467288804514,
-                        "K": 0.07115146273111442,
-                        "L": 0.06983139175916683,
-                        "M": 0.018719440492995735,
-                        "N": 0.04155684963611917,
-                        "P": 0.07334463009453558,
-                        "Q": 0.04200563750089531,
-                        "R": 0.0679065904724603,
-                        "S": 0.11648357028425951,
-                        "T": 0.05360249725514089,
-                        "V": 0.047556100749702394,
-                        "W": 0.006309322729246734,
-                        "Y": 0.017888956282622118
+                        "A": 'float',
+                        "C": 'float',
+                        "D": 'float',
+                        "E": 'float',
+                        "F": 'float',
+                        "G": 'float',
+                        "H": 'float',
+                        "I": 'float',
+                        "K": 'float',
+                        "L": 'float',
+                        "M": 'float',
+                        "N": 'float',
+                        "P": 'float',
+                        "Q": 'float',
+                        "R": 'float',
+                        "S": 'float',
+                        "T": 'float',
+                        "V": 'float',
+                        "W": 'float',
+                        "Y": 'float'
                     },
                     "-9": {
-                        "A": 0.07052225307827677,
-                        "C": 0.009749123050379385,
-                        "D": 0.05235767758173152,
-                        "E": 0.06948505445746081,
-                        "F": 0.023708692250294885,
-                        "G": 0.06556745372271801,
-                        "H": 0.021381341848516415,
-                        "I": 0.032743381285636704,
-                        "K": 0.07189853586359025,
-                        "L": 0.07030012575126635,
-                        "M": 0.019313291101941937,
-                        "N": 0.0409720654486836,
-                        "P": 0.07281333779401272,
-                        "Q": 0.0415414367195511,
-                        "R": 0.06997010800827945,
-                        "S": 0.11731405449463313,
-                        "T": 0.05393160835597672,
-                        "V": 0.04772654947410222,
-                        "W": 0.006002877682187473,
-                        "Y": 0.017927941895117823
+                        "A": 'float',
+                        "C": 'float',
+                        "D": 'float',
+                        "E": 'float',
+                        "F": 'float',
+                        "G": 'float',
+                        "H": 'float',
+                        "I": 'float',
+                        "K": 'float',
+                        "L": 'float',
+                        "M": 'float',
+                        "N": 'float',
+                        "P": 'float',
+                        "Q": 'float',
+                        "R": 'float',
+                        "S": 'float',
+                        "T": 'float',
+                        "V": 'float',
+                        "W": 'float',
+                        "Y": 'float'
                     },
                     "-8": {
-                        "A": 0.07018044898732605,
-                        "C": 0.010220576968932093,
-                        "D": 0.052466474639859075,
-                        "E": 0.06824295471050462,
-                        "F": 0.024043243204037095,
-                        "G": 0.06484304664401874,
-                        "H": 0.021530031161290732,
-                        "I": 0.033403416771610496,
-                        "K": 0.07079152579714244,
-                        "L": 0.07134095094068657,
-                        "M": 0.01926977227869092,
-                        "N": 0.04118875292278763,
-                        "P": 0.07345433379481418,
-                        "Q": 0.04193310612881028,
-                        "R": 0.07024119401144727,
-                        "S": 0.11962055212693716,
-                        "T": 0.053910755586502275,
-                        "V": 0.047905157977861615,
-                        "W": 0.005574942586885784,
-                        "Y": 0.01804217880615175
+                        "A": 'float',
+                        "C": 'float',
+                        "D": 'float',
+                        "E": 'float',
+                        "F": 'float',
+                        "G": 'float',
+                        "H": 'float',
+                        "I": 'float',
+                        "K": 'float',
+                        "L": 'float',
+                        "M": 'float',
+                        "N": 'float',
+                        "P": 'float',
+                        "Q": 'float',
+                        "R": 'float',
+                        "S": 'float',
+                        "T": 'float',
+                        "V": 'float',
+                        "W": 'float',
+                        "Y": 'float'
                     },
                     "-7": {
-                        "A": 0.07103359925147625,
-                        "C": 0.008922265408610018,
-                        "D": 0.053416635614172994,
-                        "E": 0.06937353747288007,
-                        "F": 0.023239051616044303,
-                        "G": 0.0669827221205272,
-                        "H": 0.021218146261325094,
-                        "I": 0.03172703543429519,
-                        "K": 0.07246881377660881,
-                        "L": 0.06893109610316137,
-                        "M": 0.018507286229647018,
-                        "N": 0.04116336694255787,
-                        "P": 0.07504367748562746,
-                        "Q": 0.041364641500093835,
-                        "R": 0.07198557351009228,
-                        "S": 0.12096056922620813,
-                        "T": 0.054233520192280664,
-                        "V": 0.047084646831149685,
-                        "W": 0.005699152561581402,
-                        "Y": 0.017687681725086155
+                        "A": 'float',
+                        "C": 'float',
+                        "D": 'float',
+                        "E": 'float',
+                        "F": 'float',
+                        "G": 'float',
+                        "H": 'float',
+                        "I": 'float',
+                        "K": 'float',
+                        "L": 'float',
+                        "M": 'float',
+                        "N": 'float',
+                        "P": 'float',
+                        "Q": 'float',
+                        "R": 'float',
+                        "S": 'float',
+                        "T": 'float',
+                        "V": 'float',
+                        "W": 'float',
+                        "Y": 'float'
                     },
                     "-6": {
-                        "A": 0.07094474832067207,
-                        "C": 0.008871493448150495,
-                        "D": 0.053335944462728394,
-                        "E": 0.06901269389675703,
-                        "F": 0.023887300754054278,
-                        "G": 0.06688933797896772,
-                        "H": 0.02062701557883208,
-                        "I": 0.03364549022594429,
-                        "K": 0.06873254147207859,
-                        "L": 0.07171086093832023,
-                        "M": 0.018743919831074433,
-                        "N": 0.04092763998328152,
-                        "P": 0.07449334569993227,
-                        "Q": 0.03995753288164421,
-                        "R": 0.07226663257692179,
-                        "S": 0.12368321560585002,
-                        "T": 0.054693187762869556,
-                        "V": 0.04847362260657805,
-                        "W": 0.005162420408152163,
-                        "Y": 0.018004099835807107
+                        "A": 'float',
+                        "C": 'float',
+                        "D": 'float',
+                        "E": 'float',
+                        "F": 'float',
+                        "G": 'float',
+                        "H": 'float',
+                        "I": 'float',
+                        "K": 'float',
+                        "L": 'float',
+                        "M": 'float',
+                        "N": 'float',
+                        "P": 'float',
+                        "Q": 'float',
+                        "R": 'float',
+                        "S": 'float',
+                        "T": 'float',
+                        "V": 'float',
+                        "W": 'float',
+                        "Y": 'float'
                     },
                     "-5": {
-                        "A": 0.06904351972989317,
-                        "C": 0.008668405606312405,
-                        "D": 0.05327519943860718,
-                        "E": 0.0663009272229279,
-                        "F": 0.026143026425898778,
-                        "G": 0.06357374763253068,
-                        "H": 0.02232606296992396,
-                        "I": 0.03575615315361873,
-                        "K": 0.06381491444471342,
-                        "L": 0.08418716357909682,
-                        "M": 0.020795651018929783,
-                        "N": 0.039988358714780355,
-                        "P": 0.07352142531399285,
-                        "Q": 0.03861751578237325,
-                        "R": 0.0731288492625826,
-                        "S": 0.12072574890908283,
-                        "T": 0.053960620904810734,
-                        "V": 0.04922976216056451,
-                        "W": 0.0055549964595624,
-                        "Y": 0.018309638240715305
+                        "A": 'float',
+                        "C": 'float',
+                        "D": 'float',
+                        "E": 'float',
+                        "F": 'float',
+                        "G": 'float',
+                        "H": 'float',
+                        "I": 'float',
+                        "K": 'float',
+                        "L": 'float',
+                        "M": 'float',
+                        "N": 'float',
+                        "P": 'float',
+                        "Q": 'float',
+                        "R": 'float',
+                        "S": 'float',
+                        "T": 'float',
+                        "V": 'float',
+                        "W": 'float',
+                        "Y": 'float'
                     },
                     "-4": {
-                        "A": 0.07033185822655355,
-                        "C": 0.00815433950665974,
-                        "D": 0.05523626641135624,
-                        "E": 0.07072896748871911,
-                        "F": 0.02357269592763545,
-                        "G": 0.06762009155272442,
-                        "H": 0.020659654696270346,
-                        "I": 0.0314115239657253,
-                        "K": 0.06563545188404772,
-                        "L": 0.06730639336845665,
-                        "M": 0.01756075182393735,
-                        "N": 0.041588582111406376,
-                        "P": 0.0722004476998942,
-                        "Q": 0.0419349194131124,
-                        "R": 0.06821575544597275,
-                        "S": 0.14167371580939117,
-                        "T": 0.05646204659959328,
-                        "V": 0.04719072396282405,
-                        "W": 0.0051170883005990184,
-                        "Y": 0.01699319383737197
+                        "A": 'float',
+                        "C": 'float',
+                        "D": 'float',
+                        "E": 'float',
+                        "F": 'float',
+                        "G": 'float',
+                        "H": 'float',
+                        "I": 'float',
+                        "K": 'float',
+                        "L": 'float',
+                        "M": 'float',
+                        "N": 'float',
+                        "P": 'float',
+                        "Q": 'float',
+                        "R": 'float',
+                        "S": 'float',
+                        "T": 'float',
+                        "V": 'float',
+                        "W": 'float',
+                        "Y": 'float'
                     },
                     "-3": {
-                        "A": 0.06457830713590838,
-                        "C": 0.007356494413724386,
-                        "D": 0.055628842462766476,
-                        "E": 0.06396360375748773,
-                        "F": 0.021507365107514158,
-                        "G": 0.06684309922926351,
-                        "H": 0.021838289492652117,
-                        "I": 0.029207476896491384,
-                        "K": 0.0662102630078216,
-                        "L": 0.0685956385072681,
-                        "M": 0.01690887611732312,
-                        "N": 0.0358595103588399,
-                        "P": 0.0698322984013179,
-                        "Q": 0.036587544006143405,
-                        "R": 0.11634304075084477,
-                        "S": 0.13710877257878948,
-                        "T": 0.05181913214400016,
-                        "V": 0.04165204706198078,
-                        "W": 0.004362762030914684,
-                        "Y": 0.01609652474997076
+                        "A": 'float',
+                        "C": 'float',
+                        "D": 'float',
+                        "E": 'float',
+                        "F": 'float',
+                        "G": 'float',
+                        "H": 'float',
+                        "I": 'float',
+                        "K": 'float',
+                        "L": 'float',
+                        "M": 'float',
+                        "N": 'float',
+                        "P": 'float',
+                        "Q": 'float',
+                        "R": 'float',
+                        "S": 'float',
+                        "T": 'float',
+                        "V": 'float',
+                        "W": 'float',
+                        "Y": 'float'
                     },
                     "-2": {
-                        "A": 0.07145881442032474,
-                        "C": 0.009142579451318304,
-                        "D": 0.05264961635437378,
-                        "E": 0.0616425998507667,
-                        "F": 0.022318809832715458,
-                        "G": 0.06268795825094223,
-                        "H": 0.019630615854813953,
-                        "I": 0.03286940454463445,
-                        "K": 0.04975108139742568,
-                        "L": 0.07009794455157932,
-                        "M": 0.017943354811685894,
-                        "N": 0.04351157011381079,
-                        "P": 0.07818337925475828,
-                        "Q": 0.039904947636882564,
-                        "R": 0.07356857070584812,
-                        "S": 0.15979205255623222,
-                        "T": 0.05939956716903708,
-                        "V": 0.04935397213526013,
-                        "W": 0.0045513435983357674,
-                        "Y": 0.01675837352024668
+                        "A": 'float',
+                        "C": 'float',
+                        "D": 'float',
+                        "E": 'float',
+                        "F": 'float',
+                        "G": 'float',
+                        "H": 'float',
+                        "I": 'float',
+                        "K": 'float',
+                        "L": 'float',
+                        "M": 'float',
+                        "N": 'float',
+                        "P": 'float',
+                        "Q": 'float',
+                        "R": 'float',
+                        "S": 'float',
+                        "T": 'float',
+                        "V": 'float',
+                        "W": 'float',
+                        "Y": 'float'
                     },
                     "-1": {
-                        "A": 0.0731170629146188,
-                        "C": 0.00906642151062902,
-                        "D": 0.06459462669462751,
-                        "E": 0.05766334744975163,
-                        "F": 0.02615934598461791,
-                        "G": 0.08251078224178152,
-                        "H": 0.02433518197667935,
-                        "I": 0.03359199833903158,
-                        "K": 0.0489686492210584,
-                        "L": 0.08039377281904964,
-                        "M": 0.019602509948131,
-                        "N": 0.04361039410827665,
-                        "P": 0.07836833425357512,
-                        "Q": 0.03539802950394888,
-                        "R": 0.06200616335334293,
-                        "S": 0.13748956228223588,
-                        "T": 0.052233467607035906,
-                        "V": 0.04796862292843602,
-                        "W": 0.0044153472756763325,
-                        "Y": 0.018490966670927884
+                        "A": 'float',
+                        "C": 'float',
+                        "D": 'float',
+                        "E": 'float',
+                        "F": 'float',
+                        "G": 'float',
+                        "H": 'float',
+                        "I": 'float',
+                        "K": 'float',
+                        "L": 'float',
+                        "M": 'float',
+                        "N": 'float',
+                        "P": 'float',
+                        "Q": 'float',
+                        "R": 'float',
+                        "S": 'float',
+                        "T": 'float',
+                        "V": 'float',
+                        "W": 'float',
+                        "Y": 'float'
                     },
                     "0": {
-                        "A": 0.0,
-                        "C": 0.0,
-                        "D": 0.0,
-                        "E": 0.0,
-                        "F": 0.0,
-                        "G": 0.0,
-                        "H": 0.0,
-                        "I": 0.0,
-                        "K": 0.0,
-                        "L": 0.0,
-                        "M": 0.0,
-                        "N": 0.0,
-                        "P": 0.0,
-                        "Q": 0.0,
-                        "R": 0.0,
-                        "S": 1.0,
-                        "T": 0.0,
-                        "V": 0.0,
-                        "W": 0.0,
-                        "Y": 0.0
+                        "A": 'float',
+                        "C": 'float',
+                        "D": 'float',
+                        "E": 'float',
+                        "F": 'float',
+                        "G": 'float',
+                        "H": 'float',
+                        "I": 'float',
+                        "K": 'float',
+                        "L": 'float',
+                        "M": 'float',
+                        "N": 'float',
+                        "P": 'float',
+                        "Q": 'float',
+                        "R": 'float',
+                        "S": 'float',
+                        "T": 'float',
+                        "V": 'float',
+                        "W": 'float',
+                        "Y": 'float'
                     },
                     "+1": {
-                        "A": 0.05490534202621828,
-                        "C": 0.007468918040456186,
-                        "D": 0.06766361037597543,
-                        "E": 0.0628375542058676,
-                        "F": 0.033640957015188974,
-                        "G": 0.061012483555777985,
-                        "H": 0.015058419487003738,
-                        "I": 0.0340534791939226,
-                        "K": 0.03329371307133189,
-                        "L": 0.08112724631925952,
-                        "M": 0.015056606202701613,
-                        "N": 0.03198905501595237,
-                        "P": 0.17596836181549652,
-                        "Q": 0.03636994988988831,
-                        "R": 0.04214888696076325,
-                        "S": 0.13044948597923245,
-                        "T": 0.048158111138008164,
-                        "V": 0.04633576041437173,
-                        "W": 0.005535050332239016,
-                        "Y": 0.015360331323307684
+                        "A": 'float',
+                        "C": 'float',
+                        "D": 'float',
+                        "E": 'float',
+                        "F": 'float',
+                        "G": 'float',
+                        "H": 'float',
+                        "I": 'float',
+                        "K": 'float',
+                        "L": 'float',
+                        "M": 'float',
+                        "N": 'float',
+                        "P": 'float',
+                        "Q": 'float',
+                        "R": 'float',
+                        "S": 'float',
+                        "T": 'float',
+                        "V": 'float',
+                        "W": 'float',
+                        "Y": 'float'
                     },
                     "+2": {
-                        "A": 0.0634096454031883,
-                        "C": 0.008140739874393796,
-                        "D": 0.07143614836654817,
-                        "E": 0.08419532335845639,
-                        "F": 0.02093527391019347,
-                        "G": 0.06940345666386515,
-                        "H": 0.018296945250600424,
-                        "I": 0.03424478068779687,
-                        "K": 0.0488217731925862,
-                        "L": 0.06897733485286558,
-                        "M": 0.012977675750314378,
-                        "N": 0.03836909583298201,
-                        "P": 0.08564051094725066,
-                        "Q": 0.03496374791358975,
-                        "R": 0.05228514620964649,
-                        "S": 0.1537900815161958,
-                        "T": 0.06087104738021217,
-                        "V": 0.04918443005301137,
-                        "W": 0.003611155687683538,
-                        "Y": 0.015325878921567294
+                        "A": 'float',
+                        "C": 'float',
+                        "D": 'float',
+                        "E": 'float',
+                        "F": 'float',
+                        "G": 'float',
+                        "H": 'float',
+                        "I": 'float',
+                        "K": 'float',
+                        "L": 'float',
+                        "M": 'float',
+                        "N": 'float',
+                        "P": 'float',
+                        "Q": 'float',
+                        "R": 'float',
+                        "S": 'float',
+                        "T": 'float',
+                        "V": 'float',
+                        "W": 'float',
+                        "Y": 'float'
                     },
                     "+3": {
-                        "A": 0.06517850423991202,
-                        "C": 0.007871467155528115,
-                        "D": 0.06987309729811572,
-                        "E": 0.09477311733490726,
-                        "F": 0.023396807350329247,
-                        "G": 0.07053675935269377,
-                        "H": 0.020493739182625835,
-                        "I": 0.02938336547379759,
-                        "K": 0.05711482894835857,
-                        "L": 0.06599448217586863,
-                        "M": 0.013650404226403052,
-                        "N": 0.04357956827514051,
-                        "P": 0.07645078610407707,
-                        "Q": 0.038047237869354676,
-                        "R": 0.05992813954310675,
-                        "S": 0.13845241624666468,
-                        "T": 0.05231234547417838,
-                        "V": 0.04398211739021243,
-                        "W": 0.004844189013129085,
-                        "Y": 0.01673117425571479
+                        "A": 'float',
+                        "C": 'float',
+                        "D": 'float',
+                        "E": 'float',
+                        "F": 'float',
+                        "G": 'float',
+                        "H": 'float',
+                        "I": 'float',
+                        "K": 'float',
+                        "L": 'float',
+                        "M": 'float',
+                        "N": 'float',
+                        "P": 'float',
+                        "Q": 'float',
+                        "R": 'float',
+                        "S": 'float',
+                        "T": 'float',
+                        "V": 'float',
+                        "W": 'float',
+                        "Y": 'float'
                     },
                     "+4": {
-                        "A": 0.06684763244001882,
-                        "C": 0.0078107221314069,
-                        "D": 0.062273622787906484,
-                        "E": 0.0776475537434801,
-                        "F": 0.02402239043456265,
-                        "G": 0.06404701483538552,
-                        "H": 0.019353183356588706,
-                        "I": 0.03690486875901542,
-                        "K": 0.05810306889301713,
-                        "L": 0.08147811683172088,
-                        "M": 0.015873490780809286,
-                        "N": 0.03940085460089159,
-                        "P": 0.07271723372600004,
-                        "Q": 0.03810979617777802,
-                        "R": 0.057757638233462166,
-                        "S": 0.13849412178561357,
-                        "T": 0.058000618329947025,
-                        "V": 0.049061126720466815,
-                        "W": 0.005087169109613943,
-                        "Y": 0.016912502685927373
+                        "A": 'float',
+                        "C": 'float',
+                        "D": 'float',
+                        "E": 'float',
+                        "F": 'float',
+                        "G": 'float',
+                        "H": 'float',
+                        "I": 'float',
+                        "K": 'float',
+                        "L": 'float',
+                        "M": 'float',
+                        "N": 'float',
+                        "P": 'float',
+                        "Q": 'float',
+                        "R": 'float',
+                        "S": 'float',
+                        "T": 'float',
+                        "V": 'float',
+                        "W": 'float',
+                        "Y": 'float'
                     },
                     "+5": {
-                        "A": 0.06909247840605057,
-                        "C": 0.008539662420861474,
-                        "D": 0.06308053430235247,
-                        "E": 0.07784157516380757,
-                        "F": 0.023870981195335143,
-                        "G": 0.06467259791961892,
-                        "H": 0.021081243296514597,
-                        "I": 0.03361285110850602,
-                        "K": 0.06112672046681191,
-                        "L": 0.07073984719453186,
-                        "M": 0.015500860856722434,
-                        "N": 0.04107179608530052,
-                        "P": 0.08279274795076208,
-                        "Q": 0.040810683145794405,
-                        "R": 0.06342505831975637,
-                        "S": 0.12201499404789427,
-                        "T": 0.056001472386853324,
-                        "V": 0.04863772483592044,
-                        "W": 0.0053972407252774555,
-                        "Y": 0.017940634885232704
+                        "A": 'float',
+                        "C": 'float',
+                        "D": 'float',
+                        "E": 'float',
+                        "F": 'float',
+                        "G": 'float',
+                        "H": 'float',
+                        "I": 'float',
+                        "K": 'float',
+                        "L": 'float',
+                        "M": 'float',
+                        "N": 'float',
+                        "P": 'float',
+                        "Q": 'float',
+                        "R": 'float',
+                        "S": 'float',
+                        "T": 'float',
+                        "V": 'float',
+                        "W": 'float',
+                        "Y": 'float'
                     },
                     "+6": {
-                        "A": 0.07049505381374488,
-                        "C": 0.008905945849890885,
-                        "D": 0.05860806857115917,
-                        "E": 0.0757463251527012,
-                        "F": 0.024692398984198134,
-                        "G": 0.06500170902045475,
-                        "H": 0.0204701664866982,
-                        "I": 0.0342221146340203,
-                        "K": 0.06500533558905901,
-                        "L": 0.07093477525701039,
-                        "M": 0.015467315097133108,
-                        "N": 0.039933053543565515,
-                        "P": 0.07486144241326381,
-                        "Q": 0.0406765001074371,
-                        "R": 0.06412861262898117,
-                        "S": 0.1234610882788396,
-                        "T": 0.057890914629668416,
-                        "V": 0.05067222982290559,
-                        "W": 0.005540490185145393,
-                        "Y": 0.017869916797449797
+                        "A": 'float',
+                        "C": 'float',
+                        "D": 'float',
+                        "E": 'float',
+                        "F": 'float',
+                        "G": 'float',
+                        "H": 'float',
+                        "I": 'float',
+                        "K": 'float',
+                        "L": 'float',
+                        "M": 'float',
+                        "N": 'float',
+                        "P": 'float',
+                        "Q": 'float',
+                        "R": 'float',
+                        "S": 'float',
+                        "T": 'float',
+                        "V": 'float',
+                        "W": 'float',
+                        "Y": 'float'
                     },
                     "+7": {
-                        "A": 0.07010157112018357,
-                        "C": 0.009086367637952402,
-                        "D": 0.05911125496499908,
-                        "E": 0.07611895507678805,
-                        "F": 0.024230918129307118,
-                        "G": 0.06463542559142534,
-                        "H": 0.021037724473263575,
-                        "I": 0.03371983488233145,
-                        "K": 0.06668171692637431,
-                        "L": 0.0711151970450719,
-                        "M": 0.01556795237590109,
-                        "N": 0.04083697576817523,
-                        "P": 0.0747834711882724,
-                        "Q": 0.04070732594057323,
-                        "R": 0.0660271212933069,
-                        "S": 0.1198417728117965,
-                        "T": 0.05502501879015858,
-                        "V": 0.04887889164810317,
-                        "W": 0.005742671384832421,
-                        "Y": 0.018506379587495955
+                        "A": 'float',
+                        "C": 'float',
+                        "D": 'float',
+                        "E": 'float',
+                        "F": 'float',
+                        "G": 'float',
+                        "H": 'float',
+                        "I": 'float',
+                        "K": 'float',
+                        "L": 'float',
+                        "M": 'float',
+                        "N": 'float',
+                        "P": 'float',
+                        "Q": 'float',
+                        "R": 'float',
+                        "S": 'float',
+                        "T": 'float',
+                        "V": 'float',
+                        "W": 'float',
+                        "Y": 'float'
                     },
                     "+8": {
-                        "A": 0.06963918362314149,
-                        "C": 0.009273135921071362,
-                        "D": 0.05708309647307137,
-                        "E": 0.07435462945081965,
-                        "F": 0.024506537343230238,
-                        "G": 0.06495728355505268,
-                        "H": 0.020883595307582884,
-                        "I": 0.03453218624968381,
-                        "K": 0.06744873618617353,
-                        "L": 0.07112426346658253,
-                        "M": 0.015429236126788466,
-                        "N": 0.0404099473150246,
-                        "P": 0.07332196404075901,
-                        "Q": 0.04113526103587492,
-                        "R": 0.06514133191171843,
-                        "S": 0.11952263477462235,
-                        "T": 0.056122962435095756,
-                        "V": 0.049968675513680776,
-                        "W": 0.005957545574634329,
-                        "Y": 0.01797146071836884
+                        "A": 'float',
+                        "C": 'float',
+                        "D": 'float',
+                        "E": 'float',
+                        "F": 'float',
+                        "G": 'float',
+                        "H": 'float',
+                        "I": 'float',
+                        "K": 'float',
+                        "L": 'float',
+                        "M": 'float',
+                        "N": 'float',
+                        "P": 'float',
+                        "Q": 'float',
+                        "R": 'float',
+                        "S": 'float',
+                        "T": 'float',
+                        "V": 'float',
+                        "W": 'float',
+                        "Y": 'float'
                     },
                     "+9": {
-                        "A": 0.07011245082599633,
-                        "C": 0.009456277635586067,
-                        "D": 0.05532058413140509,
-                        "E": 0.07392669435551796,
-                        "F": 0.02466247979321306,
-                        "G": 0.0640742140999174,
-                        "H": 0.021025031483148694,
-                        "I": 0.033952841915154616,
-                        "K": 0.06951769357489906,
-                        "L": 0.07035633756463225,
-                        "M": 0.015455528749169289,
-                        "N": 0.0404661591283905,
-                        "P": 0.07382333715029679,
-                        "Q": 0.041214138903017394,
-                        "R": 0.06754030704343088,
-                        "S": 0.11660868690110619,
-                        "T": 0.05527162545524769,
-                        "V": 0.048586952875460915,
-                        "W": 0.0061334341519405314,
-                        "Y": 0.018229853731421768
+                        "A": 'float',
+                        "C": 'float',
+                        "D": 'float',
+                        "E": 'float',
+                        "F": 'float',
+                        "G": 'float',
+                        "H": 'float',
+                        "I": 'float',
+                        "K": 'float',
+                        "L": 'float',
+                        "M": 'float',
+                        "N": 'float',
+                        "P": 'float',
+                        "Q": 'float',
+                        "R": 'float',
+                        "S": 'float',
+                        "T": 'float',
+                        "V": 'float',
+                        "W": 'float',
+                        "Y": 'float'
                     },
                     "+10": {
-                        "A": 0.06999730727281134,
-                        "C": 0.009783575452119775,
-                        "D": 0.055673267928168554,
-                        "E": 0.07366104820525653,
-                        "F": 0.02486556763505115,
-                        "G": 0.06447132336208296,
-                        "H": 0.020946153616006224,
-                        "I": 0.03400089394916095,
-                        "K": 0.06946692161443954,
-                        "L": 0.06969358215220527,
-                        "M": 0.015604218061943604,
-                        "N": 0.04037005506037784,
-                        "P": 0.07229292519930261,
-                        "Q": 0.04129120348585774,
-                        "R": 0.06610781244475149,
-                        "S": 0.11597494403751323,
-                        "T": 0.05529157158257107,
-                        "V": 0.04924154850852833,
-                        "W": 0.005951199079576888,
-                        "Y": 0.018191774761077126
+                        "A": 'float',
+                        "C": 'float',
+                        "D": 'float',
+                        "E": 'float',
+                        "F": 'float',
+                        "G": 'float',
+                        "H": 'float',
+                        "I": 'float',
+                        "K": 'float',
+                        "L": 'float',
+                        "M": 'float',
+                        "N": 'float',
+                        "P": 'float',
+                        "Q": 'float',
+                        "R": 'float',
+                        "S": 'float',
+                        "T": 'float',
+                        "V": 'float',
+                        "W": 'float',
+                        "Y": 'float'
                     }
                 }
             }
@@ -1276,9 +1057,9 @@ async def get_positional_frequency_matrix(
     Get the positional frequency matrix of a Post-Translational Modification (PTM),
     given the PTM, amino acid, and the matrix table type.
 
-    If nothing is provided, all available natural log matrices for all PTMs on all residues will be supplied.
+    If nothing is provided, all available positional matrices for all PTMs on all residues will be supplied.
 
-    If only the PTM is provided, all available natural log matrices for that PTM on all residues will be supplied.
+    If only the PTM is provided, all available positional matrices for that PTM on all residues will be supplied.
 
     If the table is not provided or is any value other than 'freq' or 'log-e', it will default to 'log-e' and subsequently return the natural log matrix for the specified PTM on the specified residue.
 
@@ -1287,45 +1068,14 @@ async def get_positional_frequency_matrix(
     """
     
     if not ptm:
-        ptms = [i.split("\\")[-1] for i in glob.glob(r'data\tables\*')]
-        response = {ptm: [] for ptm in ptms}
-        for ptm in ptms:
-            # Pick out all AAs in that folder
-            AAs = [i.split("\\")[-1].split('.')[0] for i in glob.glob(f'data/tables/{ptm}/log-e/*.json')]
-            for aa in AAs:
-                with open(f"data/tables/{ptm}/log-e/{aa}.json", 'r', encoding='utf-8') as f:
-                    response[ptm].append(
-                        {
-                            aa: json.load(f)
-                        }
-                    )
-        return response
-    elif not residue:
-        response = {ptm: []}
-        AAs = [i.split("\\")[-1].split('.')[0] for i in glob.glob(f'data/tables/{ptm}/log-e/*.json')]
-        for aa in AAs:
-            with open(f"data/tables/{ptm}/log-e/{aa}.json", 'r', encoding='utf-8') as f:
-                response[ptm].append(
-                    {
-                        aa: json.load(f)
-                    }
-                )
-    elif table not in ['log-e', 'log2', 'freq']:
-        if not os.path.exists(f'./data/tables/{ptm}/log-e/{residue}.json'):
-            return {'message': f"Could not find matrix of positional frequency of {ptm} for {residue}."}
-        return FileResponse(
-            './data/tables/{selection}/log-e/{residue}.json'.format(
-                selection=ptm, residue=residue
-            )
-        )
-    else:
-        if not os.path.exists(f'./data/tables/{ptm}/{table}/{residue}.json'):
-            return {'message': f"Could not find the {table}-based matrix of positional frequency of {ptm} for {residue}."}
-        return FileResponse(
-            './data/tables/{selection}/{table}/{residue}.json'.format(
-                selection=ptm, residue=residue, table=table
-            )
-        )
+        return {'message': "Please provide a Post Translational Modification as value."}
+    if not residue:
+        return {'message': "Please provide a residue for which you want the positional matrix."}
+    if table not in ['log-e', 'freq']:
+        table = 'log-e'
+    if not os.path.exists(f'./data/tables/{ptm}/{table}/{residue}.json'):
+        return {'message': f"Could not find the positional matrix of {ptm} for {residue}."}
+    return [i for i in PTM_TABLES.get(ptm) if i.get(residue) is not None][0].get(residue).get(table)
 
 @app.get('/ptmkb/api/calculate-propensity', responses={
     200: {
@@ -1333,8 +1083,8 @@ async def get_positional_frequency_matrix(
         "content": {
             "application/json": {
                 "example": {
-                    "logSum": -60.2164362825967,
-                    "logLogProduct": -21.3580873581939
+                    "logSum": 'float',
+                    "logLogProduct": 'float'
                 }
             }
         },
@@ -1350,9 +1100,17 @@ async def calculate_propensity(
     **Returns:**
     - The Log Sum and Log Log Product scores. (type: *JSON*)
     """
-    if ptm is None or subsequence is None:
+    if ptm == '' and subsequence == '':
         return {
             'message': "Please provide both the subsequence and the PTM to use for Propensity calculation."
+        }
+    if ptm == '':
+        return {
+            'message': "Please provide the PTM to use for Propensity calculation."
+        }
+    if subsequence == '':
+        return {
+            'message': "Please provide a subsequence to use for Propensity calculation."
         }
     if not isinstance(ptm, str):
         return {

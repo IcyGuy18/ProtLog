@@ -53,3 +53,10 @@ def search_identifier(_id: str) -> tuple[bool, dict[str, str]]:
     )
     found = True if results else False
     return (found, results)
+
+def get_all_proteins() -> list[str]:
+    collection = list(dbptm_data.find({}, {'_id': 0}))
+    set1 = set(i.get('Protein Identifier', '') for i in collection)
+    set2 = set(i.get('Accession Number', '') for i in collection)
+    set1.update(set2)
+    return list(set1)

@@ -33,48 +33,20 @@
         </ul>
     </nav>
 
-    <div class="container mt-5">
-        <h1>Integration</h1>
-        <p>This portion covers how to programmatically access information for your work.</p>
-    </div>
     <div id="markdown">
-
-        <p>For starters, you can fetch the list of available PTMs by calling this URL with a GET request:</p>
-        <pre><code style="font-weight: 1000;"><span class="hljs-regexp">/ptmkb/</span>api<span class="hljs-regexp">/ptms</span>
-</code></pre>
-        <h2 id="proteins">Proteins</h2>
-        <p>To gather information on a protein whose PTMs you wish to identify, you can make a GET request to this URL,
-            with either the <code>upid</code> (UniProt ID) or the <code>upac</code> (UniProt Accession Number) required.
-            Note that if both are provided, <code>upid</code> will take preference:</p>
-        <pre><code style="font-weight: 1000;"><span class="hljs-regexp">/ptmkb/</span>api<span class="hljs-regexp">/proteins</span>
-</code></pre>
-        <p>For instance, if you wish to gather information on <code>O14746</code>, you must invoke a GET request to the
-            URL like so:</p>
-        <pre><code style="font-weight: 1000;"><span class="hljs-regexp">/ptmkb/</span>api<span class="hljs-regexp">/proteins?upac=O14746</span>
-</code></pre>
-        <h2 id="fetching-ptm-table">Fetching PTM Table</h2>
-        <p>Besides the availability to download the tables through the website, you can also programmatically fetch the
-            table for your work.</p>
-        <p>The values calculated for a protein sequence are log-odd frequencies over the entire available sequences in
-            dbPTM. If you wish to use a table for your purposes, that can also be fetched using a GET request.</p>
-        <p>For fetching a PTM&#39;s table, make a request at the following URL:</p>
-        <pre><code style="font-weight: 1000;">/ptmkb/api/<span class="hljs-class"><span class="hljs-keyword">data</span></span>
-</code></pre>
-        <p>This will fetch all tables available in our database.
-            The tables are kept in JSON format for usability and storage.</p>
-        <p>For a specific table, pass the name of the PTM to <code>selection</code>. As an example, for Phosphorylation,
-            the URL would be:</p>
-        <pre><code style="font-weight: 1000;">/ptmkb/api/<span class="hljs-class"><span class="hljs-keyword">data</span>?selection=<span class="hljs-type">Phosphorylation</span></span>
-</code></pre>
-        <p>For C-linked Glycosylation, it would be:</p>
-        <pre><code style="font-weight: 1000;">/ptmkb/api/<span class="hljs-class"><span class="hljs-keyword">data</span>?selection=<span class="hljs-type">C</span>-linked%20Glycosylation</span>
-</code></pre>
-        <p>A list of all possible selections are listed below for your convenience. Please keep in mind that the PTM
-            names are <strong>case-sensitive</strong>! The list will be updated with more PTM types as they are readily
-            available.</p>
-
-            <h3>API Documentation</h3>
-            <div id="swagger-ui"></div>
+        <h1 style="text-align: center; font-size: 28px; color: #444; font-weight: bold;">Integration</h1>
+        <p style="text-align: center;"><strong>This page covers how to programmatically access information for your work.</strong></p>
+        
+        <hr>
+        <h2 style="text-align: center; font-size: 24px; color: #444; font-weight: bold;">Tutorial Script</h2>
+        <p style="text-align: justify;">
+            We offer a Python script for getting started with using our API calls in your system. You can download the script by clicking on the button below:
+        </p>
+        <a href="/download_script" class="additional-button" download="ptmkb_get_started.py" style="margin-top:-20px;">Download Script</a>
+        
+        <hr>
+        <h3 style="text-align: center; font-size: 20px; color: #444; font-weight: bold;">API Documentation</h3>
+        <div id="swagger-ui"></div>
     </div>
 
     <div class="main-content"></div>

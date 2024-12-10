@@ -2,9 +2,10 @@
 
 var ptmSites = null;
 var currentSequence = null;
-var pdbDataGlobal = '';
 
 function getValue(obj, key, defaultValue = null) {
+    if (obj === undefined || obj === null)
+        return null;
     return key in obj ? obj[key] : defaultValue;
 }
 
@@ -656,7 +657,7 @@ async function fetchData(ptm, char, table) {
 async function preparePTMDetails(localizedSequence, localizedSequenceInfo, ptmsData) {
     // Prepare to display the localized sequence with bolded PTMs
     const detailsPanel = document.getElementById("detailsPanel");
-    detailsPanel.innerHTML = "";  // Clear any previous content
+    detailsPanel.innerHTML = ``;
 
     // Create a container to hold the localized sequence with bolded PTMs
     const sequenceDisplay = document.createElement('div');
@@ -754,11 +755,6 @@ async function preparePTMDetails(localizedSequence, localizedSequenceInfo, ptmsD
     const positionDiv = document.createElement('div');
     positionDiv.innerHTML = `<h5>Position - </h5>`
     positionDiv.style.padding = '20px';
-
-    // Append the sequence to the details panel
-    detailsPanel.appendChild(sequenceDisplayTitle);
-    detailsPanel.appendChild(sequenceDisplay);
-    detailsPanel.appendChild(positionDiv);
 
     // Create a table to display the PTM details as key-value pairs
     const ptmInfo = document.createElement('div');
@@ -938,7 +934,13 @@ async function preparePTMDetails(localizedSequence, localizedSequenceInfo, ptmsD
         // tableContainer.appendChild(ptmTable);
     });
     
+    
+    detailsPanel.innerHTML = '';
+    // Append the sequence to the details panel
     // Append the table container to the details panel
+    detailsPanel.appendChild(sequenceDisplayTitle);
+    detailsPanel.appendChild(sequenceDisplay);
+    detailsPanel.appendChild(positionDiv);
     detailsPanel.appendChild(ptmInfo);
 
     // Show the details panel with styles applied
@@ -1553,7 +1555,7 @@ async function displayPDBStructures(uniprotAC, alphafoldPdbData, ptms) {
         const downloadButton = document.createElement('button');
         downloadButton.setAttribute('id', 'afPdbDownload');
         downloadButton.classList.add('additional-button');
-        downloadButton.textContent = 'Download DSSP/Shrake-Rupley calculation';
+        downloadButton.textContent = 'Download DSSP/Shrake-Rupley calculations';
         downloadButton.addEventListener('click', () => {
             var jsonString = JSON.stringify(afCalculations, null, 2);
             var blob = new Blob([jsonString], { type: 'application/json' });
@@ -1659,7 +1661,7 @@ async function displayPDBStructures(uniprotAC, alphafoldPdbData, ptms) {
                             if (indices.includes(atom.resi)) {
                                 // Set up the label to include everything
                                 // Gather all PTMs
-                                label += '('
+                                label += ' ('
                                 let uniquePtms = new Set();
                                 ptms.forEach(ptm => {
                                     if (ptm[0] === atom.resi) {
@@ -1677,7 +1679,7 @@ async function displayPDBStructures(uniprotAC, alphafoldPdbData, ptms) {
                             // Use DSSP and Shrake-Rupley values
                             const idx = (atom.resi - 1);
                             try{
-                                label += ` --- SASA: ${afCalculations['SASA'][idx].toFixed(3)} - DSSP: ${afCalculations['simplified'][idx]}`;
+                                label += ` --- SASA: ${afCalculations['SASA'][idx].toFixed(3)}Å² - DSSP: ${afCalculations['simplified'][idx]}`;
                             } catch (e) {}
                             if (afCalculations['detailed'][idx] !== ' ') {
                                 label += ` (${afCalculations['detailed'][idx]})`;
@@ -1747,7 +1749,10 @@ async function displayPDBStructures(uniprotAC, alphafoldPdbData, ptms) {
         encodeURI(`https://search.rcsb.org/rcsbsearch/v2/query?json=${JSON.stringify(rcsbJson)}`)
     )
     .then((res) => {
-        return res.json();
+        if (res.status === 200) {
+            return res.json();
+        }
+        return null;
     }).catch(error => {
         console.error(error);
     });
@@ -1779,7 +1784,7 @@ async function displayPDBStructures(uniprotAC, alphafoldPdbData, ptms) {
             const downloadButton = document.createElement('button');
             downloadButton.setAttribute('id', 'rcsbPdbDownload');
             downloadButton.classList.add('additional-button');
-            downloadButton.textContent = 'Download DSSP/Shrake-Rupley calculation';
+            downloadButton.textContent = 'Download DSSP/Shrake-Rupley calculations';
             downloadButton.addEventListener('click', () => {
                 var jsonString = JSON.stringify(rcsbCalculations, null, 2);
                 var blob = new Blob([jsonString], { type: 'application/json' });
@@ -1907,7 +1912,7 @@ async function displayPDBStructures(uniprotAC, alphafoldPdbData, ptms) {
                                     });
                                     idx = idx.indexOf(currRes.resi);
                                     try{
-                                        label += ` --- SASA: ${rcsbCalculations['SASA'][idx].toFixed(3)} - DSSP: ${rcsbCalculations['simplified'][idx]}`;
+                                        label += ` --- SASA: ${rcsbCalculations['SASA'][idx].toFixed(3)}Å² - DSSP: ${rcsbCalculations['simplified'][idx]}`;
                                     } catch (e) {}
                                     if (rcsbCalculations['detailed'][idx] !== ' ') {
                                         label += ` (${rcsbCalculations['detailed'][idx]})`;
@@ -2011,7 +2016,7 @@ async function displayPDBStructures(uniprotAC, alphafoldPdbData, ptms) {
                 const downloadButton = document.createElement('button');
                 downloadButton.setAttribute('id', 'afPdbDownload');
                 downloadButton.classList.add('additional-button');
-                downloadButton.textContent = 'Download DSSP/Shrake-Rupley calculation';
+                downloadButton.textContent = 'Download DSSP/Shrake-Rupley calculations';
                 downloadButton.addEventListener('click', () => {
                     var jsonString = JSON.stringify(rcsbCalculations, null, 2);
                     var blob = new Blob([jsonString], { type: 'application/json' });
@@ -2140,7 +2145,7 @@ async function displayPDBStructures(uniprotAC, alphafoldPdbData, ptms) {
                                         });
                                         idx = idx.indexOf(currRes.resi);
                                         try{
-                                            label += ` --- SASA: ${rcsbCalculations['SASA'][idx].toFixed(3)} - DSSP: ${rcsbCalculations['simplified'][idx]}`;
+                                            label += ` --- SASA: ${rcsbCalculations['SASA'][idx].toFixed(3)}Å² - DSSP: ${rcsbCalculations['simplified'][idx]}`;
                                         } catch (e) {}
                                         if (rcsbCalculations['detailed'][idx] !== ' ') {
                                             label += ` (${rcsbCalculations['detailed'][idx]})`;
@@ -2654,7 +2659,7 @@ async function exampleSearch(element) {
 }
 
 async function search() {
-    const id = document.getElementById('form_value').value;
+    const id = document.getElementById('form_value').value.trim();
     if (id) {
         if (currentJobAbortController) {
             currentJobAbortController.abort();
