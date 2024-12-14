@@ -776,7 +776,7 @@ async function preparePTMDetails(localizedSequence, localizedSequenceInfo, ptmsD
 
         return text.replace(pubMedRegex, (match, id) => {
             const url = `https://www.ncbi.nlm.nih.gov/pubmed/?term=${id}`; // Construct the URL
-            return `<a href="${url}" target="_blank" rel="noopener noreferrer">${match}</a>`; // Create the link
+            return `<a href="${url}" target="_blank" rel="noopener noreferrer">PMID:${match}</a>&nbsp`; // Create the link
         });
     }
 
@@ -1426,7 +1426,7 @@ function generatePTMHtmlTable() {
 
     // Create the first header cell for PTM Type
     const th = document.createElement('th');
-    th.textContent = 'PTM Type';
+    // th.textContent = 'PTM Type';
     th.style.padding = '10px';
     th.style.textAlign = 'center';
     th.style.border = '1px solid #ddd';
@@ -2641,16 +2641,6 @@ async function fetchOptions() {
     });
 }
 
-// Function's used to add hyperlinks
-function convertPubMedReferences(text) {
-    const pubMedRegex = /PubMed:(\d+)/g; // Regex to match PubMed references
-
-    return text.replace(pubMedRegex, (match, id) => {
-        const url = `https://www.ncbi.nlm.nih.gov/pubmed/?term=${id}`; // Construct the URL
-        return `<a href="${url}" target="_blank" rel="noopener noreferrer">${match}</a>`; // Create the link
-    });
-}
-
 async function exampleSearch(element) {
     document.getElementById('form_value').value = element.textContent;
     if (document.getElementById('form_submit').disabled === false) {
@@ -2734,6 +2724,14 @@ async function search() {
                                     keyCell.className = 'key';
                                     // Special case #1
                                     if (key === 'proteinFunction' || key === 'subcellularLocalizations') {
+                                        function convertPubMedReferences(text) {
+                                            const pubMedRegex = /PubMed:(\d+)/g; // Regex to match PubMed references
+                                        
+                                            return text.replace(pubMedRegex, (match, id) => {
+                                                const url = `https://www.ncbi.nlm.nih.gov/pubmed/?term=${id}`; // Construct the URL
+                                                return `<a href="${url}" target="_blank" rel="noopener noreferrer">${match}</a>`; // Create the link
+                                            });
+                                        }
                                         valueCell.innerHTML = convertPubMedReferences(value);
                                     } else if (key === 'uniProtID' || key === 'uniProtAC') {
                                         valueCell.innerHTML = `<a href="https://www.uniprot.org/uniprotkb/${value}">${value}</a>`;

@@ -80,7 +80,7 @@ def get_protein_details(upid: str = None, upac: str = None):
 
 # Call the available-ptms URL
 def get_available_ptms():
-    return request("available-ptms", "GET")
+    return request("get-available-ptms", "GET")
 
 # Call the get-positional-frequency-matrix URL
 def get_positional_frequency_matrix(selection: str, residue: str, table: str):

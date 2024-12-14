@@ -1,16 +1,18 @@
-from fastapi import FastAPI, Request, Body, Query
+from fastapi import FastAPI, Request, Body, Query, Depends
+from fastapi.security import OAuth2PasswordBearer
 from fastapi.templating import Jinja2Templates
+from fastapi.middleware.cors import CORSMiddleware
 from starlette.responses import Response, FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
-from starlette.middleware.base import BaseHTTPMiddleware
-import requests
+from fastapi.exceptions import HTTPException
 import glob
 import pandas as pd
 import matplotlib.pyplot as plt
 import os
-import traceback
 import json
 from typing import Annotated
+# from jose import jwt, JWTError
+from datetime import datetime, timedelta
 
 #### Comment whichever you want to use for the time being
 #### Only use one at a time though
@@ -25,7 +27,9 @@ from mdtraj_calculations import (
     get_solvent_accessible_surface_area,
     get_protein_sequence
 )
-from constants import PTM_TABLES, RESID_DATABASE
+from constants import PTM_TABLES, RESID_DATABASE, USERS
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 app = FastAPI(
     docs_url=None,
@@ -35,6 +39,19 @@ app = FastAPI(
     swagger_ui_oauth2_redirect_url=None,
     redirect_slashes=False,
 )
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+SECRET_KEY = "your_secret_key"  
+ALGORITHM = "HS256" 
+ACCESS_TOKEN_EXPIRE_MINUTES = 30
+
 templates = Jinja2Templates(directory='templates/')
 app.mount('/static', StaticFiles(directory="static"), name="static")
 
@@ -50,6 +67,36 @@ def sort_ids(strings: list[str], substring: str):
         else:
             return (1, 0)
     return sorted(strings, key=similarity_score)
+
+######## TOKEN STUFF ########
+
+# def get_current_user(token: str = Depends(oauth2_scheme)): 
+#     try: 
+#         # Decode the JWT token and extract the username 
+#         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM]) 
+#         username: str = payload.get("sub") 
+#         if username is None: 
+#             raise credentials_exception 
+#     except JWTError: 
+#         raise HTTPException( 
+#             status_code=401, 
+#             detail="Could not validate credentials", 
+#             headers={"WWW-Authenticate": "Bearer"}, 
+#         )  
+#     return {
+#         'username': username,
+#         'password': None
+#     }
+
+# def create_access_token(data: dict, expires_delta: timedelta = None): 
+#     to_encode = data.copy() 
+#     if expires_delta: 
+#         expire = datetime.utcnow() + expires_delta 
+#     else: 
+#         expire = datetime.utcnow() + timedelta(minutes=15) 
+#     to_encode.update({"exp": expire}) 
+#     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM) 
+#     return encoded_jwt
 
 ######## PAGES ########
 
@@ -1066,7 +1113,7 @@ async def get_positional_frequency_matrix(
     **Returns:**
     - The Positional Frequency Matrix of the Post-Translational Modification for the specified amino acid. (type: *JSON*)
     """
-    
+    residue = residue.upper() # Input validation.
     if not ptm:
         return {'message': "Please provide a Post Translational Modification as value."}
     if not residue:
@@ -1075,7 +1122,7 @@ async def get_positional_frequency_matrix(
         table = 'log-e'
     if not os.path.exists(f'./data/tables/{ptm}/{table}/{residue}.json'):
         return {'message': f"Could not find the positional matrix of {ptm} for {residue}."}
-    return [i for i in PTM_TABLES.get(ptm) if i.get(residue) is not None][0].get(residue).get(table)
+    return [i for i in PTM_TABLES.get(ptm) if i.get(residue, None) is not None][0].get(residue).get(table)
 
 @app.get('/ptmkb/api/calculate-propensity', responses={
     200: {
@@ -1100,6 +1147,7 @@ async def calculate_propensity(
     **Returns:**
     - The Log Sum and Log Log Product scores. (type: *JSON*)
     """
+    print("HERE", ptm, subsequence)
     if ptm == '' and subsequence == '':
         return {
             'message': "Please provide both the subsequence and the PTM to use for Propensity calculation."

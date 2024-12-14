@@ -3,7 +3,7 @@ var suggestions = null;
 document.addEventListener("DOMContentLoaded", async () => {
     console.log("Loaded DOM content.");
 
-    const res = await fetch(`/ptmkb/api/available-ptms`);
+    const res = await fetch(`/ptmkb/api/get-available-ptms`);
     const data = await res.json();
     suggestions = data['ptms'];
     // Set up an autocomplete function
@@ -83,14 +83,13 @@ document.addEventListener("DOMContentLoaded", async () => {
 async function calculate() {
     const AA = "A C D E F G H I K L M N P Q R S T V W Y".split(' ');
     AA.push('-');
-    console.log(AA);
     document.getElementById('messageDiv').innerHTML = "";
     document.getElementById('vectorInfo').style.display = 'none';
     document.getElementById('tableInfo').style.display = 'none';
 
-    console.log("Work your magic here.");
-    const subsequence = document.getElementById('sequence_value').value;
+    const subsequence = document.getElementById('sequence_value').value.toUpperCase();
     const ptm = document.getElementById('ptm_value').value;
+    console.log(ptm, subsequence);
 
     var validAA = new Boolean(true);
     subsequence.split('').forEach(aa => {
@@ -121,7 +120,7 @@ async function calculate() {
                     const residue = subsequence[Math.floor(subsequence.length / 2)];
                     const data = await fetch(
                         encodeURI(
-                            `/ptmkb/api/get-positional-frequency-matrix?selection=${ptm}&residue=${residue}&table=log-e`
+                            `/ptmkb/api/get-positional-frequency-matrix?ptm=${encodeURIComponent(ptm)}&residue=${encodeURIComponent(residue)}&table=log-e`
                         )
                     ).then(res => {
                         return res.json();
