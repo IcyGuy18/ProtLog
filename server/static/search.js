@@ -2471,7 +2471,7 @@ function colorPTMs(checkbox) {
                 return label.children[0].getAttribute('value');
         })));
         allOtherPTMs = allOtherPTMs.filter(item => item != ptmType);
-        console.log(allOtherPTMs, typeof(allOtherPTMs));
+        // console.log(allOtherPTMs, typeof(allOtherPTMs));
         // Check if the span has the corresponding PTM type
         if (ptmsForThisChar.includes(ptmType)) {
             // If unchecked, we need to check if all associated PTM checkboxes are unchecked
