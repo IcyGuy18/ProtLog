@@ -460,12 +460,62 @@ function generateHtmlForJPred(data, acc, ptms) {
     predictionSequencesBox.setAttribute('style', `background-color: #f4f4f4; padding: 15px; border-radius: 5px; font-family: monospace; flex: 2; font-size: ${fontSize}; white-space: nowrap; max-height: 400px; overflow-y: hidden;`);
     predictionScrollContainer.appendChild(predictionSequencesBox);
 
+    const jpredKeyMapping = {
+        'Pos': "The position of the residue in the protein sequence",
+        'OrigSeq': "The protein sequence",
+        'Jnet': "Final secondary structure prediction for protein sequence",
+        'jhmm': "Jnet hmm profile prediction",
+        'jpssm': "Jnet PSIBLAST pssm profile prediction",
+        'Lupas 14': "Lupas Coil prediction of window size 14 (- = < 50% probability, c = b/w 50% and 90% probability, C = > 90% probability)",
+        'Lupas 21': "Lupas Coil prediction of window size 21 (- = < 50% probability, c = b/w 50% and 90% probability, C = > 90% probability)",
+        'Lupas 28': "Lupas Coil prediction of window size 28 (- = < 50% probability, c = b/w 50% and 90% probability, C = > 90% probability)",
+        'Jnet_25': "Jnet bruial prediction (< 25% solvent accessibility)",
+        'Jnet_5': "Jnet bruial prediction (< 5% exposure)",
+        'Jnet_0': "Jnet bruial prediction (0% exposure)",
+        'Jnet Rel': "Jnet reliability of prediction accuracy, ranges from 0 to 9, bigger is better",
+    }
+
     // Append labels and sequences for the prediction data
     Object.keys(data.prediction).forEach(key => {
         // Create label div
         const predictionLabelDiv = document.createElement('div');
         predictionLabelDiv.setAttribute('style', `font-weight: bold; margin-bottom: 10px; white-space: nowrap; color: ${key.includes('QUERY') ? 'red' : 'black'};`);
+        // Create the key tooltips over here
         predictionLabelDiv.textContent = key;
+        predictionLabelDiv.addEventListener('mouseenter', (e) => {
+            const tooltip = document.createElement("div");
+            tooltip.classList.add("custom-tooltip");
+            try {
+                tooltip.textContent = jpredKeyMapping[key];  // Display all PTMs for this position
+            } catch (e) {
+                tooltip.textContent = '';
+            }
+
+            // Append the tooltip to the body
+            document.body.appendChild(tooltip);
+
+            // Position the tooltip near the character
+            const rect = e.target.getBoundingClientRect(); // Get the character's position
+            tooltip.style.position = "absolute";
+            tooltip.style.left = `${rect.left + window.scrollX}px`; // Adjust for any page scroll
+            tooltip.style.top = `${rect.top + window.scrollY - 30}px`; // Position above the character
+            tooltip.style.zIndex = 10; // Ensure it's above other content
+
+            // Add the 'visible' class to the tooltip to show it
+            setTimeout(() => {
+                tooltip.classList.add("visible");
+            }, 10); // Small delay for the transition to kick in
+
+            // Store tooltip for later removal
+            e.target.tooltip = tooltip;
+        });
+        predictionLabelDiv.addEventListener('mouseleave', (e) => {
+            const tooltip = e.target.tooltip;
+            if (tooltip) {
+                tooltip.remove(); // Remove the tooltip when the mouse leaves
+                delete e.target.tooltip; // Clean up the tooltip reference
+            }
+        });
         predictionLabelsBox.appendChild(predictionLabelDiv);
 
         // Create sequence div
@@ -646,7 +696,7 @@ function generateHtmlForJPred(data, acc, ptms) {
 async function fetchData(ptm, char, table) {
     try {
         return await fetch(
-            `/ptmkb/api/get-positional-frequency-matrix?selection=${encodeURIComponent(ptm)}&residue=${encodeURIComponent(char)}&table=${encodeURIComponent(table)}`
+            `/ptmkb/api/get-positional-frequency-matrix?ptm=${encodeURIComponent(ptm)}&residue=${encodeURIComponent(char)}&table=${encodeURIComponent(table)}`
         )
         .then(res => res.json());
     } catch (err) {
@@ -925,6 +975,8 @@ async function preparePTMDetails(localizedSequence, localizedSequenceInfo, ptmsD
             scoreRow.appendChild(scoreKeyCell);
             scoreRow.appendChild(scoreValueCell);
             ptmTable.appendChild(scoreRow);
+        } else {
+            console.log(logTableResp);
         }
 
         ptmInfo.appendChild(ptmTable);
@@ -2403,6 +2455,7 @@ function updateStats(ptmData) {
 
 // Function to handle PTM highlighting (this is where you can remove highlights if unchecked)
 function colorPTMs(checkbox) {
+    console.log("Calling this function!");
     const ptmType = checkbox.value;  // PTM type from the checkbox value
     const isChecked = checkbox.checked;
 
@@ -2411,8 +2464,14 @@ function colorPTMs(checkbox) {
 
     highlightedSpans.forEach(span => {
         // Get the list of PTMs applied to the current span (separated by semicolons)
-        const ptmsForThisChar = span.getAttribute('data-ptm') ? span.getAttribute('data-ptm').split(';') : [];
-
+        var ptmsForThisChar = span.getAttribute('data-ptm') ? span.getAttribute('data-ptm').split(';') : [];
+        var allOtherPTMs = document.getElementById('checkboxContainer').querySelectorAll('li');
+        allOtherPTMs = Array.from(new Set(Object.values(allOtherPTMs).map(label => {
+            if (label.children[0].checked === true)
+                return label.children[0].getAttribute('value');
+        })));
+        allOtherPTMs = allOtherPTMs.filter(item => item != ptmType);
+        console.log(allOtherPTMs, typeof(allOtherPTMs));
         // Check if the span has the corresponding PTM type
         if (ptmsForThisChar.includes(ptmType)) {
             // If unchecked, we need to check if all associated PTM checkboxes are unchecked
@@ -2432,7 +2491,9 @@ function colorPTMs(checkbox) {
                 }
             } else if (isChecked) {
                 // If there are multiple PTMs, apply a gradient background
+                // Gotta get the list of currently activated PTMs
                 if (ptmsForThisChar.length > 1) {
+
                     // Calculate the percentage for each color block
                     const gradientPercentile = 100 / ptmsForThisChar.length;
             
