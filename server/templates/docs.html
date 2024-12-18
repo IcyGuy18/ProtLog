@@ -15,10 +15,10 @@
 </head>
 
 <body>
-    <nav class="navbar">
+    <nav class="navbar" id="navBar">
         <!-- <div class="logo">PTMKB</div> -->
         <a href="/">
-            <img src="/picture?picture=ptmkb-1-alt.png" style="width: 150px;" alt="PTMKB">
+            <img src="/picture?picture=logo/ptmkb-1-alt.png" style="width: 150px;" alt="PTMKB">
         </a>
         <button class="navbar-toggler" onclick="toggleNavbar()">☰</button>
         <ul class="navbar-items">
@@ -53,7 +53,7 @@
             Upon accessing the page, you will be presented with this screen:
         </p>
         <div style="margin: 0 auto; display: block; text-align: center;">
-            <img src="/picture?picture=search-1.png" style="width: 100%; border: 2px solid black;">
+            <img src="/picture?picture=docs/search-1.png" style="width: 100%; border: 2px solid black;">
         </div>
         <p style="text-align: justify;">
             You can enter the aforementioned parameter in [<a style="color: #ff0000">1</a>], or click on either of the examples in
@@ -62,7 +62,7 @@
             will be shown below:
         </p>
         <div style="margin: 0 auto; display: block; text-align: center;">
-            <img src="/picture?picture=search-2.png" style="width: 100%; border: 2px solid black;">
+            <img src="/picture?picture=docs/search-2.png" style="width: 100%; border: 2px solid black;">
         </div>
         <p style="text-align: justify;">
             First, general information about the input protein is displayed. [<a style="color: #ff0000">1</a>] and [<a style="color: #ff0000">2</a>]
@@ -81,7 +81,7 @@
             Scrolling down below, you will see the following information:
         </p>
         <div style="margin: 0 auto; display: block; text-align: center;">
-            <img src="/picture?picture=search-3.png" style="width: 100%; border: 2px solid black;">
+            <img src="/picture?picture=docs/search-3.png" style="width: 100%; border: 2px solid black;">
         </div>
         <p style="text-align: justify;">
             [<a style="color: #ff0000">1</a>], [<a style="color: #ff0000">2</a>], and [<a style="color: #ff0000">3</a>] respectively
@@ -91,7 +91,7 @@
             further down is information about the PTM sequence:
         </p>
         <div style="margin: 0 auto; display: block; text-align: center;">
-            <img src="/picture?picture=search-4.png" style="width: 100%; border: 2px solid black;">
+            <img src="/picture?picture=docs/search-4.png" style="width: 100%; border: 2px solid black;">
         </div>
         <p style="text-align: justify;">
             This shows some UniProt-enabled information about the protein sequence with the option to download the PTM data as a JSON file
@@ -100,7 +100,7 @@
             The actual retrieved sequence is displayed just below the general sequence information:
         </p>
         <div style="margin: 0 auto; display: block; text-align: center;">
-            <img src="/picture?picture=search-5.png" style="width: 90%; border: 2px solid black;">
+            <img src="/picture?picture=docs/search-5.png" style="width: 90%; border: 2px solid black;">
         </div>
         <p style="text-align: justify;">
             The PTMs shown on the sequence are colour-coded for convenience (as shown in [<a style="color: #ff0000">1</a>]). Additionally,
@@ -112,7 +112,7 @@
             it. When you click on the highlighted residue, detailed information about the PTM will be shown in [<a style="color: #ff0000">3</a>]:
         </p>
         <div style="margin: 0 auto; display: block; text-align: center;">
-            <img src="/picture?picture=search-6.png" style="width: 90%; border: 2px solid black;">
+            <img src="/picture?picture=docs/search-6.png" style="width: 90%; border: 2px solid black;">
         </div>
         <p style="text-align: justify;">
             A localised sequence of 21 amino acids is shown in [<a style="color: #ff0000">1</a>], with the position of the center amino acid
@@ -127,7 +127,7 @@
             This is the base information gathered for the proteins. Extra information is also provided by scrolling down:
         </p>
         <div style="margin: 0 auto; display: block; text-align: center;">
-            <img src="/picture?picture=search-7.png" style="width: 90%; border: 2px solid black;">
+            <img src="/picture?picture=docs/search-7.png" style="width: 90%; border: 2px solid black;">
         </div>
         <p style="text-align: justify;">
             We also provide secondary structure predictions by JPred to get an idea of how and why a PTM is occurring on the amino acid.
@@ -144,7 +144,7 @@
             Finally, we also present predicted and experimentally verified structures for the protein observed from AlphaFoldDB and RCSB Database respectively:
         </p>
         <div style="margin: 0 auto; display: block; text-align: center;">
-            <img src="/picture?picture=search-8.png" style="width: 90%; border: 2px solid black;">
+            <img src="/picture?picture=docs/search-8.png" style="width: 90%; border: 2px solid black;">
         </div>
         <p style="text-align: justify;">
             [<a style="color: #ff0000">1</a>] and [<a style="color: #ff0000">2</a>] are hyperlinks to the respective database for extensive additional
@@ -160,10 +160,10 @@
             Finally, the information can also be viewed in a tabular form:
         </p>
         <div style="margin: 0 auto; display: block; text-align: center;">
-            <img src="/picture?picture=search-9.png" style="width: 90%; border: 2px solid black;">
+            <img src="/picture?picture=docs/search-9.png" style="width: 90%; border: 2px solid black;">
         </div>
         <div style="margin: 0 auto; display: block; text-align: center;">
-            <img src="/picture?picture=search-10.png" style="width: 90%; border: 2px solid black;">
+            <img src="/picture?picture=docs/search-10.png" style="width: 90%; border: 2px solid black;">
         </div>
         <p style="text-align: justify;">
             The sequence, simplified DSSP calculations, detailed DSSP calculations, and the Shrake-Rupley SASA values are given for both the AlphaFoldDB PDB and the RCSB PDB.
@@ -182,7 +182,7 @@
             of PTMs.
         </p>
         <div style="margin: 0 auto; display: block; text-align: center;">
-            <img src="/picture?picture=propensity-1.png" style="width: 80%; border: 2px solid black;">
+            <img src="/picture?picture=docs/propensity-1.png" style="width: 80%; border: 2px solid black;">
         </div>
         <p style="text-align: justify;">Here is the Propensity page interface:</p>
         <p style="text-align: justify;">
@@ -200,7 +200,7 @@
             You will be presented with something like this:
         </p>
         <div style="margin: 0 auto; display: block; text-align: center;">
-            <img src="/picture?picture=propensity-2.png" style="width: 70%; border: 2px solid black;">
+            <img src="/picture?picture=docs/propensity-2.png" style="width: 70%; border: 2px solid black;">
         </div>
         <p style="text-align: justify;">
             [<a style="color: #ff0000">1</a>] shows the input subsequence, with the red-color residue denoting the center of the
@@ -229,8 +229,36 @@
         <p style="text-align: justify;">
             The Integration page covers the <strong>RESTful API</strong> side of the website and caters to providing descriptions and examples of each 
             API call. Five API calls are provided for your convenience, each with its own options on what it accepts as input, how it should be 
-            called, and what it will reurn, along with examples for each API call on how to execute the call. For more information on the API calls,
-            please head over to the Integration page to get started.
+            called, and what it will return, along with examples for each API call on how to execute the call. However, to use the API functionalities,
+            you must first create an account and pair it with an authorization token. This is done for security purposes. Do not worry, we keep only your
+            username and your password hashed through the SHA256 algorithm, along with the account's token. You must use this token for making API calls.
+        </p>
+        <p style="text-align: justify;">
+            To access the API integration, you will first create your own account by clicking on the <strong>Login</strong> tab at the top of the page ([<a style="color: #ff0000">1</a>]):
+        </p>
+        <div style="margin: 0 auto; display: block; text-align: center;">
+            <img src="/picture?picture=docs/login-1.png" style="width: 50%; border: 2px solid black;">
+        </div>
+        <p style="text-align: justify;">
+            At the top, you can login with your current user handle and password. At the bottom, you can sign up for your account using a unique username.
+            When a new user is created, it is automatically assigned a new token. This token is valid only for 5 days from the time of the token generation.
+        </p>
+        <p style="text-align: justify;">
+            After logging in, you will see this at the top of the page:
+        </p>
+        <div style="margin: 0 auto; display: block; text-align: center;">
+            <img src="/picture?picture=docs/login-2.png" style="width: 50%; border: 2px solid black;">
+        </div>
+        <p style="text-align: justify;">
+            Upon clicking on your username, you will be presented with multiple options:
+        </p>
+        <div style="margin: 0 auto; display: block; text-align: center;">
+            <img src="/picture?picture=docs/login-3.png" style="width: 18%; border: 2px solid black;">
+        </div>
+        <p style="text-align: justify;">
+            You can click on "Copy Token to Clipboard" to copy the token assigned to your account and use this as a Bearer Authorization token. For more details on how to implement it, <a href="/download_script" download="ptmkb_get_started.py">please refer to the Python starter code on making API requests</a>.
+            In case your authorization account expires or you wish to manually reset the token (it is also done automatically!), you can simply click on "Reset Token".
+            Finally, the third button is for simply logging out of your account.
         </p>
 
         <hr id="download-block">

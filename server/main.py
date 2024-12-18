@@ -1,18 +1,23 @@
-from fastapi import FastAPI, Request, Body, Query, Depends
-from fastapi.security import OAuth2PasswordBearer
+import sys
+
+sys.dont_write_bytecode = True
+
+from fastapi import FastAPI, Request, Body, Query, Depends, HTTPException
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.templating import Jinja2Templates
 from fastapi.middleware.cors import CORSMiddleware
-from starlette.responses import Response, FileResponse, RedirectResponse
+from starlette.responses import Response, FileResponse
 from fastapi.staticfiles import StaticFiles
-from fastapi.exceptions import HTTPException
 import glob
 import pandas as pd
 import matplotlib.pyplot as plt
 import os
 import json
-from typing import Annotated
-# from jose import jwt, JWTError
-from datetime import datetime, timedelta
+import hashlib
+import threading
+
+# Enabling a MutEx here for file lock (safety purposes - I know, bad code)
+lock = threading.Lock()
 
 #### Comment whichever you want to use for the time being
 #### Only use one at a time though
@@ -28,8 +33,84 @@ from mdtraj_calculations import (
     get_protein_sequence
 )
 from constants import PTM_TABLES, RESID_DATABASE, USERS
+import random
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+######## TOKEN STUFF ########
+
+import time
+import jwt
+
+JWT_SECRET = 'what_are_you_looking_here_for'
+JWT_ALGORITHM = 'HS256'
+
+SESSIONS = {}
+
+# Return response as a JSON
+def token_response(token: str):
+    return {
+        'access_token': token
+    }
+
+# Give the user a new token
+def sign_jwt(user_id: str) -> dict[str, str]:
+    payload = {
+        '_id_': random.randint(1, 10000000000),
+        "username": user_id,
+        "expires": time.time() + 432000 # Valid for 5 days
+    }
+    token = jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
+
+    return token_response(token)
+
+# Decode the token by the user
+def decode_jwt(token: str) -> dict:
+    try:
+        decoded_token: dict = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+        decoded_token['expired'] = False
+        if decoded_token["expires"] < time.time():
+            decoded_token['expired'] = True
+        return decoded_token
+    except:
+        return None
+
+class JWTBearer(HTTPBearer):
+    def __init__(self, auto_error: bool = True):
+        super(JWTBearer, self).__init__(auto_error=auto_error)
+
+    async def __call__(self, request: Request):
+        credentials: HTTPAuthorizationCredentials = await super(JWTBearer, self).__call__(request)
+        if credentials:
+            if not credentials.scheme == "Bearer":
+                raise HTTPException(status_code=403, detail="Invalid authentication scheme.")
+            validity = decode_jwt(credentials.credentials)
+            if not validity:
+                raise HTTPException(status_code=403, detail="Invalid token.")
+            if validity.get('expired'):
+                # Don't raise, just reset the token
+                username = validity.get('username')
+                token = sign_jwt(username)
+                USERS[username]['token'] = token
+                with lock:
+                    with open('../data/users/users.json', 'w') as f:
+                        json.dump(USERS, f)
+                raise HTTPException(status_code=403, detail="Expired Token.")
+            return credentials.credentials
+        else:
+            raise HTTPException(status_code=403, detail="Invalid authorization code.")
+
+    def verify_jwt(self, jwtoken: str) -> bool:
+        isTokenValid: bool = False
+
+        try:
+            payload = decode_jwt(jwtoken)
+        except:
+            payload = None
+        if payload:
+            isTokenValid = True
+
+        return isTokenValid
+
+######## LOGIN AND SIGNUP PURPOSES ########
 
 app = FastAPI(
     docs_url=None,
@@ -39,6 +120,103 @@ app = FastAPI(
     swagger_ui_oauth2_redirect_url=None,
     redirect_slashes=False,
 )
+
+@app.post('/ptmkb/check_existing_user', include_in_schema=False)
+async def check_for_existing_user(request: Request):
+    info: dict = await request.json()
+    username = info.get('username')
+    exists = True if username in USERS.keys() else False
+    return {'exists': exists}
+
+@app.post('/ptmkb/registration', include_in_schema=False)
+async def register(request: Request):
+    try:
+        info = await request.json()
+        username = info.get('username')
+        password = info.get('password')
+        USERS[username] = {
+            'password': hashlib.sha256(password.encode('utf-8')).hexdigest(),
+            'token': sign_jwt(username)
+        }
+        with lock:
+            with open('../data/users/users.json', 'w') as f:
+                json.dump(USERS, f)
+        return {'registered': True}
+    except:
+        return {'registered': False}
+
+@app.post('/ptmkb/reset_token', include_in_schema=False)
+async def reset_token(request: Request):
+    try:
+        info: dict = await request.json()
+        username = info.get('username')
+        token = sign_jwt(username)
+        USERS[username]['token'] = token
+        with lock:
+            with open('../data/users/users.json', 'w') as f:
+                json.dump(USERS, f)
+        return {
+            'reset': True,
+            'token': token.get('access_token')
+        }
+    except:
+        return {'reset': False,}
+
+@app.post('/ptmkb/fetch_token', include_in_schema=False)
+async def fetch_token(request: Request):
+    info: dict = await request.json()
+    username = info.get('username')
+    return {
+        'token': USERS.get(username, {}).get('token', {}).get('access_token', None)
+    }
+
+@app.post('/ptmkb/login', include_in_schema=False)
+async def attempt_login(request: Request):
+    info: dict = await request.json()
+    username = info.get('username')
+    if USERS.get(username, None):
+        existing_password = USERS.get(username, {}).get('password')
+        if existing_password == hashlib.sha256(
+            info.get('password').encode('utf-8')
+        ).hexdigest():
+            # User is validated.
+            token = USERS.get(username, {}).get('token', {}).get('access_token', None)
+            if token is None:
+                token = sign_jwt(username)
+                USERS[username]['token'] = token
+            return {
+                'verify': True,
+                'message': '',
+                'info': {
+                    'username': username,
+                    'token': token,
+                }
+            }
+        # Password is invalid.
+        return {
+            'verify': False,
+            'message': "Your password is invalid."
+        }
+    # User doesn't exist.
+    return {
+        'verify': False,
+        'message': f"No user by the name of {username} exists."
+    }
+
+@app.post('/ptmkb/logout', include_in_schema=False)
+async def logout(request: Request):
+    try:
+        info: dict = await request.json()
+        username = info.pop('username')
+        SESSIONS.pop(username, None)
+        return {'logout': True}
+    except:
+        return {'logout': False}
+
+
+
+######## ########
+
 
 app.add_middleware(
     CORSMiddleware,
@@ -68,36 +246,6 @@ def sort_ids(strings: list[str], substring: str):
             return (1, 0)
     return sorted(strings, key=similarity_score)
 
-######## TOKEN STUFF ########
-
-# def get_current_user(token: str = Depends(oauth2_scheme)): 
-#     try: 
-#         # Decode the JWT token and extract the username 
-#         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM]) 
-#         username: str = payload.get("sub") 
-#         if username is None: 
-#             raise credentials_exception 
-#     except JWTError: 
-#         raise HTTPException( 
-#             status_code=401, 
-#             detail="Could not validate credentials", 
-#             headers={"WWW-Authenticate": "Bearer"}, 
-#         )  
-#     return {
-#         'username': username,
-#         'password': None
-#     }
-
-# def create_access_token(data: dict, expires_delta: timedelta = None): 
-#     to_encode = data.copy() 
-#     if expires_delta: 
-#         expire = datetime.utcnow() + expires_delta 
-#     else: 
-#         expire = datetime.utcnow() + timedelta(minutes=15) 
-#     to_encode.update({"exp": expire}) 
-#     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM) 
-#     return encoded_jwt
-
 ######## PAGES ########
 
 @app.get('/favicon.ico', include_in_schema=False)
@@ -110,7 +258,7 @@ async def get_started_script():
 
 @app.get('/picture', include_in_schema=False)
 async def picture(picture: str):
-    return FileResponse(f'./help/{picture}')
+    return FileResponse(f'./images/{picture}')
 
 @app.get("/", include_in_schema=False)
 def home_page(request: Request):
@@ -122,6 +270,12 @@ def home_page(request: Request):
 def home_page(request: Request):
     return templates.TemplateResponse(
         "search.html", context={"request": request}
+    )
+
+@app.get("/signup-login", include_in_schema=False)
+def home_page(request: Request):
+    return templates.TemplateResponse(
+        "signin_signup.html", context={"request": request}
     )
 
 @app.get("/propensity", include_in_schema=False)
@@ -414,7 +568,7 @@ async def get_jpred_prediction(request: Request):
 def get_jpred_prediction(request: Request, jobid: str):
     return get_job(jobid)
 
-@app.get('/ptmkb/api/get-ptm-details', responses={
+@app.get('/ptmkb/api/get-ptm-details', dependencies=[Depends(JWTBearer())], responses={
     200: {
         "description": "Success",
         "content": {
@@ -550,7 +704,7 @@ def get_post_translational_modification_details(
     return {'message': 'Please provide a valid RESID Database ID.'}
 
 
-@app.get("/ptmkb/api/get-protein-details", responses={
+@app.get("/ptmkb/api/get-protein-details", dependencies=[Depends(JWTBearer())], responses={
     200: {
         "description": "Success",
         "content": {
@@ -597,7 +751,7 @@ def get_protein_details(
         return {'result': results}
     return {'message': 'Could not find the queried protein!'}
 
-@app.get("/ptmkb/api/get-available-ptms", responses={
+@app.get("/ptmkb/api/get-available-ptms", dependencies=[Depends(JWTBearer())], responses={
     200: {
         "description": "Success",
         "content": {
@@ -622,7 +776,7 @@ async def get_available_post_translational_modifications():
     options = [i.split("\\")[-1] for i in glob.glob(r'data\tables\*')]
     return {'ptms': options}
 
-@app.get("/ptmkb/api/get-positional-frequency-matrix", responses={
+@app.get("/ptmkb/api/get-positional-frequency-matrix", dependencies=[Depends(JWTBearer())], responses={
     200: {
         "description": "Success",
         "content": {
@@ -1124,7 +1278,7 @@ async def get_positional_frequency_matrix(
         return {'message': f"Could not find the positional matrix of {ptm} for {residue}."}
     return [i for i in PTM_TABLES.get(ptm) if i.get(residue, None) is not None][0].get(residue).get(table)
 
-@app.get('/ptmkb/api/calculate-propensity', responses={
+@app.get('/ptmkb/api/calculate-propensity', dependencies=[Depends(JWTBearer())], responses={
     200: {
         "description": "Success",
         "content": {

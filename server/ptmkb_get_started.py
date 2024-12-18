@@ -8,23 +8,22 @@ import requests
 import json
 from typing import Union, Any, TypeAlias
 
-# BASE_URL = "https://ptmkb.lums.edu.pk/ptmkb/api"
-BASE_URL = 'http://localhost:8000/ptmkb/api'
+BASE_URL = "https://ptmkb.lums.edu.pk/ptmkb/api"
 TIMEOUT = 30
+
+AUTHORIZATION_TOKEN = '<your_token_here>' # Please add your token assigned to your account to proceed.
 
 # For type hinting purposes
 JSON: TypeAlias = dict[str, "JSON"] | list["JSON"] | str | int | float | bool | None 
 
 # A fairly simple request mechanism that handles GET and POST requests for
 # different endpoints, each with optional parameters provided
-def request(endpoint: str, method: str, params: dict = None) -> JSON:
+def request(endpoint: str, params: dict = None) -> JSON:
     """
     Make a request to the API endpoint.
 
     :param str endpoint:
         The service to call.
-    :param str method:
-        The type of request to make. "GET" and "POST" allowed.
     :param dict params:
         The information to pass along with the request.
 
@@ -32,9 +31,6 @@ def request(endpoint: str, method: str, params: dict = None) -> JSON:
         The response in JSON format.
     :rtype:
         JSON
-
-    :raises ValueError:
-        if the method contains anything other than "GET" or "POST"
     
     Example:
     .. code-block:: python
@@ -46,51 +42,46 @@ def request(endpoint: str, method: str, params: dict = None) -> JSON:
         if response:
             print(response.json())
     """
-    method = method.upper() # Input validation
     try:
         response = requests.get(
             f"{BASE_URL}/{endpoint}",
             params=params,
-            timeout=TIMEOUT
-        ) if method == "GET" else requests.post(
-            f"{BASE_URL}/{endpoint}",
-            json=params,
             headers={
-                "Content-Type": "application/json"
+                "Authorization": f"Bearer {AUTHORIZATION_TOKEN}",
             },
             timeout=TIMEOUT
-        ) if method == "POST" else None
+        )
         if response is None:
             return ValueError("'method' argument must either be GET or POST.")
         response.raise_for_status()
         return response.json()
     except requests.exceptions.RequestException as e:
-        print(f"Error while making {method} request to {endpoint}: {e}")
+        print(f"Error while making GET request to {endpoint}: {e}")
         return None
 
 # Call the get-ptm-details URL
 def get_ptm_details(resid: str):
     params = {'resid': resid}
-    return request("get-ptm-details", "GET", params)
+    return request("get-ptm-details", params)
 
 # Call the get-protein-details URL
 def get_protein_details(upid: str = None, upac: str = None):
     params = {'upid': upid, 'upac': upac}
-    return request("get-protein-details", "GET", params)
+    return request("get-protein-details", params)
 
 # Call the available-ptms URL
 def get_available_ptms():
-    return request("get-available-ptms", "GET")
+    return request("get-available-ptms")
 
 # Call the get-positional-frequency-matrix URL
 def get_positional_frequency_matrix(selection: str, residue: str, table: str):
     params = {'selection': selection, 'residue': residue, 'table': table}
-    return request("get-positional-frequency-matrix", "GET", params)
+    return request("get-positional-frequency-matrix", params)
 
 # Call the calculate-propensity URL
 def calculate_propensity(ptm: str, subsequence: str):
     data = {'ptm': ptm, 'subsequence': subsequence}
-    return request("calculate-propensity", "POST", data)
+    return request("calculate-propensity", data)
 
 
 def main():

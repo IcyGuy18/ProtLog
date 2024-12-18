@@ -29,7 +29,7 @@ def load_resid_database() -> list[dict]:
     with open('./data/resid/residues.json', 'r') as f:
         return json.load(f)['Database']['Entry']
 
-def load_users() -> list[dict[str, str]]:
+def load_users() -> dict[str, dict[str, str | dict]]:
     if not os.path.exists('../data/users'):
         os.mkdir('../data/users')
         with open('../data/users/users.json', 'w') as f:
