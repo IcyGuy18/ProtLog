@@ -3093,7 +3093,6 @@ async function search() {
                             document.getElementById('detailsPanel').innerHTML = `<h3>Click on a PTM to view details here!</h3>`
                         }
                         else {
-                            alert(json.message);
                             document.getElementById('iframeData').textContent = `${json.message}`;
                         }
                         document.getElementById('iframeLoader').setAttribute('class', '');
