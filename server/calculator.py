@@ -23,11 +23,12 @@ def get_longest_centered_array(values: list[float | int | str]) -> list[float]:
 
 def additive_calculator(vector: list[float | int | str]) -> float:
     additive_score = 0.0
-    for value in vector:
-        if isinstance(value, float | int):
-            additive_score += value
-    if additive_score == 0.0:
-        additive_score = 'NIL'
+    if '-inf' in vector:
+        additive_score = '-INF'
+    else:
+        for value in vector:
+            if isinstance(value, float | int):
+                additive_score += value
     return additive_score
 
 def multiplicative_calculator(vector: list[float | str]) -> tuple[bool, dict]:

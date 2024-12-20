@@ -818,7 +818,7 @@ function generateHtmlForJPred(data, acc, ptms) {
     targetDiv.appendChild(predictionBox);
     const jpredDownloadBtn = document.createElement('button');
     jpredDownloadBtn.classList.add('additional-button');
-    jpredDownloadBtn.textContent = `Download Alignments and Predictions for ${acc} as JSON`;
+    jpredDownloadBtn.textContent = `Download Alignments and Predictions for ${acc} (JSON)`;
     jpredDownloadBtn.addEventListener('click', () => {
         var jsonString = JSON.stringify(data, null, 2);
         var blob = new Blob([jsonString], { type: 'application/json' });
@@ -838,7 +838,7 @@ function generateHtmlForJPred(data, acc, ptms) {
 async function fetchData(ptm, char, table) {
     try {
         return await fetch(
-            `/ptmkb/api/get-positional-frequency-matrix?ptm=${encodeURIComponent(ptm)}&residue=${encodeURIComponent(char)}&table=${encodeURIComponent(table)}`
+            `/ptmkb/pos_matrix?ptm=${encodeURIComponent(ptm)}&residue=${encodeURIComponent(char)}&table=${encodeURIComponent(table)}`
         )
         .then(res => res.json());
     } catch (err) {
@@ -1048,7 +1048,7 @@ async function preparePTMDetails(localizedSequence, localizedSequenceInfo, ptmsD
             const scoreValueCell = document.createElement('td');
             scoreValueCell.classList.add('value');
 
-            const scores = await fetch(`/ptmkb/api/calculate-propensity?ptm=${encodeURIComponent(ptm[1])}&subsequence=${encodeURIComponent(localizedSequence)}`)
+            const scores = await fetch(`/ptmkb/get_protein_log_scores?ptm=${encodeURIComponent(ptm[1])}&subsequence=${encodeURIComponent(localizedSequence)}`)
             .then(res => {
                 return res.json();
             }).catch(error => {
@@ -1351,7 +1351,7 @@ function displayProteinSequence(sequence, modificationData, additionalUniprotInf
     
     const ptmDownloadBtn = document.createElement('button');
     ptmDownloadBtn.classList.add('additional-button');
-    ptmDownloadBtn.textContent = `Download PTM data for ${acc} as JSON`
+    ptmDownloadBtn.textContent = `Download PTM data for ${acc} (JSON)`
     ptmDownloadBtn.addEventListener('click', () => {
         var jsonString = JSON.stringify(modificationData, null, 2);
         var blob = new Blob([jsonString], { type: 'application/json' });
@@ -1749,7 +1749,7 @@ async function displayPDBStructures(uniprotAC, alphafoldPdbData, ptms) {
         const downloadButton = document.createElement('button');
         downloadButton.setAttribute('id', 'afPdbDownload');
         downloadButton.classList.add('additional-button');
-        downloadButton.textContent = 'Download DSSP/Shrake-Rupley calculations';
+        downloadButton.textContent = 'Download DSSP/Shrake-Rupley calculations (JSON)';
         downloadButton.addEventListener('click', () => {
             var jsonString = JSON.stringify(afCalculations, null, 2);
             var blob = new Blob([jsonString], { type: 'application/json' });
@@ -3103,11 +3103,11 @@ async function search() {
                 }
             } else {
                 console.error("Response not OK: ", response.statusText);
-                document.getElementById('iframeData').textContent = `${response.statusText}`;
+                document.getElementById('iframeData').textContent = `Could not make a valid response to server - please try again!`;
             }
         } catch (e) {
             console.error("Error: ", e);
-            document.getElementById('iframeData').textContent = `${e}`;
+            document.getElementById('iframeData').textContent = `Encountered server error - please try again!`;
         }
     }
     document.getElementById('form_submit').disabled = false;

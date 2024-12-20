@@ -1,11 +1,9 @@
 import requests
 import traceback
 
-def fetch_response_alphafold(prot_id):
-    ...
-
 def fetch_response_uniprot_trim(prot_id):
-    print(prot_id)
+    # I'm so sorry. I haven't had time to fix this.
+    # It works, though.
     return_response = dict.fromkeys(
         [
             'uniProtID',

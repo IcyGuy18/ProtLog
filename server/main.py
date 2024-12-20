@@ -86,6 +86,9 @@ class JWTBearer(HTTPBearer):
             if not validity:
                 raise HTTPException(status_code=403, detail="Invalid token.")
             if validity.get('expired'):
+                # Also, have to check if key already exists in USERS
+                if token not in USERS[username]['token']['access_token']:
+                    raise HTTPException(status_code=403, detail=f"Expired token - please use your current one!")
                 # Don't raise, just reset the token
                 username = validity.get('username')
                 token = sign_jwt(username)
@@ -93,7 +96,7 @@ class JWTBearer(HTTPBearer):
                 with lock:
                     with open('../data/users/users.json', 'w') as f:
                         json.dump(USERS, f)
-                raise HTTPException(status_code=403, detail="Expired Token.")
+                raise HTTPException(status_code=403, detail=f"Automatically reset token! Here: {token.get('access_token')}")
             return credentials.credentials
         else:
             raise HTTPException(status_code=403, detail="Invalid authorization code.")
@@ -109,6 +112,21 @@ class JWTBearer(HTTPBearer):
             isTokenValid = True
 
         return isTokenValid
+    
+######## DEFINE PAGES ONLY ACCESSIBLE THROUGH BROWSERS ########
+
+BROWSER_USER_AGENTS = [
+    "Mozilla",
+    "Chrome",
+    "Firefox",
+    "Safari",
+    "Edge",
+]
+
+
+def is_browser(user_agent: str) -> bool:
+    return any(browser in user_agent for browser in BROWSER_USER_AGENTS)
+
 
 ######## LOGIN AND SIGNUP PURPOSES ########
 
@@ -123,6 +141,11 @@ app = FastAPI(
 
 @app.post('/ptmkb/check_existing_user', include_in_schema=False)
 async def check_for_existing_user(request: Request):
+    user_agent = request.headers.get('user-agent', '')
+
+    if not is_browser(user_agent):
+        raise HTTPException(status_code=403, detail="Access restricted to browsers only")
+    
     info: dict = await request.json()
     username = info.get('username')
     exists = True if username in USERS.keys() else False
@@ -130,6 +153,11 @@ async def check_for_existing_user(request: Request):
 
 @app.post('/ptmkb/registration', include_in_schema=False)
 async def register(request: Request):
+    user_agent = request.headers.get('user-agent', '')
+
+    if not is_browser(user_agent):
+        raise HTTPException(status_code=403, detail="Access restricted to browsers only")
+    
     try:
         info = await request.json()
         username = info.get('username')
@@ -147,6 +175,11 @@ async def register(request: Request):
 
 @app.post('/ptmkb/reset_token', include_in_schema=False)
 async def reset_token(request: Request):
+    user_agent = request.headers.get('user-agent', '')
+
+    if not is_browser(user_agent):
+        raise HTTPException(status_code=403, detail="Access restricted to browsers only")
+    
     try:
         info: dict = await request.json()
         username = info.get('username')
@@ -164,6 +197,11 @@ async def reset_token(request: Request):
 
 @app.post('/ptmkb/fetch_token', include_in_schema=False)
 async def fetch_token(request: Request):
+    user_agent = request.headers.get('user-agent', '')
+
+    if not is_browser(user_agent):
+        raise HTTPException(status_code=403, detail="Access restricted to browsers only")
+    
     info: dict = await request.json()
     username = info.get('username')
     return {
@@ -172,6 +210,11 @@ async def fetch_token(request: Request):
 
 @app.post('/ptmkb/login', include_in_schema=False)
 async def attempt_login(request: Request):
+    user_agent = request.headers.get('user-agent', '')
+
+    if not is_browser(user_agent):
+        raise HTTPException(status_code=403, detail="Access restricted to browsers only")
+    
     info: dict = await request.json()
     username = info.get('username')
     if USERS.get(username, None):
@@ -205,6 +248,11 @@ async def attempt_login(request: Request):
 
 @app.post('/ptmkb/logout', include_in_schema=False)
 async def logout(request: Request):
+    user_agent = request.headers.get('user-agent', '')
+
+    if not is_browser(user_agent):
+        raise HTTPException(status_code=403, detail="Access restricted to browsers only")
+    
     try:
         info: dict = await request.json()
         username = info.pop('username')
@@ -249,61 +297,116 @@ def sort_ids(strings: list[str], substring: str):
 ######## PAGES ########
 
 @app.get('/favicon.ico', include_in_schema=False)
-async def favicon():
+async def favicon(request: Request):
+    user_agent = request.headers.get('user-agent', '')
+
+    if not is_browser(user_agent):
+        raise HTTPException(status_code=403, detail="Access restricted to browsers only")
+    
     return FileResponse('./icon-ptmkb.ico')
 
 @app.get('/download_script', include_in_schema=False)
-async def get_started_script():
+async def get_started_script(request: Request):
+    user_agent = request.headers.get('user-agent', '')
+
+    if not is_browser(user_agent):
+        raise HTTPException(status_code=403, detail="Access restricted to browsers only")
+    
     return FileResponse('./ptmkb_get_started.py')
 
 @app.get('/picture', include_in_schema=False)
-async def picture(picture: str):
+async def picture(request: Request, picture: str):
+    user_agent = request.headers.get('user-agent', '')
+
+    if not is_browser(user_agent):
+        raise HTTPException(status_code=403, detail="Access restricted to browsers only")
+    
     return FileResponse(f'./images/{picture}')
 
 @app.get("/", include_in_schema=False)
 def home_page(request: Request):
+    user_agent = request.headers.get('user-agent', '')
+
+    if not is_browser(user_agent):
+        raise HTTPException(status_code=403, detail="Access restricted to browsers only")
+    
     return templates.TemplateResponse(
         "index.html", context={"request": request}
     )
 
 @app.get("/search", include_in_schema=False)
 def home_page(request: Request):
+    user_agent = request.headers.get('user-agent', '')
+
+    if not is_browser(user_agent):
+        raise HTTPException(status_code=403, detail="Access restricted to browsers only")
+    
     return templates.TemplateResponse(
         "search.html", context={"request": request}
     )
 
 @app.get("/signup-login", include_in_schema=False)
 def home_page(request: Request):
+    user_agent = request.headers.get('user-agent', '')
+
+    if not is_browser(user_agent):
+        raise HTTPException(status_code=403, detail="Access restricted to browsers only")
+    
     return templates.TemplateResponse(
         "signin_signup.html", context={"request": request}
     )
 
 @app.get("/propensity", include_in_schema=False)
 def docs_page(request: Request):
+    user_agent = request.headers.get('user-agent', '')
+
+    if not is_browser(user_agent):
+        raise HTTPException(status_code=403, detail="Access restricted to browsers only")
+    
     return templates.TemplateResponse(
         "propensity.html", context={"request": request}
     )
 
 @app.get("/documentation", include_in_schema=False)
 def docs_page(request: Request):
+    user_agent = request.headers.get('user-agent', '')
+
+    if not is_browser(user_agent):
+        raise HTTPException(status_code=403, detail="Access restricted to browsers only")
+    
     return templates.TemplateResponse(
         "docs.html", context={"request": request}
     )
 
 @app.get("/download", include_in_schema=False)
 def download_page(request: Request):
+    user_agent = request.headers.get('user-agent', '')
+
+    if not is_browser(user_agent):
+        raise HTTPException(status_code=403, detail="Access restricted to browsers only")
+    
     return templates.TemplateResponse(
         "download.html", context={"request": request}
     )
 
 @app.get("/integration", include_in_schema=False)
 def integration_page(request: Request):
+    user_agent = request.headers.get('user-agent', '')
+
+    if not is_browser(user_agent):
+        raise HTTPException(status_code=403, detail="Access restricted to browsers only")
+    
     return templates.TemplateResponse(
         "integration.html", context={"request": request}
     )
 
 @app.get("/about", include_in_schema=False)
 def integration_page(request: Request):
+    user_agent = request.headers.get('user-agent', '')
+
+    if not is_browser(user_agent):
+        raise HTTPException(status_code=403, detail="Access restricted to browsers only")
+    
     return templates.TemplateResponse(
         "about.html", context={"request": request}
     )
@@ -312,6 +415,10 @@ def integration_page(request: Request):
 
 @app.get('/ptmkb/protein_autofill', include_in_schema=False)
 async def search(_id: str, request: Request):
+    user_agent = request.headers.get('user-agent', '')
+
+    if not is_browser(user_agent):
+        raise HTTPException(status_code=403, detail="Access restricted to browsers only")
     
     # Probably best to insert elements in a database
     ids = fetch_identifiers(_id)
@@ -321,6 +428,10 @@ async def search(_id: str, request: Request):
 
 @app.post('/ptmkb/search_result', include_in_schema=False)
 async def search(request: Request):
+    user_agent = request.headers.get('user-agent', '')
+
+    if not is_browser(user_agent):
+        raise HTTPException(status_code=403, detail="Access restricted to browsers only")
     
     data = await request.json()
     data['id'] = data['id'].strip()
@@ -345,6 +456,10 @@ async def search(request: Request):
 
 @app.post('/ptmkb/structure_calculations', include_in_schema=False)
 async def get_structure_calculations(request: Request, data: dict = Body(...)):
+    user_agent = request.headers.get('user-agent', '')
+
+    if not is_browser(user_agent):
+        raise HTTPException(status_code=403, detail="Access restricted to browsers only")
     
     raw_bytes = data.get('raw_pdb_data', None)
     if data is None:
@@ -366,6 +481,10 @@ async def get_structure_calculations(request: Request, data: dict = Body(...)):
 # and my inability to do good frontend programming at all. 
 @app.post('/ptmkb/fetch_uniprot', include_in_schema=False)
 async def get_uniprot_info(request: Request):
+    user_agent = request.headers.get('user-agent', '')
+
+    if not is_browser(user_agent):
+        raise HTTPException(status_code=403, detail="Access restricted to browsers only")
     
     data = await request.json()
     prot_id: str = data['id']
@@ -432,6 +551,10 @@ def save_data(df: pd.DataFrame, format: str) -> bytes:
 
 @app.post('/ptmkb/download', include_in_schema=False)
 async def download(request: Request):
+    user_agent = request.headers.get('user-agent', '')
+
+    if not is_browser(user_agent):
+        raise HTTPException(status_code=403, detail="Access restricted to browsers only")
     
     data: dict = await request.json()
 
@@ -464,6 +587,10 @@ async def download(request: Request):
 # This function is a separate call
 @app.post('/ptmkb/get_protein_log', include_in_schema=False)
 async def get_log_value(request: Request):
+    user_agent = request.headers.get('user-agent', '')
+
+    if not is_browser(user_agent):
+        raise HTTPException(status_code=403, detail="Access restricted to browsers only")
     
     data: dict = await request.json()
     data = dict(sorted(data.items(), key=lambda item: int(item[0])))
@@ -479,6 +606,10 @@ async def get_log_value(request: Request):
 
 @app.get('/ptmkb/getAminoAcids', include_in_schema=False)
 def get_amino_acids(request: Request, ptm: str):
+    user_agent = request.headers.get('user-agent', '')
+
+    if not is_browser(user_agent):
+        raise HTTPException(status_code=403, detail="Access restricted to browsers only")
     
     if not ptm:
         return {
@@ -493,6 +624,11 @@ def get_amino_acids(request: Request, ptm: str):
 
 @app.get('/ptmkb/getPTM', include_in_schema=False)
 async def get_ptm_details(request: Request, resid: str = None, ptm: str = None, aa: str = None):
+    user_agent = request.headers.get('user-agent', '')
+
+    if not is_browser(user_agent):
+        raise HTTPException(status_code=403, detail="Access restricted to browsers only")
+    
     # Check whether RESID ID or both PTM and Residue are given.
     # Both will be handled differently.
     entry = None
@@ -557,16 +693,134 @@ async def get_ptm_details(request: Request, resid: str = None, ptm: str = None, 
     return {'response': entry}
 
 
-######## API CALLS ########
+######## Non-API CALLS ########
 
 @app.post('/ptmkb/unrel/submitJpred', include_in_schema=False)
 async def get_jpred_prediction(request: Request):
+    user_agent = request.headers.get('user-agent', '')
+
+    if not is_browser(user_agent):
+        raise HTTPException(status_code=403, detail="Access restricted to browsers only")
+    
     info = await request.json()
     return await submit_job(info['sequence'])
 
 @app.get('/ptmkb/unrel/getJpred', include_in_schema=False)
 def get_jpred_prediction(request: Request, jobid: str):
+    user_agent = request.headers.get('user-agent', '')
+
+    if not is_browser(user_agent):
+        raise HTTPException(status_code=403, detail="Access restricted to browsers only")
+    
     return get_job(jobid)
+
+@app.get('/ptmkb/ptms_list', include_in_schema=False)
+def get_ptms(request: Request):
+    user_agent = request.headers.get('user-agent', '')
+
+    if not is_browser(user_agent):
+        raise HTTPException(status_code=403, detail="Access restricted to browsers only")
+
+    options = [i.split("\\")[-1] for i in glob.glob(r'data\tables\*')]
+    return {'ptms': options}
+
+@app.get('/ptmkb/pos_matrix', include_in_schema=False)
+def get_matrix(
+    request: Request,
+    ptm: str = Query(''),
+    residue: str = Query(''),
+    table: str = Query('log-e')
+):
+    user_agent = request.headers.get('user-agent', '')
+
+    if not is_browser(user_agent):
+        raise HTTPException(status_code=403, detail="Access restricted to browsers only")
+    
+    residue = residue.upper()
+    if not ptm:
+        return {'message': "Please provide a Post Translational Modification as value."}
+    if not residue:
+        return {'message': "Please provide a residue for which you want the positional matrix."}
+    if table not in ['log-e', 'freq']:
+        table = 'log-e'
+    if not os.path.exists(f'./data/tables/{ptm}/{table}/{residue}.json'):
+        return {'message': f"Could not find the positional matrix of {ptm} for {residue}."}
+    return [i for i in PTM_TABLES.get(ptm) if i.get(residue, None) is not None][0].get(residue).get(table)
+
+@app.get('/ptmkb/get_protein_log_scores', include_in_schema=False)
+async def calculate_propensity(
+    request: Request,
+    ptm: str = Query(''),
+    subsequence: str = Query('')
+) -> dict:
+    user_agent = request.headers.get('user-agent', '')
+
+    if not is_browser(user_agent):
+        raise HTTPException(status_code=403, detail="Access restricted to browsers only")
+    
+    if ptm == '' and subsequence == '':
+        return {
+            'message': "Please provide both the subsequence and the PTM to use for Propensity calculation."
+        }
+    if ptm == '':
+        return {
+            'message': "Please provide the PTM to use for Propensity calculation."
+        }
+    if subsequence == '':
+        return {
+            'message': "Please provide a subsequence to use for Propensity calculation."
+        }
+    if not isinstance(ptm, str):
+        return {
+            'message': "Please ensure that the Post-Translational Modification input is a string."
+        }
+    if not isinstance(subsequence, str):
+        return {
+            'message': "Please ensure that the Subsequence input is a string."
+        }
+    if len(subsequence) < 13 or len(subsequence) > 21:
+        return {
+            'message': f"Please ensure that the length of the subsequence is at leats 13 residues long."
+        }
+    if len(subsequence) % 2 != 1:
+        return {
+            'message': f"Please ensure that the window size of the subsequence is either 13, 15, 17, 19, or 21 (current length is {len(subsequence)})."
+        }
+    char = subsequence[len(subsequence) // 2]
+    if not os.path.exists(f'./data/tables/{ptm}'):
+        return {
+            'message': f"No such Post-Translational Modification by the name of {ptm} exists."
+        }
+    if not os.path.exists(f'./data/tables/{ptm}/log-e/{char}.json'):
+        return {
+            'message': f"No such propensity calculator exists for {ptm} of residue {char}."
+        }
+    
+    with open(f'./data/tables/{ptm}/log-e/{char}.json', 'r') as f:
+        table: dict[str, dict[str, int|str]] = json.load(f)
+
+    KEYS = []
+
+    for i in range(-(len(subsequence) // 2), (len(subsequence) // 2) + 1):
+        key = f"+{i}" if i > 0 else str(i)
+        KEYS.append(key)
+
+    vector = []
+    for index, key in enumerate(KEYS):
+        vector.append(
+            table.get(key, {})
+            .get(subsequence[index], '-inf')
+        )
+    response = {
+        'logSum': additive_calculator(vector)
+    }
+    mult_score = multiplicative_calculator(vector)[1]
+    response.update({
+        'logLogProduct': mult_score.get('logLogProduct', 'NIL')
+    })
+    return response
+
+######## API CALLS ########
 
 @app.get('/ptmkb/api/get-ptm-details', dependencies=[Depends(JWTBearer())], responses={
     200: {

@@ -145,6 +145,12 @@ function checkForLogin() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+    document.getElementById('aa').style.display = 'none';
+    document.getElementById('tab').style.display = 'none';
+    document.getElementById('download').style.display = 'none';
+    document.getElementById('downloadButton').style.display = 'none';
+    console.log(document.getElementById('ptmSelect'));
+    document.getElementById('ptmSelect').value = '';
     checkForLogin();
 });
 
@@ -155,15 +161,6 @@ const mapping = {
     'Log Odd (base 2)': 'log2',
     'Log Odd (base e)': 'log-e'
 }
-
-document.addEventListener("DOMContentLoaded", () => {
-    document.getElementById('aa').style.display = 'none';
-    document.getElementById('tab').style.display = 'none';
-    document.getElementById('download').style.display = 'none';
-    document.getElementById('downloadButton').style.display = 'none';
-    console.log(document.getElementById('ptmSelect'));
-    document.getElementById('ptmSelect').value = '';
-});
 
 async function saveFile() {
     const ptm = document.getElementById("ptmSelect").value;
@@ -255,7 +252,7 @@ async function displayTableAndDownload() {
     const ptm = document.getElementById('ptmSelect').value;
     const aa = document.getElementById('aaSelect').value;
     const table = document.getElementById('tableSelect').value;
-    fetch(`/ptmkb/api/get-positional-frequency-matrix?ptm=${encodeURIComponent(ptm)}&residue=${encodeURIComponent(aa)}&table=${encodeURIComponent(mapping[table])}`)
+    fetch(`/ptmkb/pos_matrix?ptm=${encodeURIComponent(ptm)}&residue=${encodeURIComponent(aa)}&table=${encodeURIComponent(mapping[table])}`)
     .then(res => {
         return res.json();
     }).then(json => {
@@ -273,7 +270,7 @@ function displayTable(data) {
     let maps = {
         'Frequency': 'freq',
         'Log Odd (base e)': 'log-e',
-        'Log Odd (base 2)': 'log2'
+        // 'Log Odd (base 2)': 'log2'
     }
     mapping = maps[mapping];
     var colorMapping = (value) => {};
@@ -327,7 +324,7 @@ function displayTable(data) {
         row.setAttribute("id", aa);
         const colHeader = document.createElement("th");
         colHeader.textContent = aa;
-        colHeader.setAttribute("style", "background-color: #D0E0E3; border: 3px solid black; width: 60px; height: 20px;");
+        colHeader.setAttribute("style", "text-align: center; background-color: #D0E0E3; border: 1px solid black; width: 60px; height: 20px;");
         row.appendChild(colHeader);
         tableBody.appendChild(row);
     });
@@ -336,7 +333,7 @@ function displayTable(data) {
     const introRow = document.createElement("tr");
     const introHeader = document.createElement("th");
     introHeader.textContent = "Amino Acid";
-    introHeader.setAttribute("style", "border: 3px solid black;");
+    introHeader.setAttribute("style", "border: 1px solid black;");
     introRow.appendChild(introHeader);
     tableHead.appendChild(introRow);
     
@@ -348,7 +345,7 @@ function displayTable(data) {
         if (parseInt(key) == 0) {
             site_index = index;
         }
-        header.setAttribute("style", "border: 3px solid black; background-color: #A0C4FF; width: 60px; height: 20px;")
+        header.setAttribute("style", "text-align: center; border: 1px solid black; background-color: #A0C4FF; width: 60px; height: 20px;")
         tableHead.children[0].appendChild(header);
     })
 
@@ -367,17 +364,18 @@ function displayTable(data) {
                 cell.textContent = "-inf";
             // Set border lines for table
             if (index == Object.keys(KEYS).length - 1)
-                cell.setAttribute("style", "border-right: 3px solid black; text-align: center;")
+                cell.setAttribute("style", "border-right: 1px solid black; text-align: center;")
             if (outer == AA.length - 1)
-                cell.setAttribute("style", "border-bottom: 3px solid black; text-align: center;")
+                cell.setAttribute("style", "border-bottom: 1px solid black; text-align: center;")
             if (index == Object.keys(KEYS).length - 1 && outer == AA.length - 1)
-                cell.setAttribute("style", "border-right: 3px solid black; border-bottom: 3px solid black; text-align: center;")
+                cell.setAttribute("style", "border-right: 1px solid black; border-bottom: 1px solid black; text-align: center;")
             // Set colour
             // if (outer%2 == 0)
             //     cell.style.backgroundColor = '#F0F0F0';
             // else {
             //     cell.style.backgroundColor = '#FFFFFF';
             // }
+            cell.style.border = "1px solid black";
             if (index == site_index) {
                 // cell.style.backgroundColor = '#F2C998';
                 cell.style.borderRight = "2px solid black";

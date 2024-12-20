@@ -144,17 +144,106 @@ var suggestions = null;
 document.addEventListener("DOMContentLoaded", async () => {
     checkForLogin();
 
-    const res = await fetch(`/ptmkb/api/get-available-ptms`);
+    const res = await fetch(`/ptmkb/ptms_list`);
     const data = await res.json();
     suggestions = data['ptms'];
     // Set up an autocomplete function
-    $('#sequence_value').on('input', async function () {
-        var requestTerm = $(this).val();
-        if (requestTerm.length > 21) {
-            requestTerm = requestTerm.slice(0, 21);
-            $(this).val(requestTerm);
+    const input_elem = document.getElementById('sequence_value');
+    var prevSeq = '';
+    input_elem.addEventListener('input', function (e) {
+
+        // Function to get the current caret position in a contenteditable element
+        function getCaretPosition(element) {
+            const selection = window.getSelection();
+            const range = selection.getRangeAt(0);
+
+            // Create a range from the start of the content to the caret
+            const preCaretRange = range.cloneRange();
+            preCaretRange.selectNodeContents(element);
+            preCaretRange.setEnd(range.startContainer, range.startOffset);
+
+            return preCaretRange.toString().length;  // Return the caret position
         }
-        document.getElementById('sequenceLength').textContent = requestTerm.length;
+
+        // Function to restore the caret (cursor) position in the contenteditable element
+        function restoreCaretPosition(element, position) {
+            const selection = window.getSelection();
+            const range = document.createRange();
+
+            // Get the child nodes of the contenteditable element
+            const childNodes = element.childNodes;
+
+            // Find the correct node and position within it to restore the caret
+            let currentPos = 0;
+            let targetNode = null;
+            let targetOffset = position;
+
+            // Loop through the child nodes to find the correct position
+            for (let i = 0; i < childNodes.length; i++) {
+                const child = childNodes[i];
+
+                // If it's a text node, check the length
+                if (child.nodeType === 3) {
+                    const textLength = child.textContent.length;
+                    if (currentPos + textLength >= position) {
+                        targetNode = child;
+                        targetOffset = position - currentPos;
+                        break;
+                    }
+                    currentPos += textLength;
+                } else if (child.nodeType === 1) {
+                    // If it's an element node (like <span>), we need to skip it
+                    const childLength = child.textContent.length;
+                    if (currentPos + childLength >= position) {
+                        targetNode = child;
+                        targetOffset = position - currentPos;
+                        break;
+                    }
+                    currentPos += childLength;
+                }
+            }
+
+            if (targetNode) {
+                range.setStart(targetNode, targetOffset);
+                range.setEnd(targetNode, targetOffset);
+
+                selection.removeAllRanges();
+                selection.addRange(range);
+                element.focus();
+            }
+        }
+
+        var requestTerm = input_elem.textContent.toUpperCase();
+        let caretPos;
+        if (requestTerm.length > 21) {
+            input_elem.innerHTML = prevSeq;
+            restoreCaretPosition(input_elem, 21);
+            return;
+        }
+        caretPos = getCaretPosition(input_elem);
+
+        const middleIndex = Math.floor(requestTerm.length / 2);
+        if (requestTerm.length >= 13 && requestTerm.length % 2 === 1) {
+            const middleChar = requestTerm[middleIndex];
+            const beforeMiddle = requestTerm.slice(0, middleIndex);
+            const afterMiddle = requestTerm.slice(middleIndex + 1);
+            
+            input_elem.innerHTML = beforeMiddle + 
+            `<span class="middle-char">${middleChar}</span>` + 
+            afterMiddle;
+        } else {
+            input_elem.innerHTML = `${requestTerm}`;
+        }
+
+        prevSeq = input_elem.innerHTML;
+        document.getElementById('sequenceLength').innerHTML = requestTerm.length;
+        restoreCaretPosition(input_elem, caretPos);
+
+        // setPos.setStart(input_elem.firstChild, cursorPos);
+        // setPos.collapse(true)
+        // set.removeAllRanges();
+        // set.addRange(setPos);
+        // input_elem.focus();
     });
     $('#ptm_value').on('input', async function() {
         const requestTerm = $(this).val();
@@ -214,21 +303,47 @@ document.addEventListener("DOMContentLoaded", async () => {
     const seq = urlParams.get('seq');
     console.log(ptm, seq);
     if (ptm && seq) {
-        document.getElementById('sequence_value').value = seq;
+        const middleIndex = Math.floor(seq.length / 2);
+        const middleChar = seq[middleIndex];
+        const beforeMiddle = seq.slice(0, middleIndex);
+        const afterMiddle = seq.slice(middleIndex + 1);
+        document.getElementById('sequence_value').innerHTML = beforeMiddle + 
+        `<span class="middle-char">${middleChar}</span>` + 
+        afterMiddle;
         document.getElementById('ptm_value').value = ptm;
         await calculate();
         history.replaceState( { ptm, seq }, '', '/propensity');
     }
 });
 
+async function exampleSearch() {
+    const value = document.getElementById('exampleInput').textContent;
+    const sequence = value.split(';')[0].trim();
+    const middleIndex = Math.floor(sequence.length / 2);
+    const middleChar = sequence[middleIndex];
+    const beforeMiddle = sequence.slice(0, middleIndex);
+    const afterMiddle = sequence.slice(middleIndex + 1);
+    
+    document.getElementById('sequence_value').innerHTML = beforeMiddle + 
+                                                            `<span class="middle-char">${middleChar}</span>` + 
+                                                            afterMiddle;
+    document.getElementById('sequenceLength').innerHTML = sequence.length;
+    document.getElementById('ptm_value').value = value.split(';')[1].trim()
+    calculate()
+}
+
 async function calculate() {
-    const AA = "A C D E F G H I K L M N P Q R S T V W Y".split(' ');
-    AA.push('-');
+    try{document.getElementById('ptmInfo').innerHTML = '';}catch(e){};
+    document.getElementById('subsequenceDiv').innerHTML  = '';
+    document.getElementById('ptmVector').innerHTML = '';
+    document.getElementById('ptmTable').innerHTML = '';
     document.getElementById('messageDiv').innerHTML = "";
     document.getElementById('vectorInfo').style.display = 'none';
     document.getElementById('tableInfo').style.display = 'none';
+    const AA = "A C D E F G H I K L M N P Q R S T V W Y".split(' ');
+    AA.push('-');
 
-    const subsequence = document.getElementById('sequence_value').value.toUpperCase();
+    const subsequence = document.getElementById('sequence_value').textContent;
     const ptm = document.getElementById('ptm_value').value;
 
     var validAA = new Boolean(true);
@@ -260,7 +375,7 @@ async function calculate() {
                     const residue = subsequence[Math.floor(subsequence.length / 2)];
                     const data = await fetch(
                         encodeURI(
-                            `/ptmkb/api/get-positional-frequency-matrix?ptm=${encodeURIComponent(ptm)}&residue=${encodeURIComponent(residue)}&table=log-e`
+                            `/ptmkb/pos_matrix?ptm=${encodeURIComponent(ptm)}&residue=${encodeURIComponent(residue)}&table=log-e`
                         )
                     ).then(res => {
                         return res.json();
@@ -558,7 +673,7 @@ function displayTable(data, ptm, site, subsequence) {
     
     // xlabel.appendChild(label_x);
     const dataTable = document.createElement('table');
-
+    // dataTable.classList.add('table');
 
     const AA = "A C D E F G H I K L M N P Q R S T V W Y".split(' ');
     const KEYS = Object.keys(data);
@@ -571,7 +686,7 @@ function displayTable(data, ptm, site, subsequence) {
         row.setAttribute("id", aa);
         const colHeader = document.createElement("th");
         colHeader.textContent = aa;
-        colHeader.setAttribute("style", "background-color: #D0E0E3; border: 3px solid black;");
+        colHeader.setAttribute("style", "text-align: center; background-color: #D0E0E3; border: 1px solid black;");
         row.appendChild(colHeader);
         tableBody.appendChild(row);
     });
@@ -579,8 +694,8 @@ function displayTable(data, ptm, site, subsequence) {
     // Create a new table from scratch
     const introRow = document.createElement("tr");
     const introHeader = document.createElement("th");
-    introHeader.textContent = "Amino Acid";
-    introHeader.setAttribute("style", "border: 3px solid black;");
+    introHeader.textContent = ""; //"Amino Acid";
+    introHeader.setAttribute("style", "border: 1px solid black;");
     introRow.appendChild(introHeader);
     tableHead.appendChild(introRow);
     
@@ -592,7 +707,7 @@ function displayTable(data, ptm, site, subsequence) {
         if (parseInt(key) == 0) {
             site_index = index;
         }
-        header.setAttribute("style", "border: 3px solid black; background-color: #A0C4FF;")
+        header.setAttribute("style", "text-align: center; border: 1px solid black; background-color: #A0C4FF;")
         tableHead.children[0].appendChild(header);
     })
 
