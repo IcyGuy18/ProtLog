@@ -2007,39 +2007,6 @@ async function displayPDBStructures(uniprotAC, alphafoldPdbData, ptms) {
                     });
                     residues = Object.values(residues);
 
-                    // show/hide indices
-                    // let idxLabels = []
-                    // document.getElementById('rcsbShowIndices').addEventListener('click', () => {
-                    //     if (document.getElementById('rcsbShowIndices').getAttribute('data-showing') === 'false') {
-                    //         // create indices labels
-                            
-                    //         residues.forEach((res) => {
-                    //             idxLabels.push(
-                    //                 e.addLabel(
-                    //                     res.resi,
-                    //                     {
-                    //                         position: res,
-                    //                         showBackground: false,
-                    //                         fontColor: 'black',
-                    //                         fontSize: 14,
-                    //                         alignment: 'center',
-                    //                     },
-                    //                     {resi: res.resi},
-                    //                     true
-                    //                 )
-                    //             );
-                    //         });
-                    //         document.getElementById('rcsbShowIndices').setAttribute('data-showing', 'true');
-                    //     } else {
-                    //         // just delete all indices labels using the stored information
-                    //         idxLabels.forEach((idxLabel) => {
-                    //             e.removeLabel(idxLabel);
-                    //         });
-                    //         idxLabels.splice(0, idxLabels.length);
-                    //         document.getElementById('rcsbShowIndices').setAttribute('data-showing', 'false');
-                    //     }
-                    //     e.render();
-                    // });
                     e.setStyle( {chain: 'A'}, { cartoon: { colorscheme: 'ssPyMol' } }); // Default style is 2
                     e.zoomTo();
                     document.getElementById('rcsbPdbStructure').classList.remove('lds-dual-ring');
@@ -2240,39 +2207,6 @@ async function displayPDBStructures(uniprotAC, alphafoldPdbData, ptms) {
                         });
                         residues = Object.values(residues);
     
-                        // show/hide indices
-                        let idxLabels = [];
-                        // document.getElementById('rcsbShowIndices').addEventListener('click', () => {
-                        //     if (document.getElementById('rcsbShowIndices').getAttribute('data-showing') === 'false') {
-                        //         // create indices labels
-                                
-                        //         residues.forEach((res) => {
-                        //             idxLabels.push(
-                        //                 e.addLabel(
-                        //                     res.resi,
-                        //                     {
-                        //                         position: res,
-                        //                         showBackground: false,
-                        //                         fontColor: 'black',
-                        //                         fontSize: 14,
-                        //                         alignment: 'center',
-                        //                     },
-                        //                     {resi: res.resi},
-                        //                     true
-                        //                 )
-                        //             );
-                        //         });
-                        //         document.getElementById('rcsbShowIndices').setAttribute('data-showing', 'true');
-                        //     } else {
-                        //         // just delete all indices labels using the stored information
-                        //         idxLabels.forEach((idxLabel) => {
-                        //             e.removeLabel(idxLabel);
-                        //         });
-                        //         idxLabels.splice(0, idxLabels.length);
-                        //         document.getElementById('rcsbShowIndices').setAttribute('data-showing', 'false');
-                        //     }
-                        //     e.render();
-                        // });
                         e.setStyle( {chain: 'A'}, { cartoon: { colorscheme: 'ssPyMol' } }); // Default style is 2
                         e.zoomTo();
                         document.getElementById('rcsbPdbStructure').classList.remove('lds-dual-ring');
@@ -2706,40 +2640,6 @@ async function fetchAndRenderPDB(url, uniprotAccession, datatype) {
         }
 
         const data = await response.text();  // Read as text
-        // pdbDataGlobal = data;
-
-        // // Remove the loading spinner if present
-        // document.getElementById('protein3DStructure').classList.remove('lds-dual-ring');
-        // document.getElementById('protein3DStructure').classList.add('viewer_3Dmoljs');
-
-        // // Create the viewer inside the #protein3DStructure div
-        // const viewer = $3Dmol.createViewer("protein3DStructure", { defaultcolors: $3Dmol.rasmolElementColors });
-
-        // // Add the model to the viewer
-        // viewer.addModel(data, datatype);
-
-        // // Apply the visualization style (cartoon representation with color spectrum)
-        // viewer.setStyle( {}, { cartoon: { color: 'spectrum' } });
-
-        // // Access the canvas element created by 3Dmol.js
-        // const canvas = viewer.getCanvas();
-        // // canvas.setAttribute('style', 'overflow: hidden;')
-
-        // // Create a new div element for the disclaimer
-        // const disclaimer = document.createElement('div');
-
-        // // Add the custom class for styling the disclaimer
-        // disclaimer.classList.add('disclaimer-text');
-        // disclaimer.style.fontSize = 10;
-
-        // // Create the text content with a hyperlink
-        // disclaimer.innerHTML = `<label style="font-size: 12px;">Powered by</label><a href="https://alphafold.ebi.ac.uk/entry/${uniprotAccession}" target="_blank" rel="noopener noreferrer" style="color: #1a0dab; text-decoration: underline;  font-size: 12px;"><strong>AlphaFold</strong></a><label style="font-size: 12px;">© and </label><a href="https://3dmol.csb.pitt.edu" target="_blank" rel="noopener noreferrer" style="color: #1a0dab; text-decoration: underline; font-size: 12px;"><strong>3DMol.js</strong></a><label style="font-size: 12px;">©</label>`
-
-        // // Append the disclaimer to the #protein3DStructureInfo div
-        // document.getElementById('protein3DStructureInfo').appendChild(disclaimer);
-        // document.getElementById('protein3DStructureInfo').style.display = 'block';
-        // viewer.zoomTo();
-        // viewer.render();
         return data;
     } catch (error) {
         console.error("Error rendering PDB file:", error);
@@ -2852,6 +2752,7 @@ async function exampleSearch(element) {
 }
 
 async function search() {
+    // I need to clean this messy code...
     const id = document.getElementById('form_value').value.trim();
     if (id) {
         if (currentJobAbortController) {
@@ -2948,121 +2849,6 @@ async function search() {
                                 }
                             }
                             currentSequence = json.proteinSequence;
-                            // Now highlight the protein text in the new page
-
-                            // Script for drag-text
-                            // highlightableText = document.getElementById('scrollableTextContainer');
-
-                            // let isMouseDown = false;
-                            // let startX, scrollLeft;
-
-                            // highlightableText.addEventListener('mousedown', (e) => {
-                            //     isMouseDown = true;
-                            //     startX = e.pageX - highlightableText.offsetLeft;
-                            //     scrollLeft = highlightableText.scrollLeft;
-                            //     // console.log(startX, scrollLeft);
-                            // });
-
-                            // highlightableText.addEventListener('mouseleave', () => {
-                            //     isMouseDown = false;
-                            // });
-
-                            // highlightableText.addEventListener('mouseup', () => {
-                            //     isMouseDown = false;
-                            // });
-
-                            // highlightableText.addEventListener('mousemove', (e) => {
-                            //     if (!isMouseDown) return; // Stop the fn from running
-                            //     e.preventDefault(); // Prevent text selection
-                            //     const x = e.pageX - highlightableText.offsetLeft;
-                            //     const walk = (x - startX) * 1; // Scroll-fast
-                            //     highlightableText.scrollLeft = scrollLeft - walk;
-                            // });
-
-                            // // And code for highlighting text
-                            // for (let index = 0; index < json.proteinSequence.length; index++) {
-                            //     const char = json.proteinSequence[index];
-                            //     const span = document.createElement('span');
-                            //     span.textContent = char;
-                            //     span.className = 'highlightable-text';
-                            //     span.style.fontFamily = 'monospace'
-
-                            //     // Check if the index is equal to any of the PTM modification positions
-                            //     const matched = ptmSites.find(i => i[0] === (index+1))
-                            //     // If the value is matched, well time to highlight that text~
-                            //     if (matched) {
-                            //         if (isEnabled(matched[1]))
-                            //             span.style.color = 'red';
-                            //         else
-                            //             span.style.color = 'black';
-                            //         span.title = `${matched[1]}; Position ${matched[0]}`;
-                            //         span.setAttribute('data-ptm', matched[1]);
-                            //         // This is where the magic happens
-                            //         span.addEventListener('click', (e) => {
-                            //             // This works - time to add a new popup window
-                            //             // Remove the previous highlighted blue one
-                            //             // And assign the selected amino acid the color blue
-                            //             // If you click on it again, it becomes red
-                            //             // Important since I will show another HTML subpage
-                            //             // if an amino acid's color is changed
-                            //             const s = e.currentTarget
-                            //             // This is very stupid logic, yeah
-                            //             ptm = s.title.split(';')[0];
-                            //             if (isEnabled(ptm)) {
-                            //                 if (s.style.color === 'red') {
-                            //                     // First, remove any green text
-                            //                     const sequences = document.getElementById('scrollableTextContainer').getElementsByTagName('span')
-                            //                     for (i = 0; i < sequences.length; i++) {
-                            //                         if (sequences[i].style.color === 'green')
-                            //                             sequences[i].style.color = 'red'
-                            //                     }
-                            //                     // now assign that color haha
-                            //                     s.style.color = 'green';
-                            //                     // First, fill up the Vector table
-                            //                     // Logic's going to be a bit complex for the above stuff
-                            //                     var sequenceArray = [];
-                            //                     for (i = 0; i < sequences.length; i++)
-                            //                         sequenceArray.push(sequences[i].textContent);
-                            //                     var subsequence = sliceWithPadding(sequenceArray, index);
-                            //                     var aa = subsequence[10];
-                            //                     // Okay I guess not too complex.
-
-                            //                     // Then the reference data table (whose function is already made!)
-                            //                     loadFile(subsequence, matched, aa);
-                            //                     // highlightableText.querySelectorAll('span').forEach((cs) => {
-                            //                     //     if (cs.style.color === 'green') {
-                            //                     //         cs.style.color = 'red';
-                            //                     //     }
-                            //                     // });
-                            //                     // s.style.color = 'green';
-                            //                     // // console.log(ptm, index);
-
-                            //                     // also going to center that text
-                            //                     const containerRect = highlightableText.getBoundingClientRect();
-                            //                     const spanRect = s.getBoundingClientRect();
-
-                            //                     // Calculate the scroll position to center the clicked character
-                            //                     const scrollPosition = spanRect.left - containerRect.left + highlightableText.scrollLeft - (containerRect.width / 2) + (spanRect.width / 2);
-                                                
-                            //                     // Scroll the container
-                            //                     highlightableText.scrollTo({
-                            //                         left: scrollPosition,
-                            //                         behavior: 'smooth'
-                            //                     });
-                            //                     document.getElementById('ptmSiteInfo').style.display = 'block';
-                            //                 } else {
-                            //                     s.style.color = 'red';
-                            //                     document.getElementById('ptmSiteInfo').style.display = 'none';
-                            //                 }
-                            //                 index = (s.title.match(/\d+$/)[0]) - 1;   
-                            //             }
-                            //         });
-                            //     }
-                            //     else {
-                            //         // Handle every other case (we still show log odd scores and whatnot... maybe?)
-                            //     }
-                            //     highlightableText.appendChild(span);
-                            // }
 
                             // Formatting purpose... because
                             let updatedPtmData = []
