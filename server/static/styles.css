@@ -163,7 +163,17 @@ iframe {
 
 .nav-link.active {
     font-weight: bold;
-    color: #007bff;
+    color: #1aa71d;
+}
+
+.nav-link.search {
+    font-weight: bold;
+    color: #1a81ff;
+}
+
+.nav-link.propensity {
+    font-weight: bold;
+    color: #ff8b17;
 }
 
 /* Make navbar responsive */
@@ -1507,4 +1517,13 @@ iframe {
     -webkit-box-shadow: inset -1px -1px 1px 0px rgba(0,0,0,0.25);
     -moz-box-shadow: inset -1px -1px 1px 0px rgba(0,0,0,0.25);
     box-shadow: inset -1px -1px 1px 0px rgba(0,0,0,0.25);
+}
+
+/* FOR CONTENTEDITABLE INPUT */
+
+[contenteditable=true]:empty:before {
+    content: attr(placeholder);
+    pointer-events: none;
+    color: #999;
+    display: block; /* For Firefox */
 }

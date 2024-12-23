@@ -2538,16 +2538,20 @@ function colorPTMs(checkbox) {
     // Find all highlighted spans in the sequence
     const highlightedSpans = document.getElementById('sequenceDisplayer').querySelectorAll('span');
 
+    var allOtherPTMs = document.getElementById('checkboxContainer').querySelectorAll('li');
+    allOtherPTMs = Array.from(new Set(Object.values(allOtherPTMs).map(label => {
+        if (label.children[0].checked === true)
+            return label.children[0].getAttribute('value');
+        else
+            return null;
+    })));
+    allOtherPTMs = allOtherPTMs.filter(item => item !== null);
+    // console.log(ptmType, isChecked);
+    // console.log(allOtherPTMs);
+
     highlightedSpans.forEach(span => {
         // Get the list of PTMs applied to the current span (separated by semicolons)
         var ptmsForThisChar = span.getAttribute('data-ptm') ? span.getAttribute('data-ptm').split(';') : [];
-        var allOtherPTMs = document.getElementById('checkboxContainer').querySelectorAll('li');
-        allOtherPTMs = Array.from(new Set(Object.values(allOtherPTMs).map(label => {
-            if (label.children[0].checked === true)
-                return label.children[0].getAttribute('value');
-        })));
-        allOtherPTMs = allOtherPTMs.filter(item => item != ptmType);
-        console.log(allOtherPTMs, typeof(allOtherPTMs));
         // Check if the span has the corresponding PTM type
         if (ptmsForThisChar.includes(ptmType)) {
             // If unchecked, we need to check if all associated PTM checkboxes are unchecked

@@ -24,7 +24,7 @@
         <button class="navbar-toggler" onclick="toggleNavbar()">☰</button>
         <ul class="navbar-items">
             <li><a class="nav-link active"><span class="nav-item-box">Search</span></a></li>
-            <li><a href="/propensity" class="nav-link"><span class="nav-item-box">Propensity</span></a></li>
+            <li><a href="/propensity" class="nav-link propensity"><span class="nav-item-box">Propensity</span></a></li>
             <li><a href="/documentation" class="nav-link"><span class="nav-item-box">Documentation</span></a></li>
             <li><a href="/integration" class="nav-link"><span class="nav-item-box">Integration</span></a></li>
             <li><a href="/download" class="nav-link"><span class="nav-item-box">Download</span></a></li>
@@ -36,11 +36,13 @@
     </script>
 
     <div class="container-fluid mt-5" style="width: 90%; align-content: center;">
-
-        <div class="alert alert-info text-center">
+        <div class="protein-statistics-container" style="text-align: justify; text-align-last: center; max-width: 600px; margin: 0 auto; margin-bottom: -20px; padding-bottom: 20px;">
+            <p>Here, you can provide a protein's UniProt-based identifier and get to know in detail about the protein's general info, the sequence and PTMs on each residue, the predicted and actual secondary structures, and SASA values.</p>
+        </div>
+        <div class="alert alert-info text-center" style="width: 600px; margin-top: 40px;">
             <i class="fa fa-search fa-small"></i>&nbsp;<strong><label>Search</label>&nbsp;(Enter Uniprot Identifier/Accession Number)</strong>
             <div class="input-group position-relative">
-                <input class="form-control" id="form_value" type="text" placeholder="Enter UniProt ID or UniProt AC">
+                <input class="form-control" id="form_value" type="text" placeholder="Enter UniProt ID or UniProt AC" style="text-align: center;">
                 <span class="form-group input-group-btn">
                     <button type="button" id="form_submit" class="btn btn-primary" onclick="search()">Search</button>
                 </span>
@@ -105,6 +107,9 @@
                 <div class="protein-sequence-container">
                     <h1 style="text-align: center; font-size: 28px; color: #444; font-weight: bold; margin: 20px;">Protein PTM Sequence</h1>
                     <div class="protein-info-container" id="uniprotSequence" style="width:70%;"></div>
+                    <div id="detailsPanel" class="details-panel" style="margin-top: 40px;">
+                        <h3>Click on a highlighted residue to view its details!</h3>
+                    </div>
                     <p id="iframeData2" style="padding-top: 20px;"></p>
                     <div class="sequence-displayer" id="sequenceDisplayer"></div>
                     <div id="ptmSearchContainer">
@@ -112,9 +117,6 @@
                         <div id="giantCheckboxContainer" class="checkbox-container">
                             <ul id="checkboxContainer"></ul>
                         </div>
-                    </div>
-                    <div id="detailsPanel" class="details-panel">
-                        <h3>Click on a highlighted residue to view its details!</h3>
                     </div>
                 </div>
             </div>

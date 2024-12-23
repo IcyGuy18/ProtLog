@@ -142,6 +142,40 @@ function checkForLogin() {
 var suggestions = null;
 
 document.addEventListener("DOMContentLoaded", async () => {
+
+    // const editableDiv = document.getElementById("sequence_value");
+    // const placeholderText = "Enter subsequence (valid windows - 13, 15, 17, 19, 21)";
+    
+    // // Function to check if the content is empty and display placeholder
+    // function checkPlaceholder() {
+    //     if (editableDiv.textContent.trim() === "") {
+    //         editableDiv.textContent = placeholderText;
+    //         editableDiv.style.color = "#999";  // Light gray for placeholder text
+    //     }
+    // }
+
+    // // Event listeners for user interaction
+    // editableDiv.addEventListener("focus", () => {
+    //     if (editableDiv.textContent === placeholderText) {
+    //         editableDiv.textContent = "";
+    //         editableDiv.style.color = "black";  // Reset to normal text color
+    //     }
+    // });
+
+    // editableDiv.addEventListener("blur", checkPlaceholder);
+    // editableDiv.addEventListener("input", checkPlaceholder);
+
+    // // Initialize placeholder on page load
+    // window.addEventListener("load", () => {
+    //     checkPlaceholder();  // Check if content is empty and show placeholder
+    // });
+
+    // // Ensure the placeholder is shown if no content is in the div on page load
+    // if (editableDiv.textContent.trim() === "") {
+    //     editableDiv.textContent = placeholderText;
+    //     editableDiv.style.color = "#999";  // Light gray for placeholder text
+    // }
+    
     checkForLogin();
 
     const res = await fetch(`/ptmkb/ptms_list`);
@@ -296,7 +330,6 @@ document.addEventListener("DOMContentLoaded", async () => {
             calculate();
         }
     });
-
     
     const urlParams = new URLSearchParams(window.location.search);
     const ptm = urlParams.get('ptm');

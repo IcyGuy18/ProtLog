@@ -43,7 +43,7 @@
         </a>
         <button class="navbar-toggler" onclick="toggleNavbar()">☰</button>
         <ul class="navbar-items">
-            <li><a href="/search" class="nav-link"><span class="nav-item-box">Search</span></a></li>
+            <li><a href="/search" class="nav-link search"><span class="nav-item-box">Search</span></a></li>
             <li><a class="nav-link active"><span class="nav-item-box">Propensity</span></a></li>
             <li><a href="/documentation" class="nav-link"><span class="nav-item-box">Documentation</span></a></li>
             <li><a href="/integration" class="nav-link"><span class="nav-item-box">Integration</span></a></li>
@@ -53,17 +53,17 @@
     </nav>
 
     <div class="container-fluid mt-5" style="width: 80%; align-content: center;">
-        <!-- <div style="text-align: center; max-width: 600px; margin: 0 auto;">
-            <p>We use the natural log odds matrix positional frequency of amino acids to calculate the <strong>propensity</strong> of a PTM. It is strictly computed with the natural log odds matrix to ensure magnitude scaling.</p>
-        </div> -->
-        <div class="alert alert-info text-center" style="width: 600px;">
+        <div class="protein-statistics-container" style="text-align: justify; text-align-last: center; max-width: 600px; margin: 0 auto; margin-bottom: -20px; padding-bottom: 20px;">
+            <p>Here, you can provide a protein sequence window along with a post-translational modification (PTM) as input to calculate the <strong>Propensity</strong> of the residue - that is, the tendency of a residue to undergo said PTM.</p>
+        </div>
+        <div class="alert alert-info text-center" style="width: 600px; margin-top: 40px;">
             <i class="fa fa-search fa-small"></i><label><strong>Calculate Protein Subsequence Propensity</strong></label>
             <div class="input-group position-relative">
                 <!-- <input class="form-control" id="sequence_value" type="text" placeholder="Enter subsequence (valid windows - 13, 15, 17, 19, 21)" style="text-align: center; text-transform: uppercase;"> -->
                 <div contenteditable="true" class="form-control" id="sequence_value" placeholder="Enter subsequence (valid windows - 13, 15, 17, 19, 21)" style="text-align: center; text-transform: uppercase; padding: 5px;"></div>
                 <p id="sequenceLength" style="display: inline-block; width: 40px; height: 40px; line-height: 40px; text-align: center; font-family: 'Courier New', Courier, monospace; font-size: 16px; background-color: #f0f0f0; border: 2px solid #ddd; border-radius: 8px; margin: 0; color: #333;">0</p>
             </div>
-            <div class="input-group position-relative" style="width: 400px; margin: 0 auto;">
+            <div class="input-group position-relative" style="width: 400px; margin: 20px auto;">
                 <input class="form-control" id="ptm_value" type="text" placeholder="Enter Post-Translational Modification" style="text-align: center;">
                 <div id="suggestions" class="suggestions-box" style="display: none;"></div>
             </div>
@@ -72,7 +72,7 @@
                     <button type="button" id="form_submit" class="btn btn-primary" onclick="calculate()">Calculate</button>
                 </span>
             </div>
-            <i class="fa fa-search fa-small"></i><label style="padding: -20px; margin: 0;"><strong>Example:</strong></label>
+            <i class="fa fa-search fa-small"></i><label style="padding: 20px; margin: 0;"><strong>Example:</strong></label>
             <a id="exampleInput" onclick="exampleSearch(this)" style="color: #1a0dab; text-decoration: underline; font-weight: normal; cursor: pointer;">WKLLPENNVLSPLPSQAMDDW; Phosphorylation</a>, 
         </div>
     </div>
@@ -87,7 +87,7 @@
     <h3 id="vectorInfo" style="text-align: center; font-size: 28px; color: #444; font-weight: bold; display: none; margin-top: 20px; margin-bottom: -20px;">Vector used for calculation</h3>
     <div id="ptmVector" style="margin-left: auto; margin-right: auto; padding: 40px"></div>
 
-    <h3 id="tableInfo" style="text-align: center; font-size: 28px; color: #444; font-weight: bold; display: none; margin-top: 20px;">Table used for Vector formation</h3>
+    <h3 id="tableInfo" style="text-align: center; font-size: 28px; color: #444; font-weight: bold; display: none; margin-top: 20px;">Table used for vector formation</h3>
     <div id="ptmTable" style="margin-left: auto; margin-right: auto;"></div>
 
     <div class="main-content"></div>
