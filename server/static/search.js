@@ -143,6 +143,9 @@ function checkForLogin() {
 
 var ptmSites = null;
 var currentSequence = null;
+var tables = null
+var afPdbViewer = null
+var rcsbPdbViewer = null;
 
 function getValue(obj, key, defaultValue = null) {
     if (obj === undefined || obj === null)
@@ -229,7 +232,9 @@ const ptmColorMapping = {
     "UMPylation": "#A3A3A3"  // Slightly darker Gray
 };
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
+    // tables = await fetch('/ptmkb/all_ptms_tables').then(res => res.json());
+    // console.log(tables);
     checkForLogin();
     document.getElementById('protein3DStructure').style.display = 'none';
     // Set up an autocomplete function
@@ -908,6 +913,8 @@ async function preparePTMDetails(localizedSequence, localizedSequenceInfo, ptmsD
                     tooltip.classList.add("custom-tooltip");
                     tooltip.textContent = uniquePTMs.join(", ");  // Display all PTMs for this position
 
+                    // Also append log scores here (ask about it first)
+
                     // Append the tooltip to the body
                     document.body.appendChild(tooltip);
 
@@ -972,6 +979,10 @@ async function preparePTMDetails(localizedSequence, localizedSequenceInfo, ptmsD
         });
     }
 
+    let residuePosition = 0; // Need this for highlighting in PDB view
+
+    const listOfPTMs = [];
+
     // Create a row for PTM type and position
     ptmsData.forEach(async (ptm) => {
 
@@ -987,6 +998,7 @@ async function preparePTMDetails(localizedSequence, localizedSequenceInfo, ptmsD
         const valueCell = document.createElement('td');
         valueCell.classList.add('value');
         valueCell.innerHTML = `${ptm[1]} `;
+        listOfPTMs.push(ptm[1]);
 
         // We're going to fetch the PTM's details using the PTM and the residue it is modified on.
         await fetch(`/ptmkb/getPTM?ptm=${ptm[1]}&aa=${centerChar}`).then(res => {
@@ -1014,6 +1026,8 @@ async function preparePTMDetails(localizedSequence, localizedSequenceInfo, ptmsD
         positionValueCell.classList.add('value');
         positionValueCell.innerHTML = `${ptm[0]}`; // PTM Position
         positionDiv.innerHTML = `<h5>Position - ${ptm[0]}</h5>`
+        if (residuePosition === 0)
+            residuePosition = ptm[0];
         
         // positionRow.appendChild(positionKeyCell);
         // positionRow.appendChild(positionValueCell);
@@ -1127,7 +1141,25 @@ async function preparePTMDetails(localizedSequence, localizedSequenceInfo, ptmsD
         // tableContainer.classList.add('protein-info-container');
         // tableContainer.appendChild(ptmTable);
     });
-    
+
+    const pdbHighlightButton = document.createElement('button');
+    pdbHighlightButton.textContent = "Click here to view the residue in the PDB structure";
+    pdbHighlightButton.classList.add('additional-button');
+    pdbHighlightButton.style.fontWeight = 700;
+    pdbHighlightButton.addEventListener('click', async () => {
+        const atoms = afPdbViewer.getAtomsFromSel({ resi: residuePosition });
+        var label = `${residuePosition} - ${atoms[0].resn} - ${listOfPTMs.join(', ')}`;
+        afPdbViewer.addLabel(
+            label, {
+                position: atoms[0],
+                backgroundColor: 'gray',
+                backgroundOpacity: 1.0,
+                fontColor: 'white',
+                fontSize: 12,
+            }
+        );
+        scrollIfNotInView(document.getElementById('pdbMajor'));
+    });
     
     detailsPanel.innerHTML = '';
     // Append the sequence to the details panel
@@ -1136,6 +1168,7 @@ async function preparePTMDetails(localizedSequence, localizedSequenceInfo, ptmsD
     detailsPanel.appendChild(sequenceDisplay);
     detailsPanel.appendChild(positionDiv);
     detailsPanel.appendChild(ptmInfo);
+    detailsPanel.appendChild(pdbHighlightButton);
 
     // Show the details panel with styles applied
     detailsPanel.style.display = 'block';
@@ -1762,6 +1795,7 @@ async function displayPDBStructures(uniprotAC, alphafoldPdbData, ptms) {
         $3Dmol.createViewer("afPdbStructure", {
             defaultcolors: $3Dmol.rasmolElementColors,
             callback: (e) => {
+                afPdbViewer = e;
                 e.addModel(alphafoldPdbData, 'pdb', { vibrate: true });
 
                 // show/hide indices
@@ -1817,6 +1851,7 @@ async function displayPDBStructures(uniprotAC, alphafoldPdbData, ptms) {
                     labels.forEach(l => {
                         e.removeLabel(l);
                     });
+                    e.removeAllLabels(); // Done for the ones where user asks for displaying residue on PBM structure.
                     labels.splice(0, labels.length);
                 });
                         
@@ -1978,7 +2013,7 @@ async function displayPDBStructures(uniprotAC, alphafoldPdbData, ptms) {
             const downloadButton = document.createElement('button');
             downloadButton.setAttribute('id', 'rcsbPdbDownload');
             downloadButton.classList.add('additional-button');
-            downloadButton.textContent = 'Download DSSP/Shrake-Rupley calculations';
+            downloadButton.textContent = 'Download DSSP/Shrake-Rupley calculations (JSON)';
             downloadButton.addEventListener('click', () => {
                 var jsonString = JSON.stringify(rcsbCalculations, null, 2);
                 var blob = new Blob([jsonString], { type: 'application/json' });
@@ -1991,6 +2026,7 @@ async function displayPDBStructures(uniprotAC, alphafoldPdbData, ptms) {
             $3Dmol.createViewer("rcsbPdbStructure", {
                 defaultcolors: $3Dmol.rasmolElementColors,
                 callback: (e) => {
+                    rcsbPdbViewer = e;
                     e.addModel(res, 'pdb');
                     
                     // For indices and showing labels and stuff
@@ -2177,7 +2213,7 @@ async function displayPDBStructures(uniprotAC, alphafoldPdbData, ptms) {
                 const downloadButton = document.createElement('button');
                 downloadButton.setAttribute('id', 'afPdbDownload');
                 downloadButton.classList.add('additional-button');
-                downloadButton.textContent = 'Download DSSP/Shrake-Rupley calculations';
+                downloadButton.textContent = 'Download DSSP/Shrake-Rupley calculations (DSSP)';
                 downloadButton.addEventListener('click', () => {
                     var jsonString = JSON.stringify(rcsbCalculations, null, 2);
                     var blob = new Blob([jsonString], { type: 'application/json' });
@@ -2190,6 +2226,7 @@ async function displayPDBStructures(uniprotAC, alphafoldPdbData, ptms) {
                 $3Dmol.createViewer("rcsbPdbStructure", {
                     defaultcolors: $3Dmol.rasmolElementColors,
                     callback: (e) => {
+                        rcsbPdbViewer = e;
                         e.addModel(res, 'pdb');
                         
                         // For indices and showing labels and stuff
@@ -2529,72 +2566,54 @@ function updateStats(ptmData) {
     document.getElementById('proteinStatisticsContainer').appendChild(generatePTMHtmlTable());
 }
 
-// Function to handle PTM highlighting (this is where you can remove highlights if unchecked)
-function colorPTMs(checkbox) {
-    console.log("Calling this function!");
-    const ptmType = checkbox.value;  // PTM type from the checkbox value
-    const isChecked = checkbox.checked;
+function colorPTMs() {
+    console.log("Calling the new one");
 
     // Find all highlighted spans in the sequence
     const highlightedSpans = document.getElementById('sequenceDisplayer').querySelectorAll('span');
 
-    var allOtherPTMs = document.getElementById('checkboxContainer').querySelectorAll('li');
-    allOtherPTMs = Array.from(new Set(Object.values(allOtherPTMs).map(label => {
+    // Find all checked PTM sequences for colouring
+    var allPTMs = document.getElementById('checkboxContainer').querySelectorAll('li');
+    allPTMs = Array.from(new Set(Object.values(allPTMs).map(label => {
         if (label.children[0].checked === true)
             return label.children[0].getAttribute('value');
         else
             return null;
     })));
-    allOtherPTMs = allOtherPTMs.filter(item => item !== null);
-    // console.log(ptmType, isChecked);
-    // console.log(allOtherPTMs);
+    allPTMs = allPTMs.filter(item => item !== null); // Only include checked PTMs
 
     highlightedSpans.forEach(span => {
         // Get the list of PTMs applied to the current span (separated by semicolons)
         var ptmsForThisChar = span.getAttribute('data-ptm') ? span.getAttribute('data-ptm').split(';') : [];
-        // Check if the span has the corresponding PTM type
-        if (ptmsForThisChar.includes(ptmType)) {
-            // If unchecked, we need to check if all associated PTM checkboxes are unchecked
-            if (!isChecked) {
-                // Check if all PTMs for this span are unchecked
-                const allOtherPTMUnchecked = ptmsForThisChar.every(ptm => {
-                    const checkbox = document.getElementById(ptm);
-                    return checkbox && !checkbox.checked;  // Return true if the PTM checkbox is unchecked
-                });
+        // Now perform intersection between ptmsForThisChar and allPTMs
+        const filteredPtms = allPTMs.filter(ptm => ptmsForThisChar.includes(ptm));
+        // If no PTMs match, remove background and class
+        if (filteredPtms.length === 0) {
+            span.classList.remove('highlighted');
+            span.style.backgroundColor = '';
+            span.style.background = '';
+            span.style.backgroundSize = '';
+        } else {
+            // Adjust background for the span
+            if (filteredPtms.length > 1) {
+                // Calculate the percentage for each color block
+                const gradientPercentile = 100 / filteredPtms.length;
 
-                if (allOtherPTMUnchecked) {
-                    // Remove the highlight if all PTMs are unchecked
-                    span.style.backgroundColor = '';  // Remove the background color (or reset it)
-                    span.classList.remove('highlighted');  // Remove the 'highlighted' class
-                    span.style.background = '';  // Remove the gradient
-                    span.style.backgroundSize = '';  // Remove the background size
-                }
-            } else if (isChecked) {
-                // If there are multiple PTMs, apply a gradient background
-                // Gotta get the list of currently activated PTMs
-                if (ptmsForThisChar.length > 1) {
+                // Create the gradient string by mapping over the PTMs and defining color blocks
+                const gradient = filteredPtms
+                    .map((ptm, idx) => {
+                        const startPercentage = idx * gradientPercentile;
+                        const endPercentage = startPercentage + gradientPercentile;
+                        return `${ptmColorMapping[ptm]} ${startPercentage}% ${endPercentage}%`;
+                    })
+                    .join(', ');
 
-                    // Calculate the percentage for each color block
-                    const gradientPercentile = 100 / ptmsForThisChar.length;
-            
-                    // Create the gradient string by mapping over the PTMs and defining color blocks
-                    const gradient = ptmsForThisChar
-                        .map((ptm, idx) => {
-                            const startPercentage = idx * gradientPercentile; // Calculate start percentage
-                            const endPercentage = startPercentage + gradientPercentile; // Calculate end percentage
-                            return `${ptmColorMapping[ptm]} ${startPercentage}% ${endPercentage}%`; // Define the color block from start to end
-                        })
-                        .join(', '); // Join all color blocks with commas
-            
-                    // Apply the linear gradient to the span element
-                    span.style.background = `linear-gradient(to bottom, ${gradient})`;
-                    span.style.backgroundSize = '100% 100%'; // Ensure the gradient covers the entire span
-                } else {
-                    // If only one PTM, apply the single PTM color as a solid background
-                    span.style.backgroundColor = ptmColorMapping[ptmType];
-                }
-                // Add the 'highlighted' class
-                span.classList.add('highlighted');
+                // Apply the linear gradient to the span element
+                span.style.background = `linear-gradient(to bottom, ${gradient})`;
+            } else {
+                // If only one PTM, apply the single PTM color as a solid background
+                span.style.background = ptmColorMapping[filteredPtms[0]];
+                span.classList.add('highlighted'); // Done for the first one if multiple background colors
             }
         }
     });
@@ -2690,7 +2709,7 @@ function populateCheckboxesFromResult(data) {
             }
 
             // Call colorPTMs function to update the highlights based on checked boxes
-            colorPTMs(e.target);
+            colorPTMs();
         });
 
         checkboxList.push(checkboxWrapper);
@@ -2759,6 +2778,8 @@ async function search() {
     // I need to clean this messy code...
     const id = document.getElementById('form_value').value.trim();
     if (id) {
+        afPdbViewer = null
+        rcsbPdbViewer = null;
         if (currentJobAbortController) {
             currentJobAbortController.abort();
         }
@@ -2863,11 +2884,11 @@ async function search() {
                             });
                             
                             let pdbData = await fetchProteinStructure(json.uniProtAC);
+                            displayPDBStructures(json.uniProtAC, pdbData, updatedPtmData);
                             populateCheckboxesFromResult(updatedPtmData)
                             displayProteinSequence(json.proteinSequence, updatedPtmData, json.proteinSequenceFull, json.lastUpdate, json.uniProtAC);
                             updateStats(updatedPtmData)
                             getJPredInference(json.proteinSequence, json.uniProtAC, updatedPtmData);
-                            displayPDBStructures(json.uniProtAC, pdbData, updatedPtmData);
 
                             document.getElementById('sequenceDisplayer').setAttribute('style', "display: block;");
                             document.getElementById('iframeData').textContent = "";

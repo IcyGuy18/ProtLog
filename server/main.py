@@ -724,6 +724,15 @@ def get_ptms(request: Request):
     options = [i.split("\\")[-1] for i in glob.glob(r'data\tables\*')]
     return {'ptms': options}
 
+@app.get('/ptmkb/all_ptms_tables', include_in_schema=False)
+def get_all_ptms_tables(request: Request):
+    user_agent = request.headers.get('user-agent', '')
+
+    if not is_browser(user_agent):
+        raise HTTPException(status_code=403, detail="Access restricted to browsers only")
+    
+    return PTM_TABLES
+
 @app.get('/ptmkb/pos_matrix', include_in_schema=False)
 def get_matrix(
     request: Request,
