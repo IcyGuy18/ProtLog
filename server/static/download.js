@@ -332,8 +332,8 @@ function displayTable(data) {
     // Create a new table from scratch
     const introRow = document.createElement("tr");
     const introHeader = document.createElement("th");
-    introHeader.textContent = "Amino Acid";
-    introHeader.setAttribute("style", "border: 1px solid black;");
+    introHeader.textContent = "";
+    introHeader.setAttribute("style", "border: 1px solid black; text-align: center;");
     introRow.appendChild(introHeader);
     tableHead.appendChild(introRow);
     
