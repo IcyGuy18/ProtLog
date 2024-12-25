@@ -1142,24 +1142,26 @@ async function preparePTMDetails(localizedSequence, localizedSequenceInfo, ptmsD
         // tableContainer.appendChild(ptmTable);
     });
 
-    const pdbHighlightButton = document.createElement('button');
-    pdbHighlightButton.textContent = "Click here to view the residue in the PDB structure";
-    pdbHighlightButton.classList.add('additional-button');
-    pdbHighlightButton.style.fontWeight = 700;
-    pdbHighlightButton.addEventListener('click', async () => {
-        const atoms = afPdbViewer.getAtomsFromSel({ resi: residuePosition });
-        var label = `${residuePosition} - ${atoms[0].resn} - ${listOfPTMs.join(', ')}`;
-        afPdbViewer.addLabel(
-            label, {
-                position: atoms[0],
-                backgroundColor: 'gray',
-                backgroundOpacity: 1.0,
-                fontColor: 'white',
-                fontSize: 12,
-            }
-        );
-        scrollIfNotInView(document.getElementById('pdbMajor'));
-    });
+    if (afPdbViewer !== null) {
+        const pdbHighlightButton = document.createElement('button');
+        pdbHighlightButton.textContent = "Click here to view the residue in the PDB structure";
+        pdbHighlightButton.classList.add('additional-button');
+        pdbHighlightButton.style.fontWeight = 700;
+        pdbHighlightButton.addEventListener('click', async () => {
+            const atoms = afPdbViewer.getAtomsFromSel({ resi: residuePosition });
+            var label = `${residuePosition} - ${atoms[0].resn} - ${listOfPTMs.join(', ')}`;
+            afPdbViewer.addLabel(
+                label, {
+                    position: atoms[0],
+                    backgroundColor: 'gray',
+                    backgroundOpacity: 1.0,
+                    fontColor: 'white',
+                    fontSize: 12,
+                }
+            );
+            scrollIfNotInView(document.getElementById('pdbMajor'));
+        });
+    }
     
     detailsPanel.innerHTML = '';
     // Append the sequence to the details panel
