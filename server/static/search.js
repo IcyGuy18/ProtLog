@@ -153,6 +153,116 @@ function getValue(obj, key, defaultValue = null) {
     return key in obj ? obj[key] : defaultValue;
 }
 
+// Defining functions here for score calculation
+function getLongestCenteredArray(values) {
+    const zeroIndex = Math.floor(values.length / 2);
+
+    let left = zeroIndex;
+    let right = zeroIndex;
+    let leftSteps = 0;
+    let rightSteps = 0;
+
+    while (left > 0 && values[left - 1] !== '-inf') {
+        left -= 1;
+        leftSteps += 1;
+    }
+
+    while (right < values.length - 1 && values[right + 1] !== '-inf') {
+        right += 1;
+        rightSteps += 1;
+    }
+
+    let extractIdx;
+    if (leftSteps > rightSteps) {
+        extractIdx = right;
+    } else {
+        extractIdx = left;
+    }
+
+    return values.slice(extractIdx, values.length - extractIdx);
+}
+
+function additiveCalculator(vector) {
+    let additiveScore = 0.0;
+
+    if (vector.includes('-inf')) {
+        additiveScore = '-INF';
+    } else {
+        for (let value of vector) {
+            if (typeof value === 'number') {
+                additiveScore += value;
+            }
+        }
+    }
+    return additiveScore;
+}
+
+function multiplicativeCalculator(vector) {
+    const centeredArray = getLongestCenteredArray(vector);
+
+    if (centeredArray.length < 13) {
+        return { message: "Not enough upstream/downstream amino acids to make accurate calculation!", logLogProduct: 'NIL' };
+    }
+
+    let multiplicativeScore = 1;
+
+    for (let idx = 0; idx < centeredArray.length; idx++) {
+        const value = centeredArray[idx];
+
+        if (idx !== Math.floor(centeredArray.length / 2) && (value === 0 || value === '-inf')) {
+            return { message: "Vector contains 0 or negative infinity!", logLogProduct: 'NIL' };
+        }
+
+        if (idx !== Math.floor(centeredArray.length / 2)) {
+            multiplicativeScore *= value;
+        }
+    }
+
+    const adjustedMultiplicativeScore = Math.log(Math.abs(1 / (-1 * multiplicativeScore)));
+    return { logLogProduct: adjustedMultiplicativeScore };
+}
+
+function getSubstring(inputString, index) {
+    const totalLength = 21;
+    const halfLength = 10;
+
+    let start = index - halfLength;
+    let end = index + halfLength + 1;
+
+    if (start < 0) {
+        start = 0;
+    }
+    if (end > inputString.length) {
+        end = inputString.length;
+    }
+
+    let substring = inputString.slice(start, end);
+    if (substring.length < totalLength) {
+        const leftHyphens = halfLength - (index - start);
+        const rightHyphens = halfLength - (end - index - 1);
+        substring = '-'.repeat(leftHyphens) + substring + '-'.repeat(rightHyphens);
+    }
+
+    return substring;
+}
+
+function getSubstringVector(substring) {
+    const vector = []
+    substring.split('').forEach(char => {
+        if (char === '-') {
+            vector.push('-inf')
+        } else {
+            vector.push(
+                char
+            )
+        }
+    });
+
+    return vector;
+}
+
+// Back to the other code
+
 const ptmColorMapping = {
     // Classical colors for more commonly occurring PTMs
     "Acetylation": "#D94F37",  // Slightly darker Tomato
@@ -233,7 +343,7 @@ const ptmColorMapping = {
 };
 
 document.addEventListener("DOMContentLoaded", async () => {
-    // tables = await fetch('/ptmkb/all_ptms_tables').then(res => res.json());
+    tables = await fetch('/ptmkb/all_ptms_tables').then(res => res.json());
     // console.log(tables);
     checkForLogin();
     document.getElementById('protein3DStructure').style.display = 'none';
@@ -332,10 +442,12 @@ async function getJPredInference(seq, acc, ptms) {
             // Handle the case where the sequence is too long for JPred
             document.getElementById('jpredPredictions').classList.remove('lds-dual-ring');
             document.getElementById('jpredPredictions').innerHTML = '<h5>The sequence is too long and cannot be predicted by JPred!</h5>';
+            document.getElementById('jpredInfo').innerHTML = '';
         }
     }).catch(err => {
         document.getElementById('jpredPredictions').classList.remove('lds-dual-ring');
         document.getElementById('jpredPredictions').innerHTML = '<h5>Error while submitting sequence. Please try again!</h5>';
+        document.getElementById('jpredInfo').innerHTML = '';
     });
 }
 
@@ -422,6 +534,7 @@ function formatJpredResponse(response, acc, ptms) {
 }
 
 function generateHtmlForJPred(data, acc, ptms) {
+    document.getElementById('jpredInfo').innerHTML = '';
     // Going to populate the data JSON with another value.
     data['ptms'] = {};
 
@@ -438,7 +551,6 @@ function generateHtmlForJPred(data, acc, ptms) {
         }
     });
     indices = Array.from(indices);
-    document.getElementById('jpredInfo').innerHTML = '';
     // Set a base font size for both labels and sequences
     const fontSize = '14px';
 
@@ -864,6 +976,8 @@ async function preparePTMDetails(localizedSequence, localizedSequenceInfo, ptmsD
 
     let centerChar = ''; // Use this later on
 
+    // First, construct a vector to pass on for calculation
+
     // Loop through the localized sequence text and bold PTMs
     localizedSequence.split('').forEach((char, index) => {
         // Get the global index for this character in the full sequence
@@ -1048,11 +1162,7 @@ async function preparePTMDetails(localizedSequence, localizedSequenceInfo, ptmsD
         evidenceRow.appendChild(evidenceValueCell);
         ptmTable.appendChild(evidenceRow);
 
-        // Fetch additional PTM details like score and matrix if required
-        const freqTableResp = await fetchData(ptm[1], centerChar, 'freq');
-        const logTableResp = await fetchData(ptm[1], centerChar, 'log-e');
-
-        if (!logTableResp.message) {
+        if (tables[ptm[1]][centerChar] !== undefined) {
             const scoreRow = document.createElement('tr');
             const scoreKeyCell = document.createElement('td');
             scoreKeyCell.classList.add('key');
@@ -1061,16 +1171,28 @@ async function preparePTMDetails(localizedSequence, localizedSequenceInfo, ptmsD
             scoreKeyCell.appendChild(scoresLabel);
             const scoreValueCell = document.createElement('td');
             scoreValueCell.classList.add('value');
+            
+            const relativeIndex = []
+            for (let i = -10; i <= 10; i++) {
+                relativeIndex.push(i <= 0 ? i.toString() : `+${i}`);
+            }
 
-            const scores = await fetch(`/ptmkb/get_protein_log_scores?ptm=${encodeURIComponent(ptm[1])}&subsequence=${encodeURIComponent(localizedSequence)}`)
-            .then(res => {
-                return res.json();
-            }).catch(error => {
-                console.error(error);
+            var vector = getSubstringVector(localizedSequence);
+            var currScores = [];
+            table = tables[ptm[1]][centerChar]['log-e'];
+            vector.forEach((elem, relIdx) => {
+                if (elem === '-inf') {
+                    currScores.push(elem)
+                } else {
+                    currScores.push(table[relativeIndex[relIdx]][localizedSequence[relIdx]]);
+                }
             });
 
-            const logSum = typeof(scores['logSum']) === 'string' ? "NIL" : scores['logSum'].toFixed(2);
-            const logLogProduct = typeof(scores['logLogProduct']) === 'string' ? "NIL" : scores['logLogProduct'].toFixed(2);
+            // Use the currScores to get actual scores
+            var logSum = additiveCalculator(currScores);
+            logSum = typeof(logSum) === "number" ? logSum.toFixed(2) : logSum;
+            var logLogProduct = multiplicativeCalculator(currScores)['logLogProduct'];
+            logLogProduct = typeof(logLogProduct) === "number" ? logLogProduct.toFixed(2) : logLogProduct;
 
             if (logSum !== 'NIL' || logLogProduct !== 'NIL') {
                 const scoresHelp = document.createElement('a');
@@ -1142,6 +1264,14 @@ async function preparePTMDetails(localizedSequence, localizedSequenceInfo, ptmsD
         // tableContainer.appendChild(ptmTable);
     });
 
+    detailsPanel.innerHTML = '';
+    // Append the sequence to the details panel
+    // Append the table container to the details panel
+    detailsPanel.appendChild(sequenceDisplayTitle);
+    detailsPanel.appendChild(sequenceDisplay);
+    detailsPanel.appendChild(positionDiv);
+    detailsPanel.appendChild(ptmInfo);
+
     if (afPdbViewer !== null) {
         const pdbHighlightButton = document.createElement('button');
         pdbHighlightButton.textContent = "Click here to view the residue in the PDB structure";
@@ -1161,16 +1291,9 @@ async function preparePTMDetails(localizedSequence, localizedSequenceInfo, ptmsD
             );
             scrollIfNotInView(document.getElementById('pdbMajor'));
         });
+
+        detailsPanel.appendChild(pdbHighlightButton);
     }
-    
-    detailsPanel.innerHTML = '';
-    // Append the sequence to the details panel
-    // Append the table container to the details panel
-    detailsPanel.appendChild(sequenceDisplayTitle);
-    detailsPanel.appendChild(sequenceDisplay);
-    detailsPanel.appendChild(positionDiv);
-    detailsPanel.appendChild(ptmInfo);
-    detailsPanel.appendChild(pdbHighlightButton);
 
     // Show the details panel with styles applied
     detailsPanel.style.display = 'block';
@@ -1532,14 +1655,52 @@ function displayProteinSequence(sequence, modificationData, additionalUniprotInf
 
             // Add a hover event to show the custom tooltip
             charSpan.addEventListener("mouseenter", (e) => {
+                const relativeIndex = []
+                for (let i = -10; i <= 10; i++) {
+                    relativeIndex.push(i <= 0 ? i.toString() : `+${i}`);
+                }
                 var ptmsForThisChar = ptmsAtPositions[charIndex] || [];
                 ptmsForThisChar = new Set(ptmsForThisPosition);
                 ptmsForThisChar = Array.from(ptmsForThisPosition);
                 if (ptmsForThisChar.length > 0) {
+                    // This is where we get scores.
+                    // First, get the substring.
+                    var subsequence = getSubstring(sequence, charIndex);
+                    var vector = getSubstringVector(subsequence);
+                    const scores = {};
+                    ptmsForThisChar.forEach(ptm => {
+                        var table = {};
+                        if (tables[ptm][sequence[charIndex]] !== undefined) {
+                            var currScores = [];
+                            table = tables[ptm][sequence[charIndex]]['log-e'];
+                            vector.forEach((elem, relIdx) => {
+                                if (elem === '-inf') {
+                                    currScores.push(elem)
+                                } else {
+                                    currScores.push(table[relativeIndex[relIdx]][subsequence[relIdx]]);
+                                }
+                            });
+
+                            // Use the currScores to get actual scores
+                            var logSum = additiveCalculator(currScores);
+                            logSum = typeof(logSum) === "number" ? logSum.toFixed(2) : logSum;
+                            var logLogProduct = multiplicativeCalculator(currScores)['logLogProduct'];
+                            logLogProduct = typeof(logLogProduct) === "number" ? logLogProduct.toFixed(2) : logLogProduct;
+                            scores[ptm] = [logSum, logLogProduct];
+                        } else {
+                            scores[ptm] = ['NIL', 'NIL'];
+                        }
+                    });
+
+                    const toolTipString = [];
+                    ptmsForThisChar.forEach(ptm => {
+                        toolTipString.push(`${ptm} (${scores[ptm][0]}, ${scores[ptm][1]})`)
+                    });
+
                     // Create a tooltip element
                     const tooltip = document.createElement("div");
                     tooltip.classList.add("custom-tooltip");
-                    tooltip.textContent = ptmsForThisChar.join(", ");  // Display all PTMs for this position
+                    tooltip.textContent = toolTipString.join("\n");  // Display all PTMs for this position
 
                     // Append the tooltip to the body
                     document.body.appendChild(tooltip);
@@ -1726,6 +1887,8 @@ function generatePTMHtmlTable() {
 
 async function displayPDBStructures(uniprotAC, alphafoldPdbData, ptms) {
     document.getElementById('rcsbPdbInfo').innerHTML = '';
+    document.getElementById('afPdbStructure').innerHTML = '';
+    document.getElementById('rcsbPdbStructure').innerHTML = '';
     let indices = new Set();
     ptms.forEach(ptm => {
         indices.add(ptm[0]);
@@ -2191,6 +2354,7 @@ async function displayPDBStructures(uniprotAC, alphafoldPdbData, ptms) {
         });
 
         document.getElementById('pdbDropdownSelect').addEventListener('change', async function(event) {
+            document.getElementById('rcsbPdbStructure').innerHTML = '';
             document.getElementById('rcsbProfile').style.display = 'none';
             document.getElementById('rcsbPdbStructure').classList.add('lds-dual-ring');
             document.getElementById('rcsbPdbInfo').innerHTML = ``;
@@ -2382,7 +2546,7 @@ async function displayPDBStructures(uniprotAC, alphafoldPdbData, ptms) {
             });
         });
     } else {
-        document.getElementById('rcsbHRef').innerHTML = `<h5>No RCSB Structure exists for ${uniprotAC}.</h5>`;
+        document.getElementById('rcsbHRef').innerHTML = `<h5>No RCSB Structure exists.</h5>`;
     }
     try{document.getElementById('afPdbStructure').classList.remove('lds-dual-ring');} catch(e) {}
     try{document.getElementById('rcsbPdbStructure').classList.remove('lds-dual-ring');} catch(e) {}
@@ -2546,24 +2710,23 @@ function generateHtmlForPdbStructure(data, target, ptms) {
 function updateStats(ptmData) {
     const totalSites = ptmData.length;
     const uniquePTMs = new Set(ptmData.map(ptm => ptm[1])); // Extract unique PTM types
-    
-    // Count all string values from the third element (semicolon-separated)
-    let totalStrings = 0;
+    const numLits = [];
+    // Count all string values from the third element (semicolon-separated - could also be strings)
     ptmData.forEach(ptm => {
-        let strings = [];
-
         if (typeof(ptm[2]) === "string") {
-            strings = ptm[2].split(';'); // Split the third element by semicolon
+            ptm[2].split(';').forEach(lit => {
+                numLits.push(lit);
+            });
         } else if (typeof(ptm[2]) == "number") {
-            strings = [Number(ptm[2])];
+            numLits.push(Number(ptm[2]));
         }
-        totalStrings += strings.length; // Count the number of strings in this list
     });
+    const uniqueLits = new Set(numLits);
 
     // Populate the HTML with the calculated values
     document.getElementById('total-sites').textContent = `${totalSites}`;
     document.getElementById('unique-ptms').textContent = `${uniquePTMs.size}`;
-    document.getElementById('experimentally-verified').textContent = `${totalStrings}`;
+    document.getElementById('experimentally-verified').textContent = `${uniqueLits.size}`;
 
     document.getElementById('proteinStatisticsContainer').appendChild(generatePTMHtmlTable());
 }
@@ -2623,34 +2786,31 @@ function colorPTMs() {
 
 // Function to fetch the PDB file from AlphaFold and render it inside the specified div
 async function fetchProteinStructure(uniprotAccession) {
-    document.getElementById('protein3DStructure').classList.add('lds-dual-ring')
+    document.getElementById('protein3DStructure').classList.add('lds-dual-ring');
     document.getElementById('protein3DStructureInfo').style.display = 'none';
     const apiUrl = `https://alphafold.ebi.ac.uk/api/prediction/${uniprotAccession}`;
 
     try {
-        // Fetch the list of JSON objects with prediction data
         const response = await fetch(apiUrl);
-        if (!response.ok) {
-            // throw new Error(`Failed to fetch prediction data: ${response.statusText}`);
-            document.getElementById('protein3DStructure').innerHTML = `<h5>No 3D structure found!</h5><span class="question-mark" title="This is your tooltip text!"></span>`
-            document.getElementById('protein3DStructure').classList.remove('lds-dual-ring');
-        }
-        else {
-            const data = await response.json();
 
-            // If the response contains multiple entries, you can iterate over them
-            for (let entry of data) {
-                // Check if the 'pdbUrl' exists in the response entry
-                if (entry.pdbUrl) {
-                    // Fetch the raw PDB file from the pdbUrl
-                    return await fetchAndRenderPDB(entry.pdbUrl, uniprotAccession, 'pdb');
-                }
+        if (!response.ok) {
+            throw new Error(`Failed to fetch prediction data: ${response.statusText} (Status Code: ${response.status})`);
+        }
+
+        const data = await response.json();
+
+        for (let entry of data) {
+            if (entry.pdbUrl) {
+                return await fetchAndRenderPDB(entry.pdbUrl, uniprotAccession, 'pdb');
             }
         }
 
+        document.getElementById('protein3DStructure').innerHTML = `<h5>No 3D structure found!</h5><span class="question-mark" title="This is your tooltip text!"></span>`;
+        document.getElementById('protein3DStructure').classList.remove('lds-dual-ring');
+
     } catch (error) {
-        console.error("Error fetching protein structure:", error);
-        document.getElementById('protein3DStructure').innerHTML = `<h5>Block Error ${e}</h5>`
+        // This will catch errors like network issues or failed fetch (e.g., 404 or 500)
+        document.getElementById('protein3DStructure').innerHTML = `<h5>Error: ${error.message}</h5>`;
         document.getElementById('protein3DStructure').classList.remove('lds-dual-ring');
         return null;
     }
@@ -2894,7 +3054,7 @@ async function search() {
 
                             document.getElementById('sequenceDisplayer').setAttribute('style', "display: block;");
                             document.getElementById('iframeData').textContent = "";
-                            document.getElementById('iframeData2').textContent = "Hover on a highlighted amino acid to view the PTM; click on a highlighted amino acid to view details of the PTM below."
+                            document.getElementById('iframeData2').textContent = "Hover on a highlighted residue to view the PTM and the associated Log Sum and Log-Log Product scores; click on a highlighted residue to view details of the PTM below."
                             document.getElementById('iframeData3').textContent = "You can click on the boxes below to hide certain PTMs in the above sequence.";
                             document.getElementById('foundProtein').style.display = 'block';
                             document.getElementById('checkboxContainer').style.display = 'block';

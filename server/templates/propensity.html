@@ -69,14 +69,14 @@
             </div>
             <div>
                 <span class="form-group input-group-btn">
-                    <button type="button" id="form_submit" class="btn btn-primary" onclick="calculate()">Calculate</button>
+                    <button type="button" id="form_submit" class="btn btn-primary" onclick="calculate()" disabled="true">Calculate</button>
                 </span>
             </div>
             <i class="fa fa-search fa-small"></i><label style="padding: 20px; margin: 0;"><strong>Example:</strong></label>
-            <a id="exampleInput" onclick="exampleSearch(this)" style="color: #1a0dab; text-decoration: underline; font-weight: normal; cursor: pointer;">WKLLPENNVLSPLPSQAMDDW; Phosphorylation</a>, 
+            <a id="exampleInput" onclick="exampleSearch(this)" style="color: #1a0dab; text-decoration: underline; font-weight: normal; cursor: pointer;">WKLLPENNVLSPLPSQAMDDW; Phosphorylation</a>
         </div>
     </div>
-    <div id="messageDiv" style="padding: 40px; margin-left: auto; margin-right: auto;"></div>
+    <div id="messageDiv" style="padding: 40px; margin-left: auto; margin-right: auto;"><h5>Loading tables, please wait...</h5></div>
 
     <div id="subsequenceDiv" style="padding: 40px; margin-left: auto; margin-right: auto;"></div>
 
@@ -94,7 +94,7 @@
 
     <footer class="footer bg-light py-3">
         <div class="container text-center">
-            <p class="mb-0"> This website is open for everyone to use. For more information, please contact us.</p>
+            <p class="mb-0">This website is free and open to all users and there is no login requirement. For more information, please contact us.</p>
             <p class="mb-0"><a href="http://birl.lums.edu.pk/">© 2024 Biomedical Informatics & Engineering Research Laboratory (BIRL)</a></p>
         </div>
     </footer>

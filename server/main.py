@@ -754,7 +754,7 @@ def get_matrix(
         table = 'log-e'
     if not os.path.exists(f'./data/tables/{ptm}/{table}/{residue}.json'):
         return {'message': f"Could not find the positional matrix of {ptm} for {residue}."}
-    return [i for i in PTM_TABLES.get(ptm) if i.get(residue, None) is not None][0].get(residue).get(table)
+    return PTM_TABLES.get(ptm, {}).get(residue, {}).get(table, None)
 
 @app.get('/ptmkb/get_protein_log_scores', include_in_schema=False)
 async def calculate_propensity(
@@ -1539,7 +1539,7 @@ async def get_positional_frequency_matrix(
         table = 'log-e'
     if not os.path.exists(f'./data/tables/{ptm}/{table}/{residue}.json'):
         return {'message': f"Could not find the positional matrix of {ptm} for {residue}."}
-    return [i for i in PTM_TABLES.get(ptm) if i.get(residue, None) is not None][0].get(residue).get(table)
+    return [i for i in PTM_TABLES.get(ptm) if i.get(residue, None) is not None].get(residue).get(table)
 
 @app.get('/ptmkb/api/calculate-propensity', dependencies=[Depends(JWTBearer())], responses={
     200: {

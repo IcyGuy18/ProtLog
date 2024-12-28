@@ -144,21 +144,31 @@ function checkForLogin() {
     }
 }
 
-document.addEventListener("DOMContentLoaded", () => {
+var tables = null;
+
+document.addEventListener("DOMContentLoaded", async () => {
     document.getElementById('aa').style.display = 'none';
     document.getElementById('tab').style.display = 'none';
     document.getElementById('download').style.display = 'none';
     document.getElementById('downloadButton').style.display = 'none';
-    console.log(document.getElementById('ptmSelect'));
     document.getElementById('ptmSelect').value = '';
     checkForLogin();
+    tables = await fetch('/ptmkb/all_ptms_tables').then(res => res.json());
+    Object.keys(tables).forEach(key => {
+        const option = document.createElement('option');
+        option.textContent = key;
+        document.getElementById('ptmSelect').appendChild(option);
+    });
+    document.getElementById('ptmSelect').addEventListener('change', (e) => {
+        getAminoAcids(e.target);
+    })
+    getAminoAcids()
 });
 
 var currentData = {};
 
 const mapping = {
     'Frequency': 'freq',
-    'Log Odd (base 2)': 'log2',
     'Log Odd (base e)': 'log-e'
 }
 
@@ -211,26 +221,36 @@ async function getAminoAcids() {
     document.getElementById('tab').style.display = 'none';
     document.getElementById('download').style.display = 'none';
     document.getElementById('downloadButton').style.display = 'none';
-    const aaList = document.getElementById('aaSelect').innerHTML = '';
+    document.getElementById('aaSelect').innerHTML = '';
     // Now call the Fetch API.
     const ptm = document.getElementById('ptmSelect').value;
-    fetch(`/ptmkb/getAminoAcids?ptm=${encodeURIComponent(ptm)}`).then((res) => {
-        return res.json();
-    }).then((json) => {
-        if (json.data) {
-            const aaList = document.getElementById('aaSelect');
-            json.data.forEach((aa) => {
-                const option = document.createElement('option');
-                option.textContent = aa;
-                aaList.appendChild(option);
-            });
-            aaList.value = '';
-            document.getElementById('aa').style.display = 'block';
-            aaList.addEventListener('change', displayTablesList)
-        }
-    }).catch((error) => {
-        console.error(error);
+    // fetch(`/ptmkb/getAminoAcids?ptm=${encodeURIComponent(ptm)}`).then((res) => {
+    //     return res.json();
+    // }).then((json) => {
+    //     if (json.data) {
+    //         const aaList = document.getElementById('aaSelect');
+    //         json.data.forEach((aa) => {
+    //             const option = document.createElement('option');
+    //             option.textContent = aa;
+    //             aaList.appendChild(option);
+    //         });
+    //         aaList.value = '';
+    //         document.getElementById('aa').style.display = 'block';
+    //         aaList.addEventListener('change', displayTablesList)
+    //     }
+    // }).catch((error) => {
+    //     console.error(error);
+    // });
+
+    const aaList = document.getElementById('aaSelect');
+    Array.from(Object.keys(tables[ptm])).forEach((aa) => {
+        const option = document.createElement('option');
+        option.textContent = aa;
+        aaList.appendChild(option);
     });
+    aaList.value = '';
+    document.getElementById('aa').style.display = 'block';
+    aaList.addEventListener('change', displayTablesList)
 }
 
 async function displayTablesList() {
@@ -252,17 +272,18 @@ async function displayTableAndDownload() {
     const ptm = document.getElementById('ptmSelect').value;
     const aa = document.getElementById('aaSelect').value;
     const table = document.getElementById('tableSelect').value;
-    fetch(`/ptmkb/pos_matrix?ptm=${encodeURIComponent(ptm)}&residue=${encodeURIComponent(aa)}&table=${encodeURIComponent(mapping[table])}`)
-    .then(res => {
-        return res.json();
-    }).then(json => {
-        displayTable(json);
-        document.getElementById('ptmTable').classList.remove('lds-dual-ring');
-    }).catch(error => {
-        console.error(error);
-    });
-
-    // Display table here
+    
+    // fetch(`/ptmkb/pos_matrix?ptm=${encodeURIComponent(ptm)}&residue=${encodeURIComponent(aa)}&table=${encodeURIComponent(mapping[table])}`)
+    // .then(res => {
+    //     return res.json();
+    // }).then(json => {
+    //     displayTable(json);
+    //     document.getElementById('ptmTable').classList.remove('lds-dual-ring');
+    // }).catch(error => {
+    //     console.error(error);
+    // });
+    document.getElementById('ptmTable').classList.remove('lds-dual-ring');
+    displayTable(tables[ptm][aa][mapping[table]]);
 }
 
 function displayTable(data) {
@@ -383,7 +404,6 @@ function displayTable(data) {
             }
             if (value !== '-inf') {
                 cell.style.backgroundColor = colorMapping(value)
-                console.log(value, cell.style.backgroundColor);
             }
             else
                 cell.style.backgroundColor = `rgba(0, 0, 255, 0.1)`
