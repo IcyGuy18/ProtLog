@@ -981,12 +981,6 @@ iframe {
     border-color: #0056b3;           /* Darker border */
 }
 
-/* Focus state for labels */
-.checkbox-container input[type="checkbox"]:focus + label {
-    outline: 2px solid #0056b3;      /* Blue outline for focus */
-    box-shadow: 0 0 5px rgba(0, 91, 255, 0.6); /* Focus shadow for better visibility */
-}
-
 /* Styling to ensure the label behaves like a clickable checkbox */
 .checkbox-container input[type="checkbox"]:checked + label {
     background-color: #007bff;       /* Blue background when checked */

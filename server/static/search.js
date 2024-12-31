@@ -62,11 +62,39 @@ function checkForLogin() {
             }).catch(err => {
                 console.error(err);
             });
-            navigator.clipboard.writeText(response.token).then(() => {
-                alert('Token copied to clipboard!');
-            }).catch(err => {
-                alert('Failed to copy token: ' + err);
-            });
+
+            if (response && response.token) {
+                navigator.clipboard.writeText(response.token).then(() => {
+                    const popup = document.createElement('div');
+                    popup.textContent = 'Token copied!';
+                    popup.style.position = 'fixed';
+                    popup.style.bottom = '80px';
+                    popup.style.left = '100px';
+                    popup.style.transform = 'translateX(-50%)';
+                    popup.style.backgroundColor = 'rgba(0, 0, 0, 1)';
+                    popup.style.color = 'white';
+                    popup.style.padding = '10px 20px';
+                    popup.style.borderRadius = '5px';
+                    popup.style.fontSize = '20px';
+                    popup.style.display = 'none';
+                    popup.style.opacity = '1';
+                    popup.style.transition = 'opacity 1s ease-out';
+                    popup.style.userSelect = 'none';
+                    document.body.appendChild(popup);
+                    popup.style.display = 'block';
+                    setTimeout(() => {
+                        popup.style.opacity = '0';
+                        setTimeout(() => {
+                            popup.style.display = 'none';
+                            popup.style.opacity = '1';
+                        }, 1000);
+                    }, 3000);
+                }).catch(err => {
+                    alert('Failed to copy token: ' + err);
+                });
+            } else {
+                alert('Failed to retrieve token');
+            }
         });
 
         // Reset token (if expired)
@@ -88,11 +116,37 @@ function checkForLogin() {
             }).catch(err => {
                 console.error(err);
             });
-            if (response.reset) {
-                var dataToUpdate = JSON.parse(user);
-                dataToUpdate['token'] = response.token;
-                sessionStorage.setItem('user', JSON.stringify(dataToUpdate));
-                alert('Token reset! Copy the new token to use!');
+            if (response && response.reset) {
+                navigator.clipboard.writeText(response.token).then(() => {
+                    const popup = document.createElement('div');
+                    popup.textContent = 'Token reset!';
+                    popup.style.position = 'fixed';
+                    popup.style.bottom = '80px';
+                    popup.style.left = '100px';
+                    popup.style.transform = 'translateX(-50%)';
+                    popup.style.backgroundColor = 'rgba(0, 0, 0, 1)';
+                    popup.style.color = 'white';
+                    popup.style.padding = '10px 20px';
+                    popup.style.borderRadius = '5px';
+                    popup.style.fontSize = '20px';
+                    popup.style.display = 'none';
+                    popup.style.opacity = '1';
+                    popup.style.transition = 'opacity 1s ease-out';
+                    popup.style.userSelect = 'none';
+                    document.body.appendChild(popup);
+                    popup.style.display = 'block';
+                    setTimeout(() => {
+                        popup.style.opacity = '0';
+                        setTimeout(() => {
+                            popup.style.display = 'none';
+                            popup.style.opacity = '1';
+                        }, 1000);
+                    }, 3000);
+                }).catch(err => {
+                    console.error('Failed to reset token: ' + err);
+                });
+            } else {
+                console.error('Failed to reset token');
             }
         });
 
@@ -343,9 +397,8 @@ const ptmColorMapping = {
 };
 
 document.addEventListener("DOMContentLoaded", async () => {
-    tables = await fetch('/ptmkb/all_ptms_tables').then(res => res.json());
-    // console.log(tables);
     checkForLogin();
+    tables = await fetch('/ptmkb/all_ptms_tables').then(res => res.json());
     document.getElementById('protein3DStructure').style.display = 'none';
     // Set up an autocomplete function
     $('#form_value').on('input', async function() {
@@ -1863,7 +1916,63 @@ function generatePTMHtmlTable() {
             
             if (ptmCounts[ptm][aa]) {
                 td.style.fontWeight = 'regular';
+                td.style.color = 'blue';
+                td.style.cursor = 'pointer';
                 td.textContent = ptmCounts[ptm][aa];
+                // Add hyperlink here to all available residues
+                function colorAllResiduesOfPTM(p, residue) {
+                    // Disable all checkboxes and only keep the PTM one enabled
+                    document.getElementById('checkboxContainer').querySelectorAll('li').forEach(li => {
+                        const checkbox = li.children[0];
+                        const label = li.children[1];
+
+                        const color = ptmColorMapping[checkbox.name];
+                        let styleStr = `border: 2px solid ${color}; padding: 5px; marginBottom: 10px; display: inline-block;`
+
+                        if (checkbox.name === p) {
+                            checkbox.checked = true;
+                            styleStr += " background: black; color: white;"
+                        }
+                        else {
+                            checkbox.checked = false;
+                            styleStr += " background: white; color: black;"
+                        }
+                        label.setAttribute('style', styleStr)
+                    });
+                    // Now for all highlighted spans, disable all unless they only contain that one PTM
+                    const highlightedSpans = document.getElementById('sequenceDisplayer').querySelectorAll('span');
+                    highlightedSpans.forEach(span => {
+                        span.classList.remove('highlighted');
+                        span.style.backgroundColor = '';
+                        span.style.background = '';
+                        span.style.backgroundSize = '';
+                        // Get the list of PTMs applied to the current span (separated by semicolons)
+                        var ptmsForThisChar = span.getAttribute('data-ptm') ? span.getAttribute('data-ptm').split(';') : [];
+                        if (ptmsForThisChar.includes(p) && span.textContent === residue) {
+                            span.style.background = ptmColorMapping[p];
+                            span.classList.add('highlighted'); // Done for the first one if multiple background colors
+                        }
+                    });
+                }
+
+                function scrollIfNotInView(element) {
+                    const rect = element.getBoundingClientRect();
+                    const isInViewport = (
+                        rect.top >= 0 &&
+                        rect.left >= 0 &&
+                        rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
+                        rect.right <= (window.innerWidth || document.documentElement.clientWidth)
+                    );
+                
+                    if (!isInViewport) {
+                        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                }
+
+                td.addEventListener('click', () => {
+                    colorAllResiduesOfPTM(ptm, aa)
+                    scrollIfNotInView(document.getElementById('iframeData2'));
+                });
             } else {
                 td.textContent = '-';
             }
@@ -2582,26 +2691,13 @@ function generateHtmlForPdbStructure(data, target, ptms) {
         // Add label to the labels box
         const labelDiv = document.createElement('div');
         labelDiv.setAttribute('style', 'font-weight: bold; margin-bottom: 10px; white-space: nowrap;');
-        labelDiv.textContent = label.charAt(0).toUpperCase() + label.slice(1);  // Capitalize first letter
+        labelDiv.textContent = label.charAt(0).toUpperCase() + label.slice(1); // Capitalize first letter
         labelsBox.appendChild(labelDiv);
 
         // Create corresponding sequence div
         const sequenceDiv = document.createElement('div');
         sequenceDiv.setAttribute('style', 'white-space: nowrap; margin-bottom: 10px;');
 
-        // if (label === 'pos') {
-        //     for (i = 0; i < data['sequence'].length; i++) {
-        //         const span = document.createElement('span');
-        //         span.textContent = (i+1);
-        //         sequenceDiv.appendChild(span);
-        //     }
-        // } else if (label === 'SASA') {
-        //     // For SASA, display the values as numbers
-        //     data[label].forEach((value, idx) => {
-        //         const span = document.createElement('span');
-        //         span.textContent = value.toFixed(2) + '\u00A0|\u00A0';  // Display as fixed-point numbers
-        //         sequenceDiv.appendChild(span);
-        //     });
         if (label !== 'sequence') {
             data[label].forEach((char) => {
                 const span = document.createElement('span');
@@ -2732,16 +2828,14 @@ function updateStats(ptmData) {
 }
 
 function colorPTMs() {
-    console.log("Calling the new one");
-
     // Find all highlighted spans in the sequence
     const highlightedSpans = document.getElementById('sequenceDisplayer').querySelectorAll('span');
 
     // Find all checked PTM sequences for colouring
     var allPTMs = document.getElementById('checkboxContainer').querySelectorAll('li');
     allPTMs = Array.from(new Set(Object.values(allPTMs).map(label => {
-        if (label.children[0].checked === true)
-            return label.children[0].getAttribute('value');
+        if (label.children[1].style.color === 'white')
+            return label.children[1].getAttribute('for');
         else
             return null;
     })));
@@ -2870,7 +2964,7 @@ function populateCheckboxesFromResult(data) {
                 checkboxLabel.style.color = 'black';
             }
 
-            // Call colorPTMs function to update the highlights based on checked boxes
+            // Call function to update the highlights based on checked boxes
             colorPTMs();
         });
 

@@ -62,11 +62,39 @@ function checkForLogin() {
             }).catch(err => {
                 console.error(err);
             });
-            navigator.clipboard.writeText(response.token).then(() => {
-                alert('Token copied to clipboard!');
-            }).catch(err => {
-                alert('Failed to copy token: ' + err);
-            });
+
+            if (response && response.token) {
+                navigator.clipboard.writeText(response.token).then(() => {
+                    const popup = document.createElement('div');
+                    popup.textContent = 'Token copied!';
+                    popup.style.position = 'fixed';
+                    popup.style.bottom = '80px';
+                    popup.style.left = '100px';
+                    popup.style.transform = 'translateX(-50%)';
+                    popup.style.backgroundColor = 'rgba(0, 0, 0, 1)';
+                    popup.style.color = 'white';
+                    popup.style.padding = '10px 20px';
+                    popup.style.borderRadius = '5px';
+                    popup.style.fontSize = '20px';
+                    popup.style.display = 'none';
+                    popup.style.opacity = '1';
+                    popup.style.transition = 'opacity 1s ease-out';
+                    popup.style.userSelect = 'none';
+                    document.body.appendChild(popup);
+                    popup.style.display = 'block';
+                    setTimeout(() => {
+                        popup.style.opacity = '0';
+                        setTimeout(() => {
+                            popup.style.display = 'none';
+                            popup.style.opacity = '1';
+                        }, 1000);
+                    }, 3000);
+                }).catch(err => {
+                    alert('Failed to copy token: ' + err);
+                });
+            } else {
+                alert('Failed to retrieve token');
+            }
         });
 
         // Reset token (if expired)
@@ -88,11 +116,37 @@ function checkForLogin() {
             }).catch(err => {
                 console.error(err);
             });
-            if (response.reset) {
-                var dataToUpdate = JSON.parse(user);
-                dataToUpdate['token'] = response.token;
-                sessionStorage.setItem('user', JSON.stringify(dataToUpdate));
-                alert('Token reset! Copy the new token to use!');
+            if (response && response.reset) {
+                navigator.clipboard.writeText(response.token).then(() => {
+                    const popup = document.createElement('div');
+                    popup.textContent = 'Token reset!';
+                    popup.style.position = 'fixed';
+                    popup.style.bottom = '80px';
+                    popup.style.left = '100px';
+                    popup.style.transform = 'translateX(-50%)';
+                    popup.style.backgroundColor = 'rgba(0, 0, 0, 1)';
+                    popup.style.color = 'white';
+                    popup.style.padding = '10px 20px';
+                    popup.style.borderRadius = '5px';
+                    popup.style.fontSize = '20px';
+                    popup.style.display = 'none';
+                    popup.style.opacity = '1';
+                    popup.style.transition = 'opacity 1s ease-out';
+                    popup.style.userSelect = 'none';
+                    document.body.appendChild(popup);
+                    popup.style.display = 'block';
+                    setTimeout(() => {
+                        popup.style.opacity = '0';
+                        setTimeout(() => {
+                            popup.style.display = 'none';
+                            popup.style.opacity = '1';
+                        }, 1000);
+                    }, 3000);
+                }).catch(err => {
+                    console.error('Failed to reset token: ' + err);
+                });
+            } else {
+                console.error('Failed to reset token');
             }
         });
 
@@ -213,12 +267,12 @@ var suggestions = null;
 var tables = null;
 
 document.addEventListener("DOMContentLoaded", async () => {
+    checkForLogin();
     document.getElementById('messageDiv').innerHTML = "<h5>Loading tables, please wait...</h5>";
     tables = await fetch('/ptmkb/all_ptms_tables').then(res => res.json());
     suggestions = Array.from(Object.keys(tables));
     document.getElementById('messageDiv').innerHTML = "";
     document.getElementById('form_submit').disabled = false;
-    checkForLogin();
 
     // Set up an autocomplete function
     const input_elem = document.getElementById('sequence_value');
@@ -702,19 +756,16 @@ async function displayVector(data, subsequence) {
 function displayTable(data, ptm, site, subsequence) {
 
     subsequence = subsequence.toUpperCase();
-    // const KEYS = Object.keys(data);
     let subsequenceKeys = [];
-
     let middleIndex = Math.floor(subsequence.length / 2);
-
     let subsequence_indices = [];
 
     for (let i = -middleIndex; i <= middleIndex; i++) {
         var key = (i > 0) ? `+${i}` : `${i}`;
         subsequenceKeys.push(key);
-        const index = i + middleIndex;  // Adjust to get the correct index from the string
+        const index = i + middleIndex;
         if (index >= 0 && index < subsequence.length) {
-            subsequence_indices.push(subsequence[index]);  // Add the character at that position in the string
+            subsequence_indices.push(subsequence[index]);
         }
     }
 
@@ -728,11 +779,13 @@ function displayTable(data, ptm, site, subsequence) {
     });
 
     var colorMapping = (value) => {
-        let adjValue = Math.exp(value)
+        let adjValue = Math.exp(value);
         adjValue = Math.min(Math.max(adjValue, 0), 1);
         const alpha = Math.min(1, adjValue);
         return `rgba(255, 0, 0, ${alpha})`;
     };
+
+
     const tableData = document.createElement('table');
     tableData.classList.add('table');
     tableData.classList.add('table-bordered');
@@ -746,15 +799,8 @@ function displayTable(data, ptm, site, subsequence) {
     const tableBody = document.createElement("tbody");
     tableBody.setAttribute('id', 'tableBody');
 
-    // const xlabel = document.getElementById("xlabel");
-    // xlabel.innerHTML = "";
-
-    // const label_x = document.createElement("strong")
-    // label_x.textContent = `${ptm} - Position Relative to Modification Site`
-    
-    // xlabel.appendChild(label_x);
     const dataTable = document.createElement('table');
-    // dataTable.classList.add('table');
+
 
     const AA = "A C D E F G H I K L M N P Q R S T V W Y".split(' ');
     const KEYS = Object.keys(data);
@@ -767,7 +813,7 @@ function displayTable(data, ptm, site, subsequence) {
         row.setAttribute("id", aa);
         const colHeader = document.createElement("th");
         colHeader.textContent = aa;
-        colHeader.setAttribute("style", "text-align: center; background-color: #D0E0E3; border: 1px solid black;");
+        colHeader.setAttribute("style", "text-align: center; background-color: #D0E0E3; border: 1px solid black; width: 60px; height: 20px;");
         row.appendChild(colHeader);
         tableBody.appendChild(row);
     });
@@ -775,8 +821,8 @@ function displayTable(data, ptm, site, subsequence) {
     // Create a new table from scratch
     const introRow = document.createElement("tr");
     const introHeader = document.createElement("th");
-    introHeader.textContent = ""; //"Amino Acid";
-    introHeader.setAttribute("style", "border: 1px solid black;");
+    introHeader.textContent = "";
+    introHeader.setAttribute("style", "border: 1px solid black; text-align: center;");
     introRow.appendChild(introHeader);
     tableHead.appendChild(introRow);
     
@@ -788,7 +834,7 @@ function displayTable(data, ptm, site, subsequence) {
         if (parseInt(key) == 0) {
             site_index = index;
         }
-        header.setAttribute("style", "text-align: center; border: 1px solid black; background-color: #A0C4FF;")
+        header.setAttribute("style", "text-align: center; border: 1px solid black; background-color: #A0C4FF; width: 60px; height: 20px;")
         tableHead.children[0].appendChild(header);
     })
 
@@ -807,29 +853,29 @@ function displayTable(data, ptm, site, subsequence) {
                 cell.textContent = "-inf";
             // Set border lines for table
             if (index == Object.keys(KEYS).length - 1)
-                cell.setAttribute("style", "border-right: 3px solid black; text-align: center;")
+                cell.setAttribute("style", "border-right: 1px solid black; text-align: center;")
             if (outer == AA.length - 1)
-                cell.setAttribute("style", "border-bottom: 3px solid black; text-align: center;")
+                cell.setAttribute("style", "border-bottom: 1px solid black; text-align: center;")
             if (index == Object.keys(KEYS).length - 1 && outer == AA.length - 1)
-                cell.setAttribute("style", "border-right: 3px solid black; border-bottom: 3px solid black; text-align: center;")
+                cell.setAttribute("style", "border-right: 1px solid black; border-bottom: 1px solid black; text-align: center;")
             // Set colour
             // if (outer%2 == 0)
             //     cell.style.backgroundColor = '#F0F0F0';
             // else {
             //     cell.style.backgroundColor = '#FFFFFF';
             // }
-            cell.style.borderRight = "1px solid black";
-            cell.style.borderLeft = "1px solid black";
-            cell.style.borderTop = "1px solid black";
-            cell.style.borderBottom = "1px solid black";
-            if (value !== '-inf')
-                cell.style.backgroundColor = colorMapping(value)
-            else
+            cell.style.border = "1px solid black";
+            if (value !== '-inf') {
+                cell.style.backgroundColor = colorMapping(value);
+            } else {
                 cell.style.backgroundColor = `rgba(0, 0, 255, 0.1)`;
+            }
+
+            // Highlighting cells based on subsequence keys
             if (subsequenceKeys.includes(key) && highlightedKeys[key] == aa) {
                 cell.style.backgroundColor = `rgba(0, 255, 0, 0.3)`;
+                cell.style.fontWeight = 700;
             }
-            cell.style.fontWeight = 700;
             aaHeader.appendChild(cell);
         })
     });
@@ -856,6 +902,5 @@ function displayTable(data, ptm, site, subsequence) {
     newHtmlDocument.documentElement.appendChild(head);
     newHtmlDocument.documentElement.appendChild(body);
 
-    // dataTable.style.display = "table"; // Show the table
     return newHtmlDocument.documentElement.outerHTML;
 }

@@ -62,11 +62,39 @@ function checkForLogin() {
             }).catch(err => {
                 console.error(err);
             });
-            navigator.clipboard.writeText(response.token).then(() => {
-                alert('Token copied to clipboard!');
-            }).catch(err => {
-                alert('Failed to copy token: ' + err);
-            });
+
+            if (response && response.token) {
+                navigator.clipboard.writeText(response.token).then(() => {
+                    const popup = document.createElement('div');
+                    popup.textContent = 'Token copied!';
+                    popup.style.position = 'fixed';
+                    popup.style.bottom = '80px';
+                    popup.style.left = '100px';
+                    popup.style.transform = 'translateX(-50%)';
+                    popup.style.backgroundColor = 'rgba(0, 0, 0, 1)';
+                    popup.style.color = 'white';
+                    popup.style.padding = '10px 20px';
+                    popup.style.borderRadius = '5px';
+                    popup.style.fontSize = '20px';
+                    popup.style.display = 'none';
+                    popup.style.opacity = '1';
+                    popup.style.transition = 'opacity 1s ease-out';
+                    popup.style.userSelect = 'none';
+                    document.body.appendChild(popup);
+                    popup.style.display = 'block';
+                    setTimeout(() => {
+                        popup.style.opacity = '0';
+                        setTimeout(() => {
+                            popup.style.display = 'none';
+                            popup.style.opacity = '1';
+                        }, 1000);
+                    }, 3000);
+                }).catch(err => {
+                    alert('Failed to copy token: ' + err);
+                });
+            } else {
+                alert('Failed to retrieve token');
+            }
         });
 
         // Reset token (if expired)
@@ -88,11 +116,37 @@ function checkForLogin() {
             }).catch(err => {
                 console.error(err);
             });
-            if (response.reset) {
-                var dataToUpdate = JSON.parse(user);
-                dataToUpdate['token'] = response.token;
-                sessionStorage.setItem('user', JSON.stringify(dataToUpdate));
-                alert('Token reset! Copy the new token to use!');
+            if (response && response.reset) {
+                navigator.clipboard.writeText(response.token).then(() => {
+                    const popup = document.createElement('div');
+                    popup.textContent = 'Token reset!';
+                    popup.style.position = 'fixed';
+                    popup.style.bottom = '80px';
+                    popup.style.left = '100px';
+                    popup.style.transform = 'translateX(-50%)';
+                    popup.style.backgroundColor = 'rgba(0, 0, 0, 1)';
+                    popup.style.color = 'white';
+                    popup.style.padding = '10px 20px';
+                    popup.style.borderRadius = '5px';
+                    popup.style.fontSize = '20px';
+                    popup.style.display = 'none';
+                    popup.style.opacity = '1';
+                    popup.style.transition = 'opacity 1s ease-out';
+                    popup.style.userSelect = 'none';
+                    document.body.appendChild(popup);
+                    popup.style.display = 'block';
+                    setTimeout(() => {
+                        popup.style.opacity = '0';
+                        setTimeout(() => {
+                            popup.style.display = 'none';
+                            popup.style.opacity = '1';
+                        }, 1000);
+                    }, 3000);
+                }).catch(err => {
+                    console.error('Failed to reset token: ' + err);
+                });
+            } else {
+                console.error('Failed to reset token');
             }
         });
 
