@@ -1,13 +1,13 @@
 html, body {
-    height: 100%; /* This ensures the body takes up at least 100% of the viewport height */
-    margin: 0;    /* Remove default margin to prevent any unexpected behavior */
+    height: 100%;
+    margin: 0;
 }
 
 /* Use Flexbox to lay out the body */
 body {
     display: flex;
     flex-direction: column;
-    min-height: 100vh; /* Ensures the body takes up at least the full height of the viewport */
+    min-height: 100vh;
 }
 
 
@@ -27,21 +27,21 @@ body {
 
 /* Style for the canvas element */
 .protein-canvas {
-    border: 3px solid #333;                /* Border around the canvas */
-    border-radius: 10px;                   /* Rounded corners */
-    box-shadow: 0 0 15px rgba(0, 0, 0, 0.5); /* Add shadow around the canvas */
-    background-color: #f5f5f5;             /* Background color */
-    max-width: 100%;                       /* Ensure the canvas scales with its container */
-    max-height: 100%;                      /* Ensure the canvas scales with its container */
-    display: block;                        /* Make canvas a block element */
-    margin: auto;                          /* Center the canvas within its container */
+    border: 3px solid #333;
+    border-radius: 10px;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+    background-color: #f5f5f5;
+    max-width: 100%;
+    max-height: 100%;
+    display: block;
+    margin: auto;
 }
 
 /* APPLYING MAIN CONTENT HERE */
 
 /* Main content will take up all the available space between the navbar and footer */
 .main-content {
-    flex: 1; /* This ensures that the content grows to fill any remaining space */
+    flex: 1;
     width: 1200px;
 }
 
@@ -54,47 +54,42 @@ body {
 
 .container {
     width: 100%;
-    /* padding: 20px; */
-    /* border: 2px solid transparent; No border by default */
-    /* box-sizing: border-box; */
 }
 
 .suggestions-box {
-    display: none; /* Hidden by default */
-    position: absolute; /* Positioning relative to the input group */
-    top: calc(100% + 5px); /* Position just below the input */
-    left: 0; /* Align to the left */
-    width: 100%; /* Full width of the input */
-    background: white; /* White background for contrast */
-    border: 1px solid #ccc; /* Border for better visibility */
-    border-radius: 4px; /* Rounded corners */
-    max-height: 150px; /* Max height */
-    overflow-y: auto; /* Scroll if needed */
-    z-index: 1000; /* Ensure it appears on top */
+    display: none;
+    position: absolute;
+    top: calc(100% + 5px);
+    left: 0;
+    width: 100%;
+    background: white;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    max-height: 150px;
+    overflow-y: auto;
+    z-index: 1000;
 }
 .suggestion-item {
-    padding: 10px; /* Space for each suggestion */
-    cursor: pointer; /* Pointer cursor on hover */
+    padding: 10px;
+    cursor: pointer;
 }
 .suggestion-item:hover {
-    background-color: #007bff; /* Highlight on hover */
-    color: white; /* Change text color on hover */
+    background-color: #007bff;
+    color: white;
 }
 
 .iframe-container {
-    display: none; /* Initially hide the iframe */
-    text-align: center; /* Center content */
-    margin-top: 40px; /* Add top margin to separate from search bar */
-    /* padding: 20px; */
-    width: 100%; /* Set iframe width */
+    display: none;
+    text-align: center;
+    margin-top: 40px;
+    width: 100%;
 }
 
 iframe {
-    /* width: 100%; Set iframe width */
-    height: 600px; /* Set iframe height */
-    border: none; /* Remove border */
-    border-radius: 8px; /* Add rounded corners */
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Add shadow for depth */
+    height: 600px;
+    border: none;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 
 #iFrameData {
@@ -107,14 +102,14 @@ iframe {
 
 .alert {
     width: 500px;
-    max-width: 1050px; /* Maximum width */
+    max-width: 1050px;
     margin: 0 auto;
-    border-radius: 8px; /* Add rounded corners to the alert */
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1)
 }
 
 .custom-container {
-    margin-top: 20px; /* Add margin to the title container */
+    margin-top: 20px
 }
 
 /* Navbar styling */
@@ -211,11 +206,11 @@ iframe {
 }
 
 .btn-primary {
-    transition: background-color 0.3s; /* Smooth transition for button */
+    transition: background-color 0.3s;
 }
 
 .btn-primary:hover {
-    background-color: #004085; /* Darker shade on hover */
+    background-color: #004085;
 }
 
 .lds-dual-ring {
@@ -258,102 +253,88 @@ iframe {
 /* Specific styles for the custom table container */
 .protein-info-container {
     background-color: #e5e5e5;
-    padding: 30px; /* Space around the table */
-    border-radius: 10px; /* Rounded corners for a modern look */
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Soft shadow for depth */
-    max-width: 1280px; /* Maximum width */
-    margin: 0 auto; /* Center align the table */
-    overflow-x: auto; /* Allow horizontal scrolling if needed */
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    max-width: 1280px;
+    margin: 0 auto;
+    overflow-x: auto;
     position: relative;
 }
 
 /* New window styling for the top-right corner */
 .protein-info-container .top-right-window {
-    position: absolute; /* Position it relative to the protein-info-container */
-    top: 20px; /* Adjust the distance from the top */
-    right: 20px; /* Adjust the distance from the right */
-    background-color: #fff; /* White background for the window */
-    padding: 15px; /* Space inside the window */
-    border-radius: 8px; /* Rounded corners for the window */
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); /* Light shadow for depth */
-    width: 300px; /* Set a fixed width for the window */
-    max-height: 300px; /* Maximum height for the window */
-    overflow-y: auto; /* Allow scrolling if the content exceeds the height */
-    z-index: 10; /* Ensure it's on top of the table */
-}
-
-/* New class for positioning the protein3DStructureInfo window (same as 3DStructure window) */
-.protein-info-container .top-right-window-disclaimer {
-    position: absolute; /* Keep absolute positioning */
-    top: 270px; /* Adjust the distance from the top (same as 3DStructure) */
-    right: 20px; /* Position it to the left instead of right */
-    background-color: #fff; /* Same white background */
-    padding: 1px; /* Space inside the window */
-    border-radius: 4px; /* Rounded corners for the window */
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); /* Light shadow for depth */
-    width: 300px; /* Set a fixed width for the window */
-    height: 24px; /* Maximum height for the window */
-    z-index: 10; /* Keep on top of table content */
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background-color: #fff;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    width: 300px;
+    max-height: 300px;
+    overflow-y: auto;
+    z-index: 10;
 }
 
 /* Style for the disclaimer (customized to sit below 3DStructureInfo) */
 .disclaimer-text {
     text-align: center;
     font-size: 16px;
-    color: rgba(0, 0, 0, 0.7); /* Darker color for better visibility */
+    color: rgba(0, 0, 0, 0.7);
 }
 
 /* Table Styling - Scoped to the protein-info-container */
 .protein-info-container .table {
-    table-layout: fixed; /* Ensure column widths are fixed */
-    width: 100%; /* Make sure table takes full width */
-    border-collapse: collapse; /* Collapse table borders */
-    background-color: #fff; /* White background for table itself */
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1); /* Light shadow for table */
-    border-radius: 10px; /* Rounded corners for table */
+    table-layout: fixed;
+    width: 100%;
+    border-collapse: collapse;
+    background-color: #fff;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
 }
 
 /* Header Styling */
 .protein-info-container .table th {
-    background-color: #007bff; /* Blue background for header */
-    color: #fff; /* White text color */
-    padding: 12px 16px; /* Padding inside header cells */
-    font-size: 16px; /* Larger font size for headers */
+    background-color: #007bff;
+    color: #fff;
+    padding: 12px 16px;
+    font-size: 16px;
     text-align: left;
-    font-weight: bold; /* Bold text in the header */
-    border-bottom: 2px solid #0066cc; /* Darker border below header */
-    text-transform: uppercase; /* Uppercase text for a modern look */
+    font-weight: bold;
+    border-bottom: 2px solid #0066cc;
+    text-transform: uppercase;
 }
 
 /* Table Cell Styling */
 .protein-info-container .table th, .protein-info-container .table td {
-    padding: 12px 16px; /* Add space inside cells */
-    border: 1px solid #e0e0e0; /* Light border for table cells */
+    padding: 12px 16px;
+    border: 1px solid #e0e0e0;
     font-size: 14px;
-    color: #333; /* Darker text color for contrast */
-    line-height: 1.6; /* Increased line-height for readability */
-    transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease; /* Smooth transitions */
+    color: #333;
+    line-height: 1.6;
+    transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
 }
 
 /* Default cell background (light blue-ish) */
 .protein-info-container .table td {
-    background-color: #e3f2fd; /* Soft light blue background */
-    color: #333; /* Dark text color for contrast */
-    word-wrap: break-word; /* Ensure long words break */
-    overflow-wrap: break-word; /* Older support for breaking long words */
-    white-space: normal; /* Allow the text to wrap to the next line */
+    background-color: #e3f2fd;
+    color: #333;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    white-space: normal;
     text-align: left;
     white-space: pre-wrap;
 }
 
 /* Key Column */
 .protein-info-container .table td.key {
-    width: 200px; /* Set width for key column */
-    text-align: center; /* Left-align key text */
-    color: #444; /* Slightly lighter color for keys */
-    border-right: 2px solid #ddd; /* Border on the right side of key column */
-    background-color: #f7f7f7; /* Keep key cells highlighted */
-    font-weight: 700; /* Keep the key text bold */
+    width: 200px;
+    text-align: center;
+    color: #444;
+    border-right: 2px solid #ddd;
+    background-color: #f7f7f7;
+    font-weight: 700;
 }
 
 .protein-info-container .table td.value:hover {
@@ -364,31 +345,31 @@ iframe {
 
 /* Focus State for Table Cells */
 .protein-info-container .table td:focus, .protein-info-container .table th:focus {
-    outline: 2px solid #007bff; /* Blue outline when focused */
-    background-color: #e1f4fd; /* Light blue background on focus */
+    outline: 2px solid #007bff;
+    background-color: #e1f4fd;
 }
 
 /* Alternating Row Backgrounds */
 .protein-info-container .table tr:nth-child(even) {
-    background-color: #f9f9f9; /* Light background for even rows */
+    background-color: #f9f9f9;
 }
 
 .protein-info-container .table tr:nth-child(odd) {
-    background-color: #ffffff; /* White background for odd rows */
+    background-color: #ffffff;
 }
 
 /* Responsive Table - Stack cells vertically on smaller screens */
 @media screen and (max-width: 1079px) {
     .protein-info-container .table th, .protein-info-container .table td {
-        display: block; /* Stack cells vertically */
-        width: 100%; /* Ensure each cell takes full width */
-        text-align: left; /* Align text to the left */
-        margin-bottom: 10px; /* Add space between rows */
+        display: block;
+        width: 100%;
+        text-align: left;
+        margin-bottom: 10px;
     }
 
     .protein-info-container .table td.key {
-        background-color: #f7f7f7; /* Keep key cells highlighted */
-        font-weight: 700; /* Keep the key text bold */
+        background-color: #f7f7f7;
+        font-weight: 700;
     }
 
     .protein-info-container .table td.value {
@@ -408,13 +389,13 @@ iframe {
 /* PROTEIN SEQUENCE PTM STATISTICS HERE */
 /* Main container styles for protein stats */
 .protein-statistics-container {
-    background-color: #e5e5e5; /* Light gray background */
+    background-color: #e5e5e5;
     padding: 30px;
-    border-radius: 10px; /* Rounded corners for the container */
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Soft shadow for depth */
-    max-width: 1280px; /* Maximum width */
-    margin: 0 auto; /* Center align the container */
-    overflow-x: auto; /* Allow horizontal scrolling if needed */
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    max-width: 1280px;
+    margin: 0 auto;
+    overflow-x: auto;
     margin-bottom: 20px;
 }
 
@@ -437,7 +418,7 @@ iframe {
 
 /* Column styles */
 .col {
-    flex: 1 1 calc(33% - 20px); /* Ensure three columns */
+    flex: 1 1 calc(33% - 20px);
     min-width: 250px;
     box-sizing: border-box;
 }
@@ -446,7 +427,7 @@ iframe {
 .stat-box {
     background-color: #fff;
     border-radius: 10px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Soft shadow */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
     padding: 20px;
     text-align: center;
     transition: transform 0.3s ease, box-shadow 0.3s ease;
@@ -461,7 +442,7 @@ iframe {
 /* Icons */
 .stat-box i {
     margin-bottom: 10px;
-    color: #007bff; /* Blue icons */
+    color: #007bff;
 }
 
 /* Links within the stat box */
@@ -512,7 +493,7 @@ iframe {
 /* Responsive design for smaller screens */
 @media (max-width: 768px) {
     .col {
-        flex: 1 1 100%; /* Single column layout for smaller screens */
+        flex: 1 1 100%;
     }
 }
 
@@ -529,13 +510,13 @@ iframe {
 /* DISPLAYING THE PROTEIN SEQUENCE HERE */
 
 .protein-sequence-container {
-    background-color: #e5e5e5; /* Light gray background behind the table */
-    padding: 10px; /* Space around the table */
-    border-radius: 10px; /* Rounded corners for a modern look */
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Soft shadow for depth */
-    max-width: 1280px; /* Maximum width */
-    margin: 0 auto; /* Center align the table */
-    overflow-x: auto; /* Allow horizontal scrolling if needed */
+    background-color: #e5e5e5;
+    padding: 10px;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    max-width: 1280px;
+    margin: 0 auto;
+    overflow-x: auto;
 }
 
 /* Container for sequence blocks */
@@ -560,12 +541,7 @@ iframe {
 
 /* Each individual block of sequence */
 .sequence-block {
-    /* background-color: #fff;
-    border-color: #ddd; */
-    /* border-width: 2px; */
     padding-top: 12px;
-    /* border: 1px solid #e0e0e0; */
-    /* border-radius: 8px; */
     font-size: 20px;
     font-weight: 600;
     font-family: 'Courier New', Courier, monospace;
@@ -624,8 +600,8 @@ iframe {
     border-radius: 8px;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
     font-family: Arial, sans-serif;
-    width: 100%;  /* Allow it to expand to fill the container */
-    max-width: 500px; /* Adjust max-width to control the container's maximum size */
+    width: 100%;
+    max-width: 500px;
     margin: 20px auto;
 }
 
@@ -648,7 +624,7 @@ iframe {
 .uniprot-sequence-info .info-row .value {
     font-weight: 500;
     color: #2c3e50;
-    padding-left: 8px; /* Small space between the label and the value */
+    padding-left: 8px;
 }
 
 /* Separator line */
@@ -656,7 +632,7 @@ iframe {
     content: '|';
     color: #aaa;
     margin-right: 8px;
-    font-size: 18px;  /* Adjust size of the separator */
+    font-size: 18px;
 }
 
 /* Styling for each key-value pair to keep space */
@@ -687,72 +663,72 @@ iframe {
 .details-panel {
     padding: 20px;
     background-color: linear-gradient(135deg, #f4f4f9 0%, #e0e0e0 100%); 
-    border: 1px solid #ddd; /* Light border for separation */
-    border-radius: 10px; /* Rounded corners for a soft, modern look */
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Soft shadow for depth */
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     margin-bottom: 40px;
-    max-width: 90%; /* Responsive width */
-    margin: 0 auto; /* Center the panel */
-    overflow: hidden; /* Prevent overflow */
-    position: relative; /* For absolute positioning of elements within */
-    font-family: 'Arial', sans-serif; /* Clean and modern font */
+    max-width: 90%;
+    margin: 0 auto;
+    overflow: hidden;
+    position: relative;
+    font-family: 'Arial', sans-serif;
 }
 
 .details-panel h2 {
-    font-size: 20px; /* Larger font for the title */
-    color: #007bff; /* Blue color for the header */
-    font-weight: 600; /* Slightly bold for better visibility */
-    margin-bottom: 15px; /* Space below the header */
+    font-size: 20px;
+    color: #007bff;
+    font-weight: 600;
+    margin-bottom: 15px;
 }
 
 .details-panel .localized-sequence {
-    font-family: 'Courier New', Courier, monospace; /* Monospace font for sequence */
+    font-family: 'Courier New', Courier, monospace;
     max-width: 450px;
     margin: 0 auto;
-    font-size: 24px; /* Clear font size for better readability */
-    line-height: 1.8; /* Increase line height for better spacing */
-    color: #333; /* Darker text for contrast */
-    white-space: pre-wrap; /* Preserve spacing in sequence */
-    word-wrap: break-word; /* Ensure long words or sequences break properly */
-    background-color: #f4f7fa; /* Light gray background */
-    border-radius: 8px; /* Rounded corners for the sequence box */
-    padding: 15px; /* Padding inside the sequence box */
-    border: 1px solid #e0e0e0; /* Light border around the sequence box */
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1); /* Light shadow around the sequence */
+    font-size: 24px;
+    line-height: 1.8;
+    color: #333;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    background-color: #f4f7fa;
+    border-radius: 8px;
+    padding: 15px;
+    border: 1px solid #e0e0e0;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
 /* Styling for bold PTMs */
 .details-panel .localized-sequence strong {
-    font-weight: 700; /* Make PTMs bold */
-    color: #e64a19; /* Orange color for PTMs */
+    font-weight: 700;
+    color: #e64a19;
 }
 
 /* Highlighting the clicked residue */
 .details-panel .localized-sequence span.clicked-residue {
-    font-size: 20px; /* Larger font for emphasis */
-    color: #fff; /* White text */
-    background-color: #007bff; /* Blue background to highlight */
-    border-radius: 50%; /* Rounded appearance */
-    padding: 5px 8px; /* Space around the clicked residue */
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Shadow for the clicked residue */
+    font-size: 20px;
+    color: #fff;
+    background-color: #007bff;
+    border-radius: 50%;
+    padding: 5px 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 
 /* Add some space between the localized sequence and PTM info */
 .details-panel .ptm-info {
-    margin-top: 20px; /* Space above PTM info */
-    font-size: 14px; /* Slightly smaller font for PTM data */
-    color: #555; /* Lighter color for PTM details */
+    margin-top: 20px;
+    font-size: 14px;
+    color: #555;
 }
 
 /* Panel focus state */
 .details-panel:focus {
-    outline: 3px solid #007bff; /* Blue outline for focus */
+    outline: 3px solid #007bff;
 }
 
 /* Smooth transitions for hover and focus effects */
 .details-panel .localized-sequence span:hover {
-    background-color: #f5f5f5; /* Slightly darker background on hover */
-    transition: background-color 0.3s ease; /* Smooth transition */
+    background-color: #f5f5f5;
+    transition: background-color 0.3s ease;
 }
 
 /* Modify the styling for the PTM details container to prevent overflow */
@@ -763,8 +739,8 @@ iframe {
     border-radius: 8px;
     border: 1px solid #ddd;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-    word-wrap: break-word; /* Ensure content wraps inside the box */
-    white-space: normal; /* Allow text to wrap */
+    word-wrap: break-word;
+    white-space: normal;
 }
 
 /* Modify the PTM entry to manage link overflow */
@@ -775,14 +751,14 @@ iframe {
     border: 1px solid #e0e0e0;
     border-radius: 8px;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-    overflow-wrap: break-word; /* Allow words to break and wrap inside the container */
-    word-wrap: break-word; /* Ensure long links break correctly */
+    overflow-wrap: break-word;
+    word-wrap: break-word;
 }
 
 /* Style for PTM Type label and content */
 .details-panel .ptm-entry p strong {
     font-weight: bold;
-    color: #007bff; /* Blue color for strong labels */
+    color: #007bff;
 }
 
 /* Ensure links are nicely separated and can wrap into the next line */
@@ -790,35 +766,35 @@ iframe {
     margin: 5px 0;
     color: #333;
     font-size: 14px;
-    word-wrap: break-word; /* Break long text and links */
+    word-wrap: break-word;
 }
 
 /* Style for evidence identifiers (links) */
 .details-panel .ptm-entry p a {
     color: #007bff;
     text-decoration: none;
-    display: inline-block; /* Ensure that each link takes its own line if needed */
-    margin-right: 10px; /* Add some space between the links */
-    max-width: 100%; /* Prevent links from exceeding container width */
-    word-wrap: break-word; /* Wrap the long links */
-    overflow-wrap: break-word; /* Handle word wrapping gracefully */
+    display: inline-block;
+    margin-right: 10px;
+    max-width: 100%;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
 }
 
 /* Hover effect for evidence links */
 .details-panel .ptm-entry p a:hover {
-    text-decoration: underline; /* Underline the link when hovered */
-    color: #0056b3; /* Darker blue when hovered */
+    text-decoration: underline;
+    color: #0056b3;
 }
 
 /* Optional: Add a hover effect for the PTM entries */
 .details-panel .ptm-entry:hover {
-    background-color: #f1f1f1; /* Lighten the background on hover */
-    cursor: default; /* Change cursor to indicate interactivity */
+    background-color: #f1f1f1;
+    cursor: default;
 }
 
 .details-panel .ptm-scores {
     background-color: #b4b4b4;
-    /* font-family: 'Courier New', Courier, monospace; */
+    
     border-radius: 4px;
     border: #2c3e50;
     cursor: default;
@@ -829,34 +805,34 @@ iframe {
 #chunkDetails {
     font-size: 14px;
     line-height: 1.5;
-    white-space: pre-wrap; /* To preserve line breaks */
+    white-space: pre-wrap;
 }
 
 .highlightable-text {
     cursor: default; 
-    font-size: inherit; /* Ensure it inherits font size from the parent */
+    font-size: inherit;
     user-select: none;
-    display: inline-block; /* change back to inline if issues persist */
+    display: inline-block;
     position: relative;
 }
 
 /* General highlighted class for styling */
 .highlighted {
-    background-color: #f1c40f;  /* Default highlighted color */
+    background-color: #f1c40f;
     font-weight: 1000;
     color: #2c3e50;
     border-radius: 4px;
     cursor: pointer;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
     pointer-events: visible;
-    line-height: 1; /* Reduce line-height to shrink the height of the box */
+    line-height: 1;
     margin-bottom: 5px;
 }
 
 /* Hover effect on highlighted text */
 .highlighted:hover {
     color: #ffffff;
-    box-shadow: 0 0 8px rgba(0, 0, 0, 0.3);  /* Soft shadow for emphasis */
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.3);
 }
 
 .custom-tooltip {
@@ -869,9 +845,10 @@ iframe {
     position: absolute;
     z-index: 10;
     white-space: nowrap;
-    pointer-events: none; /* Make sure the tooltip does not interfere with mouse events */
-    opacity: 0.8; /* Slight transparency */
+    pointer-events: none;
+    opacity: 0.8;
 }
+
 /* When the tooltip becomes visible */
 .custom-tooltip.visible {
     opacity: 1;
@@ -889,7 +866,7 @@ iframe {
 
 .tooltip {
     visibility: hidden;
-    width: 120px; /* Adjust width as needed */
+    width: 120px;
     background-color: black;
     color: #fff;
     text-align: center;
@@ -897,7 +874,7 @@ iframe {
     padding: 5px;
     position: absolute;
     z-index: 1;
-    bottom: 100%; /* Position above the text */
+    bottom: 100%;
     left: 50%;
     transform: translateX(-50%);
     opacity: 0;
@@ -906,86 +883,74 @@ iframe {
 
 .overlay-line {
     position: absolute;
-    top: 0; /* Start at the top of the container */
-    left: 50%; /* Center the line horizontally */
+    top: 0;
+    left: 50%;
     margin-left: 1px;
-    width: 10px; /* Thickness of the line */
-    height: 100%; /* Extend the line to the full height of the container */
-    background-color: #ccc; /* Color of the line */
-    transform: translateX(-50%); /* Center the line */
-    pointer-events: none; /* Let clicks pass through the line */
+    width: 10px;
+    height: 100%;
+    background-color: #ccc;
+    transform: translateX(-50%);
+    pointer-events: none;
 }
 
 
 /* THIS IS FOR FILTERING PTM STUFF */
 
-/* Container for the search box and checkboxes */
-/* #ptmSearchContainer {
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    gap: 10px;
-    padding: 20px;
-    background-color: #fff;
-    box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
-    border-radius: 10px;
-} */
-
 /* Styling for each checkbox list item */
 .checkbox-container li {
-    display: inline-flex;            /* Align checkbox and label horizontally */
-    align-items: center;            /* Center vertically */
-    margin-right: 10px;              /* Space between checkboxes */
-    font-size: 14px;                 /* Standard font size */
-    padding: 0;                      /* Remove any extra padding */
-    position: relative;              /* Ensure that items are properly aligned */
-    user-select: none;               /* Prevent text selection */
+    display: inline-flex;
+    align-items: center;
+    margin-right: 10px;
+    font-size: 14px;
+    padding: 0;
+    position: relative;
+    user-select: none;
 }
 
 /* Hide the checkbox input but keep it functional */
 .checkbox-container input[type="checkbox"] {
-    width: 0;                       /* Set width to 0 to ensure no extra space is taken */
-    height: 0;                      /* Set height to 0 */
-    margin: 0;                       /* Remove default margin */
-    opacity: 0;                      /* Make checkbox invisible */
-    position: absolute;              /* Position it outside the flow */
-    pointer-events: none;            /* Disable interaction with the hidden checkbox */
+    width: 0;
+    height: 0;
+    margin: 0;
+    opacity: 0;
+    position: absolute;
+    pointer-events: none;
 }
 
 /* Styling for the labels associated with checkboxes */
 .checkbox-container input[type="checkbox"] + label {
-    display: inline-flex;            /* Align label inline with checkbox */
-    align-items: center;             /* Center the text vertically */
-    cursor: pointer;                /* Pointer cursor on hover */
-    color: #333;                     /* Default text color */
-    background-color: #fff;          /* White background */
-    padding: 0 10px;                 /* Adjusted padding to align properly */
-    font-size: 14px;                 /* Standard font size */
-    border-radius: 5px;              /* Rounded corners */
-    transition: background-color 0.3s ease, border-color 0.3s ease;  /* Smooth transition */
-    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.05); /* Subtle shadow for labels */
-    min-height: 16px;                /* Ensure the label height matches the checkbox size */
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+    color: #333;
+    background-color: #fff;
+    padding: 0 10px;
+    font-size: 14px;
+    border-radius: 5px;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.05);
+    min-height: 16px;
 }
 
 /* Hover and checked states for the labels */
 .checkbox-container input[type="checkbox"]:not(:checked) + label:hover,
 .checkbox-container input[type="checkbox"]:checked + label {
-    border-color: #007bff;           /* Blue border on hover/checked */
-    background-color: #f1f1f1;       /* Light grey background on hover */
-    color: #007bff;                  /* Blue text on hover */
+    border-color: #007bff;
+    background-color: #f1f1f1;
+    color: #007bff;
 }
 
 /* Hover effect when checked */
 .checkbox-container input[type="checkbox"]:checked + label:hover {
-    background-color: #0056b3;       /* Darker blue when checked */
-    border-color: #0056b3;           /* Darker border */
+    background-color: #0056b3;
+    border-color: #0056b3;
 }
 
 /* Styling to ensure the label behaves like a clickable checkbox */
 .checkbox-container input[type="checkbox"]:checked + label {
-    background-color: #007bff;       /* Blue background when checked */
-    color: white;                    /* White text when checked */
-    border-color: #007bff;           /* Blue border when checked */
+    background-color: #007bff;
+    color: white;
+    border-color: #007bff;
 }
 
 /* Styling for collapsible sections (if needed) */
@@ -1021,17 +986,17 @@ iframe {
 
 /* Styling for the search box */
 #searchBox {
-    width: 100%;                        /* Full width for the search box */
-    max-width: 350px;                   /* Max width */
+    width: 100%;
+    max-width: 350px;
     padding: 12px 20px;
-    margin: 0;                          /* No margin at the top */
-    border: 2px solid #ccc;             /* Soft border */
-    border-radius: 8px;                 /* Rounded corners */
-    font-size: 16px;                    /* Larger font size for readability */
-    box-sizing: border-box;             /* Include padding in width */
-    display: block;                     /* Block display */
-    background-color: #f9f9f9;          /* Light background */
-    transition: all 0.3s ease;          /* Smooth transition for focus state */
+    margin: 0;
+    border: 2px solid #ccc;
+    border-radius: 8px;
+    font-size: 16px;
+    box-sizing: border-box;
+    display: block;
+    background-color: #f9f9f9;
+    transition: all 0.3s ease;
 }
 
 /* Adjust hover for search box */
@@ -1041,9 +1006,9 @@ iframe {
 
 /* Focus state for the search box */
 #searchBox:focus {
-    border-color: #007bff;              /* Blue border on focus */
-    outline: none;                      /* Remove default outline */
-    background-color: #fff;             /* Slightly change background on focus */
+    border-color: #007bff;
+    outline: none;
+    background-color: #fff;
 }
 
 /* PTM TABLE OVERVIEW STUFF */
@@ -1092,34 +1057,33 @@ iframe {
     margin: 5px;
     font-size: 16px;
     font-weight: 500;
-    border-radius: 8px;  /* Slightly rounded corners */
-    border: 2px solid transparent; /* Invisible border for initial styling */
-    background-color: #e3f2fd; /* Green background */
+    border-radius: 8px;
+    border: 2px solid transparent;
+    background-color: #e3f2fd;
     color: black;
     cursor: pointer;
-    transition: all 0.3s ease; /* Smooth transition for hover effects */
+    transition: all 0.3s ease;
     display: inline-block;
     text-align: center;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 /* Button Hover Effect */
 .additional-button:hover {
-    background-color: #c2e3fa; /* Darker green on hover */
-    /* transform: translateY(-3px); */
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2); /* Slightly stronger shadow on hover */
+    background-color: #c2e3fa;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
 }
 
 /* Button Focus Effect */
 .additional-button:focus {
     outline: none;
-    box-shadow: 0 0 10px #b8e2ff; /* Green outline on focus */
+    box-shadow: 0 0 10px #b8e2ff;
 }
 
 /* Button Active Effect (when clicked) */
 .additional-button:active {
-    /* transform: translateY(1px); */
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15); /* Subtle shadow when clicked */
+    
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
 }
 
 /*
@@ -1127,18 +1091,13 @@ iframe {
 */
 
 /* Container for the two PDB structures */
-/* #pdbMajor {
-    align-items: flex-start;
-} */
-
-/* Container for the two PDB structures */
 #pdbStructures {
     display: flex;
-    justify-content: center; /* Centers the content horizontally */
-    align-items: center; /* Centers the content vertically */
-    gap: 20px; /* Optional space between the two viewers */
-    width: 100%; /* Ensure it takes up the full width of the parent */
-    max-width: 100%; /* Make sure it doesn't exceed the parent's width */
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    width: 100%;
+    max-width: 100%;
 }
 
 #afMajor, #rcsbMajor {
@@ -1156,20 +1115,9 @@ iframe {
     border-radius: 0px;
     width: 500px;
     height: 500px;
-    /* background-color: #f0f0f0; */
     position: relative;
     overflow: hidden;
 }
-
-/* Optional: Add some basic styling */
-/* #pdbMajor {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-direction: column;
-} */
 
 /*
     USE THIS FOR PROPENSITY TABLES
@@ -1333,23 +1281,14 @@ iframe {
 
 #markdown {
     background-color: #f9f9f9;
-    /* Light background */
     border: 1px solid #ddd;
-    /* Light border */
     border-radius: 8px;
-    /* Rounded corners */
     padding: 20px;
-    /* Spacing inside the box */
     margin: 20px auto;
-    /* Centering the box */
     max-width: 1280px;
-    /* Maximum width */
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    /* Subtle shadow */
     font-family: Arial, sans-serif;
-    /* Font style */
     line-height: 1.6;
-    /* Line spacing */
     width: 70%;
 }
 
@@ -1519,5 +1458,5 @@ iframe {
     content: attr(placeholder);
     pointer-events: none;
     color: #999;
-    display: block; /* For Firefox */
+    display: block;
 }
