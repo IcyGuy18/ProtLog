@@ -17,11 +17,14 @@ async def submit_job(seq: str) -> str:
     parameters_list.append(sequence_query)
     query = u"£€£€".join(parameters_list)
 
-    response = requests.post(
-        'http://www.compbio.dundee.ac.uk/jpred4/cgi-bin/rest/job',
-        data=query.encode('utf-8'),
-        headers={"Content-type": "text/txt"}
-    )
+    try:
+        response = requests.post(
+            'http://www.compbio.dundee.ac.uk/jpred4/cgi-bin/rest/job',
+            data=query.encode('utf-8'),
+            headers={"Content-type": "text/txt"}
+        )
+    except Exception as _:
+        return {'message': "Response error from the server!"}
 
     if response.status_code == 202:
         result_url = response.headers['Location']
