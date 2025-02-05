@@ -1028,6 +1028,7 @@ async function preparePTMDetails(localizedSequence, localizedSequenceInfo, ptmsD
     sequenceDisplayTitle.innerHTML = '<h4>Local Sequence Window</h4>'
 
     let centerChar = ''; // Use this later on
+    let centerEnzymes = null; // Also use this later on
 
     // First, construct a vector to pass on for calculation
 
@@ -1038,15 +1039,23 @@ async function preparePTMDetails(localizedSequence, localizedSequenceInfo, ptmsD
         // Check if this position has PTMs (adjust the index to global sequence)
         let formattedChar = document.createElement('span');
         formattedChar.textContent = char;
-
-        if (localizedSequenceInfo[index] !== null) {
-            var tempArr = JSON.parse(localizedSequenceInfo[index]);
+        var information = [null, null];
+        try {
+            if (typeof(localizedSequenceInfo[index]) === 'object') {
+                information = localizedSequenceInfo[index];
+            }
+            var temp = information[0];
+        } catch(e) {information = [null, null];}
+        if (information[0] !== null) {
+            var tempArr = JSON.parse(information[0]);
             var uniquePTMs = new Set(tempArr.map(arr => arr[1]));
             uniquePTMs = Array.from(uniquePTMs);
             // If PTMs exist at this position, make the character bold
             if (index === 10) {
                 formattedChar.setAttribute('style', "font-weight: 700; font-size: 48px; user-select: none; cursor: pointer");
                 centerChar = char;
+                centerEnzymes = JSON.parse(information[1]);
+                console.log(centerEnzymes);
             }
             else
                 formattedChar.setAttribute('style', "user-select: none; cursor: pointer;");
@@ -1112,10 +1121,16 @@ async function preparePTMDetails(localizedSequence, localizedSequenceInfo, ptmsD
             });
 
             formattedChar.classList.add('highlighted');
-            formattedChar.setAttribute('data-all-ptms', localizedSequenceInfo[index]);
+            formattedChar.setAttribute('data-all-ptms', information[0]);
         }
         sequenceDisplay.appendChild(formattedChar);
     });
+
+    async function placeUpstreamProteins(enzymes) {
+        enzymes.forEach((enzyme) => {
+
+        })
+    }
 
     // Final DIV for displaying the position
     const positionDiv = document.createElement('div');
@@ -1307,7 +1322,7 @@ async function preparePTMDetails(localizedSequence, localizedSequenceInfo, ptmsD
             scoreRow.appendChild(scoreValueCell);
             ptmTable.appendChild(scoreRow);
         } else {
-            console.log(logTableResp);
+            // console.log(logTableResp);
         }
 
         ptmInfo.appendChild(ptmTable);
@@ -1384,7 +1399,12 @@ async function displayPTMDetails(event) {
     if (previousBlock) {
         const previousBlockText = previousBlock.querySelector('.sequence-text').textContent;
         previousBlock.querySelector('.sequence-text').querySelectorAll('span').forEach((span, index) => {
-            totalTextInfo.push(span.getAttribute('data-all-ptms'));
+            totalTextInfo.push(
+                [
+                    span.getAttribute('data-all-ptms'),
+                    span.getAttribute('data-upstream-proteins')
+                ]
+            );
         });
         totalText += previousBlockText;
     }
@@ -1398,7 +1418,12 @@ async function displayPTMDetails(event) {
     const spans = sequenceText.querySelectorAll('span');
     
     spans.forEach((span, index) => {
-        totalTextInfo.push(span.getAttribute('data-all-ptms'));
+        totalTextInfo.push(
+            [
+                span.getAttribute('data-all-ptms'),
+                span.getAttribute('data-upstream-proteins')
+            ]
+        );
 
         const clickedResidueIndex = Array.from(clickedBlock.querySelector('.sequence-text').children).indexOf(clickedSpan);
         if (index == clickedResidueIndex)
@@ -1412,7 +1437,12 @@ async function displayPTMDetails(event) {
     if (nextBlock) {
         const nextBlockText = nextBlock.querySelector('.sequence-text').textContent;
         nextBlock.querySelector('.sequence-text').querySelectorAll('span').forEach((span, index) => {
-            totalTextInfo.push(span.getAttribute('data-all-ptms'));
+            totalTextInfo.push(
+                [
+                    span.getAttribute('data-all-ptms'),
+                    span.getAttribute('data-upstream-proteins')
+                ]
+            );
         });
         totalText += nextBlockText;
     }
@@ -1497,7 +1527,12 @@ function initializePTMClickListenersForPTMSequence() {
 
                 let localizedSequenceInfo = []
                 localSpans.forEach((localSpan) => {
-                    localizedSequenceInfo.push(localSpan.getAttribute('data-all-ptms'));
+                    localizedSequenceInfo.push(
+                        [
+                            localSpan.getAttribute('data-all-ptms'),
+                            localSpan.getAttribute('data-upstream-proteins')
+                        ]
+                    );
                 })
 
                 preparePTMDetails(localizedSequence, localizedSequenceInfo, ptmsData);
@@ -1508,7 +1543,7 @@ function initializePTMClickListenersForPTMSequence() {
 }
 
 // Function to display the protein sequence with color-coded PTM highlights
-function displayProteinSequence(sequence, modificationData, additionalUniprotInfo, lastUpdate, acc) {
+function displayProteinSequence(sequence, modificationData, additionalUniprotInfo, lastUpdate, acc, upstreamProteins) {
     // Display additional information about the protein sequence
     // KEYS
             // "length": 568,
@@ -1634,6 +1669,9 @@ function displayProteinSequence(sequence, modificationData, additionalUniprotInf
                         // Otherwise, just set the current PTM type
                         charSpan.setAttribute('data-ptm', mod[1]);
                     }
+                    if (upstreamProteins[mod[0]] !== undefined) {
+                        charSpan.setAttribute('data-upstream-proteins', JSON.stringify(upstreamProteins[mod[0]]));
+                    }
                 }
             });
 
@@ -1663,6 +1701,7 @@ function displayProteinSequence(sequence, modificationData, additionalUniprotInf
                                 Array.from(grouped[modType].ids).join(';')
                             ];
                         });
+
                         charSpan.setAttribute('data-all-ptms', JSON.stringify(result));
                         break;
                     }
@@ -1730,6 +1769,7 @@ function displayProteinSequence(sequence, modificationData, additionalUniprotInf
                                 if (elem === '-inf') {
                                     currScores.push(elem)
                                 } else {
+                                    // Fix this line of code please...
                                     currScores.push(table[relativeIndex[relIdx]][subsequence[relIdx]]);
                                 }
                             });
@@ -3098,7 +3138,12 @@ async function search() {
                         if (json.message === "") {
                             // Time to fill the table
                             for (var [key, value] of Object.entries(json)) {
-                                if (key !== "message" && key !== "proteinSequenceFull" && key !== "lastUpdate") {
+                                if (
+                                    key !== "message"
+                                    && key !== "proteinSequenceFull"
+                                    && key !== "lastUpdate"
+                                    && key != "upstreamProteins"
+                                ) {
                                     const row = document.createElement('tr');
                                     const keyCell = document.createElement('td');
                                     const valueCell = document.createElement('td');
@@ -3142,7 +3187,14 @@ async function search() {
                             let pdbData = await fetchProteinStructure(json.uniProtAC);
                             displayPDBStructures(json.uniProtAC, pdbData, updatedPtmData);
                             populateCheckboxesFromResult(updatedPtmData)
-                            displayProteinSequence(json.proteinSequence, updatedPtmData, json.proteinSequenceFull, json.lastUpdate, json.uniProtAC);
+                            displayProteinSequence(
+                                json.proteinSequence,
+                                updatedPtmData,
+                                json.proteinSequenceFull,
+                                json.lastUpdate,
+                                json.uniProtAC,
+                                json.upstreamProteins
+                            );
                             updateStats(updatedPtmData)
                             getJPredInference(json.proteinSequence, json.uniProtAC, updatedPtmData);
 
