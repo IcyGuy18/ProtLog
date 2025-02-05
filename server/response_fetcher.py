@@ -1,5 +1,34 @@
 import requests
 import traceback
+from pprint import pprint
+
+def get_ptms(
+    response: dict[str, list[dict[str, dict[str, dict[str, str | int]]]]]
+) -> None:
+    features = [
+        i for i in response.get('features', [])
+        if 'modified residue'.lower() in i.get('type', '').lower()
+    ]
+    if features:
+        positions: dict[str, list] = {}
+        for feature in features:
+            position = feature.get('location', {}).get('start', {}).get('value', None)
+            if position:
+                desc = feature.get('description', '').split(';')
+                if len(desc) > 1:
+                    ptm = desc[0].strip()
+                    enzymes = desc[1].replace('by', '').strip()
+                    enzymes = [i.strip() for i in enzymes.replace('and', ',').split(',')]
+                else:
+                    ptm = desc[0].strip()
+                    enzymes = []
+                if position not in positions:
+                    positions[position] = [(ptm, enzymes,)]
+                else:
+                    positions[position].append((ptm, enzymes,))
+        pprint(features)
+            
+
 
 def fetch_response_uniprot_trim(prot_id):
     # I'm so sorry. I haven't had time to fix this.
@@ -124,6 +153,7 @@ def fetch_response_uniprot_trim(prot_id):
                                 'Accept': 'application/json'
                             }
                         )
+                        get_ptms(response)
                         # And this is also processed the same way as the original response
                         try:
                             return_response['uniProtID'] = response['uniProtkbId']
@@ -211,6 +241,7 @@ def fetch_response_uniprot_trim(prot_id):
 
                 # Otherwise just process as usual.
                 else:
+                    get_ptms(response)
                     # Populate the dictionary with the values acquired from the API
                     try:
                         return_response['uniProtID'] = response['uniProtkbId']
