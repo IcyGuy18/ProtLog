@@ -4,7 +4,7 @@ from pprint import pprint
 
 def get_ptms(
     response: dict[str, list[dict[str, dict[str, dict[str, str | int]]]]]
-) -> None:
+) -> dict:
     features = [
         i for i in response.get('features', [])
         if 'modified residue'.lower() in i.get('type', '').lower()
@@ -26,9 +26,8 @@ def get_ptms(
                     positions[position] = [(ptm, enzymes,)]
                 else:
                     positions[position].append((ptm, enzymes,))
-        pprint(features)
-            
-
+        return positions
+    return {}
 
 def fetch_response_uniprot_trim(prot_id):
     # I'm so sorry. I haven't had time to fix this.
@@ -46,7 +45,8 @@ def fetch_response_uniprot_trim(prot_id):
             'proteinSequence',
             'proteinSequenceFull',
             'lastUpdate',
-            'message'
+            'message',
+            'upstreamProteins'
         ],
         ''
     )
@@ -75,6 +75,7 @@ def fetch_response_uniprot_trim(prot_id):
                             }
                         )
                         # This is processed a LOT differently
+                        return_response['upstreamProteins'] = {}
                         try:
                             return_response['uniProtAC'] = response['uniParcCrossReferences'][0]['id']
                         except:
@@ -153,7 +154,7 @@ def fetch_response_uniprot_trim(prot_id):
                                 'Accept': 'application/json'
                             }
                         )
-                        get_ptms(response)
+                        return_response['upstreamProteins'] = get_ptms(response)
                         # And this is also processed the same way as the original response
                         try:
                             return_response['uniProtID'] = response['uniProtkbId']
@@ -241,7 +242,7 @@ def fetch_response_uniprot_trim(prot_id):
 
                 # Otherwise just process as usual.
                 else:
-                    get_ptms(response)
+                    return_response['upstreamProteins'] = get_ptms(response)
                     # Populate the dictionary with the values acquired from the API
                     try:
                         return_response['uniProtID'] = response['uniProtkbId']
