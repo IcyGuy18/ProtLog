@@ -1055,7 +1055,6 @@ async function preparePTMDetails(localizedSequence, localizedSequenceInfo, ptmsD
                 formattedChar.setAttribute('style', "font-weight: 700; font-size: 48px; user-select: none; cursor: pointer");
                 centerChar = char;
                 centerEnzymes = JSON.parse(information[1]);
-                console.log(centerEnzymes);
             }
             else
                 formattedChar.setAttribute('style', "user-select: none; cursor: pointer;");
@@ -1136,6 +1135,61 @@ async function preparePTMDetails(localizedSequence, localizedSequenceInfo, ptmsD
     const positionDiv = document.createElement('div');
     positionDiv.innerHTML = `<h5>Position - </h5>`
     positionDiv.style.padding = '20px';
+
+    // Creating yet another DIV for handling upstream proteins
+    const enzymesDiv = document.createElement('div');
+    enzymesDiv.setAttribute('style', "background-color: rgb(238, 238, 238); padding-bottom: 20px;");
+    if (centerEnzymes !== null) {
+        if (centerEnzymes.length !== 0) { // Populate the div
+            const enzymesTable = document.createElement('table')
+            enzymesTable.classList.add('table');
+            var check = false;
+    
+            enzymesDiv.classList.add('protein-info-container');
+            centerEnzymes.forEach(enzyme =>  {
+                if (enzyme[1].length !== 0) {
+                    if (!check) {
+                        const row = document.createElement('tr');
+
+                        const keyCell = document.createElement('td');
+                        keyCell.classList.add('key');
+                        keyCell.textContent = 'Modification Type';
+                        
+                        const valueCell = document.createElement('td');
+                        valueCell.classList.add('key');
+                        valueCell.textContent = "Upstream Protein(s)";
+                        check = true;
+
+                        row.appendChild(keyCell);
+                        row.appendChild(valueCell);
+
+                        enzymesTable.appendChild(row)
+                    }
+                    const enzymeRow = document.createElement('tr');
+
+                    const keyCell = document.createElement('td');
+                    keyCell.classList.add('value');
+                    keyCell.setAttribute('style', 'text-align: center; font-weight: 700;');
+                    keyCell.textContent = enzyme[0];
+                    
+                    const valueCell = document.createElement('td');
+                    valueCell.classList.add('value');
+                    valueCell.setAttribute('style', 'text-align: center; font-weight: 700;');
+                    var htmlVal = '';
+                    enzyme[1].forEach(e => {
+                        htmlVal += `<a href="https://www.uniprot.org/uniprotkb?query=gene:${e}" target="-_blank">${e}</a> `
+                    });
+                    valueCell.innerHTML = htmlVal; //enzyme[1].join(', ');
+
+                    enzymeRow.appendChild(keyCell);
+                    enzymeRow.appendChild(valueCell);
+
+                    enzymesTable.appendChild(enzymeRow);
+                }
+            });
+            enzymesDiv.appendChild(enzymesTable);
+        }
+    }
 
     // Create a table to display the PTM details as key-value pairs
     const ptmInfo = document.createElement('div');
@@ -1338,6 +1392,10 @@ async function preparePTMDetails(localizedSequence, localizedSequenceInfo, ptmsD
     detailsPanel.appendChild(sequenceDisplayTitle);
     detailsPanel.appendChild(sequenceDisplay);
     detailsPanel.appendChild(positionDiv);
+    console.log(enzymesDiv.children.length);
+    if (enzymesDiv.children.length !== 0) {
+        detailsPanel.appendChild(enzymesDiv);
+    }
     detailsPanel.appendChild(ptmInfo);
 
     if (afPdbViewer !== null) {
