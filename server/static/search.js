@@ -1138,7 +1138,7 @@ async function preparePTMDetails(localizedSequence, localizedSequenceInfo, ptmsD
 
     // Creating yet another DIV for handling upstream proteins
     const enzymesDiv = document.createElement('div');
-    enzymesDiv.setAttribute('style', "background-color: rgb(238, 238, 238); padding-bottom: 20px;");
+    enzymesDiv.setAttribute('style', "background-color: rgb(238, 238, 238); margin-bottom: 20px;");
     if (centerEnzymes !== null) {
         if (centerEnzymes.length !== 0) { // Populate the div
             const enzymesTable = document.createElement('table')
