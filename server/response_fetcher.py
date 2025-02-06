@@ -18,7 +18,7 @@ def get_ptms(
                 if len(desc) > 1:
                     ptm = desc[0].strip()
                     enzymes = desc[1].replace('by', '').strip()
-                    enzymes = [i.strip() for i in enzymes.replace('and', ',').split(',')]
+                    enzymes = [i.strip() for i in enzymes.replace('and', ',').replace('/', ',').split(',')]
                 else:
                     ptm = desc[0].strip()
                     enzymes = []
