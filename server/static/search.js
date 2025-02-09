@@ -1306,7 +1306,14 @@ async function preparePTMDetails(localizedSequence, localizedSequenceInfo, ptmsD
                 if (elem === '-inf') {
                     currScores.push(elem)
                 } else {
-                    currScores.push(table[relativeIndex[relIdx]][localizedSequence[relIdx]]);
+                    // Also this line of code to fix too...
+                    try{
+                        const tempVal = table[relativeIndex[relIdx]][localizedSequence[relIdx]];
+                        currScores.push(tempVal);
+                    }
+                    catch (e) {
+                        currScores.push('-inf');
+                    }
                 }
             });
 
@@ -1316,7 +1323,7 @@ async function preparePTMDetails(localizedSequence, localizedSequenceInfo, ptmsD
             var logLogProduct = multiplicativeCalculator(currScores)['logLogProduct'];
             logLogProduct = typeof(logLogProduct) === "number" ? logLogProduct.toFixed(2) : logLogProduct;
 
-            if (logSum !== 'NIL' || logLogProduct !== 'NIL') {
+            if ((logSum !== 'NIL' && logSum !== '-INF') || (logLogProduct !== 'NIL' && logLogProduct !== '-INF')) {
                 const scoresHelp = document.createElement('a');
                 scoresHelp.classList.add('question-mark');
                 scoresHelp.textContent = "?";
@@ -1329,10 +1336,10 @@ async function preparePTMDetails(localizedSequence, localizedSequenceInfo, ptmsD
                         sequence.push(span.textContent);
                     });
                     sequence = sequence.join('');
-                    // Now we obtain the PTM
-                    var ptm = detailsDiv.querySelectorAll('.value')[0].textContent.split('[')[0].trim();
+                    // // Now we obtain the PTM
+                    // var ptm = detailsDiv.querySelectorAll('.value')[0].textContent.split('[')[0].trim();
                     // Now we send it over to the new page.
-                    window.location.href = `/propensity?ptm=${ptm}&seq=${sequence}`;
+                    window.location.href = `/propensity?ptm=${ptm[1]}&seq=${sequence}`;
                 });
 
                 scoresHelp.addEventListener('mouseenter', (e) => {
@@ -1828,7 +1835,13 @@ function displayProteinSequence(sequence, modificationData, additionalUniprotInf
                                     currScores.push(elem)
                                 } else {
                                     // Fix this line of code please...
-                                    currScores.push(table[relativeIndex[relIdx]][subsequence[relIdx]]);
+                                    try{
+                                        const tempVal = table[relativeIndex[relIdx]][subsequence[relIdx]]
+                                        currScores.push(tempVal);
+                                    }
+                                    catch (e) {
+                                        currScores.push('-inf');
+                                    }
                                 }
                             });
 
