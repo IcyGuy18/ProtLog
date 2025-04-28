@@ -116,7 +116,7 @@ iframe {
 .navbar {
     background-color: #f8f9fa;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    padding: 10px 30px;
+    padding: 10px 200px;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -158,7 +158,7 @@ iframe {
 
 .nav-link.active {
     font-weight: bold;
-    color: #1aa71d;
+    color: #1a81ff;
 }
 
 .nav-link.search {
