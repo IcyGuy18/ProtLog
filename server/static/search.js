@@ -1418,6 +1418,7 @@ async function preparePTMDetails(localizedSequence, localizedSequenceInfo, ptmsD
         pdbHighlightButton.classList.add('additional-button');
         pdbHighlightButton.style.fontWeight = 700;
         pdbHighlightButton.addEventListener('click', async () => {
+            bootstrap.Tab.getOrCreateInstance(document.querySelector('#ptm-sequence-tab')).show();
             const atoms = afPdbViewer.getAtomsFromSel({ resi: residuePosition });
             var label = `${residuePosition} - ${atoms[0].resn} - ${listOfPTMs.join(', ')}`;
             afPdbViewer.addLabel(
@@ -2088,6 +2089,7 @@ function generatePTMHtmlTable() {
                 }
 
                 td.addEventListener('click', () => {
+                    bootstrap.Tab.getOrCreateInstance(document.querySelector('#ptm-sequence-tab')).show();
                     colorAllResiduesOfPTM(ptm, aa)
                     scrollIfNotInView(document.getElementById('iframeData2'));
                 });
