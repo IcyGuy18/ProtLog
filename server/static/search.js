@@ -450,6 +450,13 @@ document.addEventListener("DOMContentLoaded", async () => {
             search();
         }
     });
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const id = urlParams.get('id');
+    if (id) {
+        document.getElementById('form_value').value = id;
+       await search();
+    }
 });
 
 // Split the sequence like it is done in UniProt

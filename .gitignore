@@ -8,3 +8,4 @@ server\static\note.md
 server\templates\index_old.html
 server\data\resid
 data/dbptm/dbptm.json
+data/users/users.json
