@@ -3,6 +3,7 @@ import sys
 sys.dont_write_bytecode = True
 
 from fastapi import FastAPI, Request, Body, Query, Depends, HTTPException
+from fastapi.responses import ORJSONResponse
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.templating import Jinja2Templates
 from fastapi.middleware.cors import CORSMiddleware
@@ -149,7 +150,7 @@ async def check_for_existing_user(request: Request):
     info: dict = await request.json()
     username = info.get('username')
     exists = True if username in USERS.keys() else False
-    return {'exists': exists}
+    return ORJSONResponse({'exists': exists})
 
 @app.post('/ptmkb/registration', include_in_schema=False)
 async def register(request: Request):
@@ -169,9 +170,9 @@ async def register(request: Request):
         with lock:
             with open('../data/users/users.json', 'w') as f:
                 json.dump(USERS, f)
-        return {'registered': True}
+        return ORJSONResponse({'registered': True})
     except:
-        return {'registered': False}
+        return ORJSONResponse({'registered': False})
 
 @app.post('/ptmkb/reset_token', include_in_schema=False)
 async def reset_token(request: Request):
@@ -188,10 +189,10 @@ async def reset_token(request: Request):
         with lock:
             with open('../data/users/users.json', 'w') as f:
                 json.dump(USERS, f)
-        return {
+        return ORJSONResponse({
             'reset': True,
             'token': token.get('access_token')
-        }
+        })
     except:
         return {'reset': False,}
 
@@ -204,9 +205,9 @@ async def fetch_token(request: Request):
     
     info: dict = await request.json()
     username = info.get('username')
-    return {
+    return ORJSONResponse({
         'token': USERS.get(username, {}).get('token', {}).get('access_token', None)
-    }
+    })
 
 @app.post('/ptmkb/login', include_in_schema=False)
 async def attempt_login(request: Request):
@@ -227,24 +228,24 @@ async def attempt_login(request: Request):
             if token is None:
                 token = sign_jwt(username)
                 USERS[username]['token'] = token
-            return {
+            return ORJSONResponse({
                 'verify': True,
                 'message': '',
                 'info': {
                     'username': username,
                     'token': token,
                 }
-            }
+            })
         # Password is invalid.
-        return {
+        return ORJSONResponse({
             'verify': False,
             'message': "Your password is invalid."
-        }
+        })
     # User doesn't exist.
-    return {
+    return ORJSONResponse({
         'verify': False,
         'message': f"No user by the name of {username} exists."
-    }
+    })
 
 @app.post('/ptmkb/logout', include_in_schema=False)
 async def logout(request: Request):
@@ -257,9 +258,9 @@ async def logout(request: Request):
         info: dict = await request.json()
         username = info.pop('username')
         SESSIONS.pop(username, None)
-        return {'logout': True}
+        return ORJSONResponse({'logout': True})
     except:
-        return {'logout': False}
+        return ORJSONResponse({'logout': False})
 
 
 
@@ -424,7 +425,7 @@ async def search(_id: str, request: Request):
     ids = fetch_identifiers(_id)
     ids = sort_ids(ids, _id)
     # Give only top 200 suggestions - otherwise burden on user
-    return {'ids': ids[:200]}
+    return ORJSONResponse({'ids': ids[:200]})
 
 @app.post('/ptmkb/search_result', include_in_schema=False)
 async def search(request: Request):
@@ -448,11 +449,11 @@ async def search(request: Request):
     if found:
         if not isinstance(results['Accession Number'], str):
             results['Accession Number'] = ''
-    return {
+    return ORJSONResponse({
         'found': found,
         'result': results,
         'html': html_page
-    }
+    })
 
 @app.post('/ptmkb/structure_calculations', include_in_schema=False)
 async def get_structure_calculations(request: Request, data: dict = Body(...)):
@@ -463,7 +464,7 @@ async def get_structure_calculations(request: Request, data: dict = Body(...)):
     
     raw_bytes = data.get('raw_pdb_data', None)
     if data is None:
-        return {'message': "Please submit a PDB file in bytes."}
+        return ORJSONResponse({'message': "Please submit a PDB file in bytes."})
     traj = create_file(raw_bytes.encode('utf-8'))
     response = dict()
     ss = get_secondary_structure(traj)
@@ -473,7 +474,7 @@ async def get_structure_calculations(request: Request, data: dict = Body(...)):
     response.update({
         'sequence': get_protein_sequence(traj)
     })
-    return response
+    return ORJSONResponse(response)
 
 
 # I look at this function and cry every single night.
@@ -495,7 +496,7 @@ async def get_uniprot_info(request: Request):
     # without worrying about the type of ID
     return_response = fetch_response_uniprot_trim(prot_id)
 
-    return return_response
+    return ORJSONResponse(return_response)
 
 def save_image(df: pd.DataFrame, format: str, ptm: str) -> bytes:
     _, ax = plt.subplots(figsize=(12, 8))
@@ -599,10 +600,10 @@ async def get_log_value(request: Request):
     a_score, m_scores = additive_calculator(vector), multiplicative_calculator(vector)
     m_score = m_scores[1]['multiplicative_score']
     asterisk_m_score = m_scores[1]['logLogProduct']
-    return {
+    return ORJSONResponse({
         'logSum': round(a_score, 3) if not isinstance(a_score, str) else a_score,
         'logLogProduct': round(asterisk_m_score, 3) if not isinstance(asterisk_m_score, str) else asterisk_m_score
-    }
+    })
 
 @app.get('/ptmkb/getAminoAcids', include_in_schema=False)
 def get_amino_acids(request: Request, ptm: str):
@@ -612,15 +613,15 @@ def get_amino_acids(request: Request, ptm: str):
         raise HTTPException(status_code=403, detail="Access restricted to browsers only")
     
     if not ptm:
-        return {
+        return ORJSONResponse({
             'response': False,
             'message': "No PTM was provided."
-        }
+        })
     data = [i.split("\\")[-1].split('.')[0] for i in glob.glob(f'./data/tables/{ptm}/log-e/*.json')]
-    return {
+    return ORJSONResponse({
         'response': True,
         'data': data
-    }
+    })
 
 @app.get('/ptmkb/getPTM', include_in_schema=False)
 async def get_ptm_details(request: Request, resid: str = None, ptm: str = None, aa: str = None):
@@ -688,9 +689,9 @@ async def get_ptm_details(request: Request, resid: str = None, ptm: str = None, 
                     entry[i]['Model']['Encoding'] = 'utf-8'
                     entry[i]['Model']['FileType'] = '.PDB'
     else:
-        return {'message': "Please enter either a RESID ID or a PTM name along with a residue!"}
+        return ORJSONResponse({'message': "Please enter either a RESID ID or a PTM name along with a residue!"})
 
-    return {'response': entry}
+    return ORJSONResponse({'response': entry})
 
 
 ######## Non-API CALLS ########
@@ -722,7 +723,7 @@ def get_ptms(request: Request):
         raise HTTPException(status_code=403, detail="Access restricted to browsers only")
 
     options = [i.split("\\")[-1] for i in glob.glob(r'data\tables\*')]
-    return {'ptms': options}
+    return ORJSONResponse({'ptms': options})
 
 @app.get('/ptmkb/all_ptms_tables', include_in_schema=False)
 def get_all_ptms_tables(request: Request):
@@ -731,7 +732,7 @@ def get_all_ptms_tables(request: Request):
     if not is_browser(user_agent):
         raise HTTPException(status_code=403, detail="Access restricted to browsers only")
     
-    return PTM_TABLES
+    return ORJSONResponse(PTM_TABLES)
 
 @app.get('/ptmkb/pos_matrix', include_in_schema=False)
 def get_matrix(
@@ -754,7 +755,7 @@ def get_matrix(
         table = 'log-e'
     if not os.path.exists(f'./data/tables/{ptm}/{table}/{residue}.json'):
         return {'message': f"Could not find the positional matrix of {ptm} for {residue}."}
-    return PTM_TABLES.get(ptm, {}).get(residue, {}).get(table, None)
+    return ORJSONResponse(PTM_TABLES.get(ptm, {}).get(residue, {}).get(table, None))
 
 @app.get('/ptmkb/get_protein_log_scores', include_in_schema=False)
 async def calculate_propensity(
@@ -827,7 +828,7 @@ async def calculate_propensity(
     response.update({
         'logLogProduct': mult_score.get('logLogProduct', 'NIL')
     })
-    return response
+    return ORJSONResponse(response)
 
 ######## API CALLS ########
 
@@ -963,7 +964,7 @@ def get_post_translational_modification_details(
             entry[i]['Model']['Encoding'] = 'utf-8'
             entry[i]['Model']['FileType'] = '.PDB'
     if entry:
-        return {resid: entry[0]}
+        return ORJSONResponse({resid: entry[0]})
     return {'message': 'Please provide a valid RESID Database ID.'}
 
 
@@ -1011,7 +1012,7 @@ def get_protein_details(
     _id = _id.upper()
     found, results = search_identifier(_id)
     if found:
-        return {'result': results}
+        return ORJSONResponse({'result': results})
     return {'message': 'Could not find the queried protein!'}
 
 @app.get("/ptmkb/api/get-available-ptms", dependencies=[Depends(JWTBearer())], responses={
@@ -1539,7 +1540,7 @@ async def get_positional_frequency_matrix(
         table = 'log-e'
     if not os.path.exists(f'./data/tables/{ptm}/{table}/{residue}.json'):
         return {'message': f"Could not find the positional matrix of {ptm} for {residue}."}
-    return [i for i in PTM_TABLES.get(ptm) if i.get(residue, None) is not None].get(residue).get(table)
+    return ORJSONResponse([i for i in PTM_TABLES.get(ptm) if i.get(residue, None) is not None].get(residue).get(table))
 
 @app.get('/ptmkb/api/calculate-propensity', dependencies=[Depends(JWTBearer())], responses={
     200: {
@@ -1628,4 +1629,4 @@ async def calculate_propensity(
     })
     # A minor change here to account for non-showing of raw multiplicative scores
     # because the value is too large to be used for anything substantial
-    return response
+    return ORJSONResponse(response)
