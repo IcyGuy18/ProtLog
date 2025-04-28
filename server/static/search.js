@@ -452,10 +452,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
 
     const urlParams = new URLSearchParams(window.location.search);
-    const id = urlParams.get('id');
-    if (id) {
+    const searchId = urlParams.get('searchId');
+    if (searchId) {
         document.getElementById('form_value').value = id;
-       await search();
+        search();
     }
 });
 
