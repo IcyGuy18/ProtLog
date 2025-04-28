@@ -3157,6 +3157,7 @@ async function search() {
         if (currentJobAbortController) {
             currentJobAbortController.abort();
         }
+        document.getElementById('proteinTabs').style.dispaly = 'none';
         document.getElementById('afProfile').style.display = 'none';
         document.getElementById('rcsbProfile').style.display = 'none';
         document.getElementById('proteinStatisticsContainer').style.display = 'none';
@@ -3288,6 +3289,7 @@ async function search() {
                             document.getElementById('jpredMajor').style.display = 'block';
                             document.getElementById('pdbMajor').style.display = 'block';
                             document.getElementById('detailsPanel').innerHTML = `<h3>Click on a PTM to view details here!</h3>`
+                            document.getElementById('proteinTabs').style.dispaly = 'block';
                         }
                         else {
                             document.getElementById('iframeData').textContent = `${json.message}`;
