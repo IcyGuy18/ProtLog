@@ -116,11 +116,31 @@
         </nav>
 
         <main>
+            <div style="background-color: #69a4fd85; width: 100%; padding: 40px 0; text-align: center;">
+                <img src="/picture?picture=logo/ptmkb-1-text.png" style="width: 500px; margin-bottom: 20px;" alt="PTMKB">
+                <h2 style="text-align: justify; text-align-last: center;">Developed by the Biomedical Informatics and Engineering Research Lab</h2>
+            
+                <!-- Centered input group -->
+                <div class="input-group position-relative" style="margin: 15px auto 0 auto; width: 700px;">
+                    <input class="form-control" id="form_value" type="text" placeholder="Search for a protein by entering a Uniprot Identifier/Accession Number" style="text-align: center;">
+                    <span class="form-group input-group-btn">
+                        <button type="button" id="form_submit" class="btn btn-light" onclick="search()" style="margin-left: 10px;">Search</button>
+                    </span>
+                    <div id="suggestions" class="suggestions-box" style="display: none;"></div>
+                </div>
+            
+                <div style="margin-top: 20px;">
+                    <i class="fa fa-search fa-small"></i>
+                    <label style="margin: 0; font-weight: bold;">Examples:</label>
+                    <a onclick="exampleSearch(this)" class="index-options">P04637</a> 
+                    <a onclick="exampleSearch(this)" class="index-options">G6PI_HUMAN</a>
+                </div>
+            </div>
+
             <section class="intro">
                 <div class="container">
-                    <h1 style="text-align: center; font-size: 28px; color: #444; font-weight: bold;">Welcome to</h1>
-                    <img src="/picture?picture=logo/ptmkb-1-text.png" style="width: 500px; margin-bottom: 20px;" alt="PTMKB">
-                    <div class="protein-statistics-container">
+
+                    <div class="protein-statistics-container" style="margin-top: 40px; background-color: #9dc4ff85;">
                         <p style="text-align: justify; text-align-last: center; margin-bottom: -10px;">
                             <strong>PTMKB</strong> is designed to serve any and all data related to the <strong>Post-Translational Modifications</strong> (PTMs) of proteins. We aim to assist researchers and developers alike to advance in the understanding, exploration, and application of PTMs in cellular process.
                             By providing simple access to a rich repository of PTM data, algorithmic calculations, and tools for integration into systems, we plan to accelerate breakthroughs in fields such as drug discovery, disease research, and biotechnology.
@@ -164,7 +184,7 @@
                     </div>
 
                     <h2 style="text-align: center; font-size: 24px; color: #444; font-weight: bold;">Using REST API</h2>
-                    <div class="protein-statistics-container">
+                    <div class="protein-statistics-container" style="background-color: #9dc4ff85;">
                         <p>
                             Get started with our RESTful API bundle by downloading the script below. It's simple, efficient, and easy to integrate into your workflow.
                         </p>
