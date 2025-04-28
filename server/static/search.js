@@ -454,7 +454,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const urlParams = new URLSearchParams(window.location.search);
     const searchId = urlParams.get('searchId');
     if (searchId) {
-        document.getElementById('form_value').value = id;
+        document.getElementById('form_value').value = searchId;
         search();
     }
 });
