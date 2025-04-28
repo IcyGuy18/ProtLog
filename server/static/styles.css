@@ -247,6 +247,24 @@ iframe {
 }
 
 /*
+    Entering some custom CSS of my own
+*/
+
+.index-options {
+    color: #d3d3d3;
+    background-color: #004d9996;
+    padding: 5px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-left: 5px;
+}
+
+.index-options:hover{
+    background-color: #0f63b796;
+    color: #ffffff;
+}
+
+/*
     Going to use this to display general protein information here
 */
 
