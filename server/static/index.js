@@ -193,6 +193,11 @@ function checkForLogin() {
     }
 }
 
+async function exampleSearch(element) {
+    document.getElementById('form_value').value = element.textContent;
+    window.location.href = `/search?id=${element.textContent}`;
+}
+
 document.addEventListener("DOMContentLoaded", () => {
     checkForLogin();
 });
