@@ -1418,7 +1418,7 @@ async function preparePTMDetails(localizedSequence, localizedSequenceInfo, ptmsD
         pdbHighlightButton.classList.add('additional-button');
         pdbHighlightButton.style.fontWeight = 700;
         pdbHighlightButton.addEventListener('click', async () => {
-            bootstrap.Tab.getOrCreateInstance(document.querySelector('#ptm-sequence-tab')).show();
+            bootstrap.Tab.getOrCreateInstance(document.querySelector('#pdb-tab')).show();
             const atoms = afPdbViewer.getAtomsFromSel({ resi: residuePosition });
             var label = `${residuePosition} - ${atoms[0].resn} - ${listOfPTMs.join(', ')}`;
             afPdbViewer.addLabel(
