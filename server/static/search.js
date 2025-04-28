@@ -453,7 +453,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const urlParams = new URLSearchParams(window.location.search);
     const searchId = urlParams.get('searchId');
-    console.log("HERE", searchId);
     if (searchId) {
         document.getElementById('form_value').value = searchId;
         search();
