@@ -16,14 +16,13 @@
     <link rel="stylesheet" href="../static/styles.css">
 </head>
 <body>
-    <nav class="navbar" id="navBar">
-        <!-- <div class="logo">PTMKB</div> -->
+    <nav class="navbar" id="navBar" style="background-color: #163c82;">
         <a href="/">
-            <img src="/picture?picture=logo/ptmkb-1-alt.png" style="width: 150px;" alt="PTMKB">
+            <img src="/picture?picture=logo/ptmkb-1-alt2.png" style="width: 150px; padding: 10px 10px;" alt="PTMKB">
         </a>
         <button class="navbar-toggler" onclick="toggleNavbar()">☰</button>
         <ul class="navbar-items">
-            <li><a class="nav-link active"><span class="nav-item-box">Search</span></a></li>
+            <li><a href="/search" class="nav-link active"><span class="nav-item-box">Search</span></a></li>
             <li><a href="/propensity" class="nav-link"><span class="nav-item-box">Propensity</span></a></li>
             <li><a href="/documentation" class="nav-link"><span class="nav-item-box">Documentation</span></a></li>
             <li><a href="/integration" class="nav-link"><span class="nav-item-box">Integration</span></a></li>
@@ -59,19 +58,19 @@
             <div id="proteinTabs" style="display: none;">
                 <ul class="nav nav-tabs" role="tablist" style="text-align: center; max-width: 1280px; margin: 0 auto;">
                     <li class="nav-item" role="presentation">
-                        <a class="nav-link active" id="info-tab" data-bs-toggle="tab" href="#info" role="tab" aria-controls="info" aria-selected="true">Protein Information</a>
+                        <a class="nav-link active" id="info-tab" data-bs-toggle="tab" href="#info" role="tab" aria-controls="info" aria-selected="true" style="color: #333;">Protein Information</a>
                     </li>
                     <li class="nav-item" role="presentation">
-                        <a class="nav-link" id="statistics-tab" data-bs-toggle="tab" href="#statistics" role="tab" aria-controls="statistics" aria-selected="false">Statistics</a>
+                        <a class="nav-link" id="statistics-tab" data-bs-toggle="tab" href="#statistics" role="tab" aria-controls="statistics" aria-selected="false" style="color: #333;">Statistics</a>
                     </li>
                     <li class="nav-item" role="presentation">
-                        <a class="nav-link" id="ptm-sequence-tab" data-bs-toggle="tab" href="#ptm-sequence" role="tab" aria-controls="ptm-sequence" aria-selected="false">PTM Sequence</a>
+                        <a class="nav-link" id="ptm-sequence-tab" data-bs-toggle="tab" href="#ptm-sequence" role="tab" aria-controls="ptm-sequence" aria-selected="false" style="color: #333;">PTM Sequence</a>
                     </li>
                     <li class="nav-item" role="presentation">
-                        <a class="nav-link" id="jpred-tab" data-bs-toggle="tab" href="#jpred" role="tab" aria-controls="jpred" aria-selected="false">JPred Predictions</a>
+                        <a class="nav-link" id="jpred-tab" data-bs-toggle="tab" href="#jpred" role="tab" aria-controls="jpred" aria-selected="false" style="color: #333;">JPred Predictions</a>
                     </li>
                     <li class="nav-item" role="presentation">
-                        <a class="nav-link" id="pdb-tab" data-bs-toggle="tab" href="#pdb" role="tab" aria-controls="pdb" aria-selected="false">PDB Structures</a>
+                        <a class="nav-link" id="pdb-tab" data-bs-toggle="tab" href="#pdb" role="tab" aria-controls="pdb" aria-selected="false" style="color: #333;">PDB Structures</a>
                     </li>
                 </ul>
             </div>

@@ -466,6 +466,7 @@ async function calculate() {
     document.getElementById('subsequenceDiv').innerHTML  = '';
     document.getElementById('ptmVector').innerHTML = '';
     document.getElementById('ptmTable').innerHTML = '';
+    document.getElementById('ptmTable').style.marginBottom = '0px';
     document.getElementById('messageDiv').innerHTML = "";
     document.getElementById('vectorInfo').style.display = 'none';
     document.getElementById('tableInfo').style.display = 'none';
@@ -532,6 +533,7 @@ async function calculate() {
                     document.getElementById('ptmTable').innerHTML = displayTable(data, ptm, residue, subsequence);
                     document.getElementById('vectorInfo').style.display = 'block';
                     document.getElementById('tableInfo').style.display = 'block';
+                    document.getElementById('ptmTable').style.marginBottom = '20px';
                 }
             }
         }

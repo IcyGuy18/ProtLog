@@ -315,6 +315,16 @@ async def get_started_script(request: Request):
     
     return FileResponse('./ptmkb_get_started.py')
 
+@app.get('/font', include_in_schema=False)
+async def picture(request: Request, font: str):
+    user_agent = request.headers.get('user-agent', '')
+
+    if not is_browser(user_agent):
+        raise HTTPException(status_code=403, detail="Access restricted to browsers only")
+    
+    return FileResponse(f'./data/fonts/{font}.ttf')
+
+
 @app.get('/picture', include_in_schema=False)
 async def picture(request: Request, picture: str):
     user_agent = request.headers.get('user-agent', '')

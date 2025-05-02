@@ -1,3 +1,8 @@
+@font-face {
+    font-family: monsterrat;
+    src: url('/font?font=monsterrat');
+}
+
 html, body {
     height: 100%;
     margin: 0;
@@ -8,6 +13,7 @@ body {
     display: flex;
     flex-direction: column;
     min-height: 100vh;
+    font-family: monsterrat;
 }
 
 
@@ -116,7 +122,7 @@ iframe {
 .navbar {
     background-color: #f8f9fa;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    padding: 10px 200px;
+    padding: 10px 300px;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -142,7 +148,7 @@ iframe {
 
 .nav-link {
     text-decoration: none;
-    color: #333;
+    color: #ffffff;
     font-weight: 600;
     text-transform: uppercase;
     padding: 5px 10px;
@@ -153,12 +159,12 @@ iframe {
 
 /* Hover and active link styles */
 .nav-link:hover {
-    color: #007bff;
+    color: #85c0ff;
 }
 
 .nav-link.active {
     font-weight: bold;
-    color: #1a81ff;
+    color: #a8cfff;
 }
 
 .nav-link.search {
@@ -250,18 +256,176 @@ iframe {
     Entering some custom CSS of my own
 */
 
+.landing-page-button {
+    color: white;
+    background-color: #529fec;
+    border: 1px solid rgb(55, 113, 250);
+    margin-left: 10px;
+    transform: translateY(-5px);
+    transition: background-color 0.2s ease, color 0.2s ease, border 0.2s ease;
+}
+
+.landing-page-button:hover {
+    color: black;
+    background-color: #d4e9ff;
+    border: 1px solid rgb(114, 156, 255);
+}
+
 .index-options {
     color: #d3d3d3;
-    background-color: #004d9996;
+    background-color: #1870c8;
     padding: 5px;
     border-radius: 4px;
     cursor: pointer;
     margin-left: 5px;
+    transition: background-color 0.1s ease, color 0.1s ease;
 }
 
 .index-options:hover{
-    background-color: #0f63b796;
+    background-color: #3a92ea;
     color: #ffffff;
+    text-decoration: none;
+}
+
+.bullet-point {
+    font-weight: 700;
+    color: #0051a8;
+    text-decoration: none;
+    transition: color 0.1s linear;
+}
+
+.bullet-point:hover {
+    color: #186eca;
+}
+
+.header-bar {
+    position: relative;
+    font-size: 32px;
+    color: #333;
+    font-weight: bold;
+    padding-left: 20px; /* Space for the bar */
+    margin: 40px 0 20px;
+    text-align: left;
+}
+
+.header-bar::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 6px;
+    background-color: #1d5cf0;
+    border-radius: 2px;
+    transition: background-color 0.3s ease;
+}
+
+.section-lead-major {
+    position: relative;
+    font-size: 26px !important;
+    color: #2a2a2a;
+    font-weight: 700;
+    padding-left: 20px;
+    margin: 40px 0 20px;
+    text-align: justify;
+    background-color: transparent;
+    line-height: 1.6;
+}
+
+.section-lead-minor {
+    position: relative;
+    font-size: 20px !important;
+    color: #2a2a2a;
+    font-weight: 400;
+    padding-left: 20px;
+    margin: 40px 0 20px;
+    text-align: justify;
+    background-color: transparent;
+    line-height: 1.6;
+}
+
+.header-bar:hover::before {
+    background-color: #719cff;
+}
+
+/*
+    Entering for the landing page image
+*/
+
+.background-wrapper {
+    position: relative;
+    background-color: rgba(105, 164, 253, 0.52); /* Background color */
+    width: 100%;
+    padding: 120px 0;
+    text-align: center;
+    overflow: hidden;
+}
+
+.background-image {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: url('/picture?picture=icons/haemoglobin.png') center/contain no-repeat;
+    opacity: 0.1; /* Image opacity */
+    z-index: 1;
+}
+.content-layer {
+    position: relative;
+    z-index: 2;
+}
+
+.feature-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    width: 100%;
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.feature-bar-link {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+}
+
+.feature-bar {
+    display: flex;
+    align-items: center;
+    background-color: #d8ecff;
+    border-radius: 6px;
+    padding: 20px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    transition: background-color 0.3s ease;
+    width: 100%;
+    text-decoration: none;
+}
+
+.feature-bar:hover {
+    background-color: #bee0ff;
+    text-decoration: none;
+}
+
+.feature-bar-icon {
+    width: 50px;
+    height: 50px;
+    flex-shrink: 0;
+    margin-right: 20px;
+}
+
+.feature-bar-text {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 16px;
+    color: #333;
+    line-height: 1.5;
+    text-align: center;
+    width: 100%;
+}
+
+.feature-bar-text:hover {
+    text-decoration: none;
 }
 
 /*
