@@ -3236,7 +3236,7 @@ async function search() {
                                     // Special case #1
                                     if (key === 'proteinFunction' || key === 'subcellularLocalizations') {
                                         function convertPubMedReferences(text) {
-                                            const pubMedRegex = /PubMed:(\d+)/g; // Regex to match PubMed references
+                                            const pubMedRegex = /PubMed:(\d+)/g;
                                         
                                             return text.replace(pubMedRegex, (match, id) => {
                                                 const url = `https://www.ncbi.nlm.nih.gov/pubmed/?term=${id}`; // Construct the URL
@@ -3279,6 +3279,7 @@ async function search() {
                             updateStats(updatedPtmData)
                             getJPredInference(json.proteinSequence, json.uniProtAC, updatedPtmData);
 
+                            document.getElementById('search_field').style.display = 'none';
                             document.getElementById('sequenceDisplayer').setAttribute('style', "display: block;");
                             document.getElementById('iframeData').textContent = "";
                             document.getElementById('iframeData2').textContent = "Hover on a highlighted residue to view the PTM and the associated Log Sum and Log-Log Product scores; click on a highlighted residue to view details of the PTM below."

@@ -361,6 +361,16 @@ iframe {
     overflow: hidden;
 }
 
+.background-wrapper-2 {
+    position: relative;
+    width: 60%;
+    margin: 0 auto;
+    padding-bottom: 140px;
+    border-radius: 5px;
+    text-align: center;
+    overflow: hidden;
+}
+
 .background-image {
     position: absolute;
     top: 0;

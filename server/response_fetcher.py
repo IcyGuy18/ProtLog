@@ -132,7 +132,7 @@ def fetch_response_uniprot_trim(prot_id):
                         # And now we resume.
                         try:
                             return_response['proteinFunction'] = ''.join(
-                                i['texts'][0]['value'] for i in response['comments']
+                                f"{i['texts'][0]['value']}\n" for i in response['comments']
                                 if 'FUNCTION' in i['commentType']
                             )
                         except:
@@ -202,7 +202,7 @@ def fetch_response_uniprot_trim(prot_id):
                             return_response['sequenceLength'] = ''
                         try:
                             return_response['proteinFunction'] = ''.join(
-                                i['texts'][0]['value'] for i in response['comments']
+                                f"{i['texts'][0]['value']}\n" for i in response['comments']
                                 if 'FUNCTION' in i['commentType']
                             )
                         except:
@@ -290,7 +290,7 @@ def fetch_response_uniprot_trim(prot_id):
                         return_response['sequenceLength'] = ''
                     try:
                         return_response['proteinFunction'] = ''.join(
-                            i['texts'][0]['value'] for i in response['comments']
+                            f"{i['texts'][0]['value']}\n" for i in response['comments']
                             if 'FUNCTION' in i['commentType']
                         )
                     except:

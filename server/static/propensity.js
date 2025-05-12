@@ -528,12 +528,14 @@ async function calculate() {
                         span.setAttribute('style', `text-align: center; font-size: 28px; color: ${color}; font-weight: bold;`);
                         document.getElementById('subsequenceDiv').appendChild(span);
                     });
-                    // document.getElementById('subsequenceDiv').innerHTML = `<h2 style="text-align: center; font-size: 28px; color: #444; font-weight: bold;">${subsequence.toUpperCase()}</h2>`
+                    document.getElementById('search_field').style.display = 'none';
+                    document.getElementById('search_again').style.display = 'block';
                     document.getElementById('ptmVector').innerHTML = await displayVector(data, subsequence);
                     document.getElementById('ptmTable').innerHTML = displayTable(data, ptm, residue, subsequence);
                     document.getElementById('vectorInfo').style.display = 'block';
                     document.getElementById('tableInfo').style.display = 'block';
                     document.getElementById('ptmTable').style.marginBottom = '20px';
+                    document.getElementById('subsequenceDiv').style.marginTop = '-120px';
                 }
             }
         }
@@ -690,11 +692,14 @@ async function displayVector(data, subsequence) {
     for (let i = -10; i <= 10; i++) {
         relativeIndex.push(i <= 0 ? i.toString() : `+${i}`);
     }
+    console.log(relativeIndex, vectorData);
     relativeIndex.forEach(idx => {
         const innerObj = vectorData[idx];
-        Object.values(innerObj).forEach(value => {
-            vector.push(value);
-        });
+        if (innerObj !== undefined) {
+            Object.values(innerObj).forEach(value => {
+                vector.push(value);
+            });
+        }
     });
 
     var logSum = additiveCalculator(vector);

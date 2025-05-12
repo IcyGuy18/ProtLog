@@ -35,7 +35,7 @@
     </script>
 
     <div class="container-fluid mt-5" style="width: 90%; align-content: center;">
-        <div class="protein-statistics-container" style="background-color: #d8ecff; text-align: justify; text-align-last: center; max-width: 600px; margin: 0 auto; margin-bottom: -20px; padding-bottom: 20px;">
+        <!-- <div class="protein-statistics-container" style="background-color: #d8ecff; text-align: justify; text-align-last: center; max-width: 600px; margin: 0 auto; margin-bottom: -20px; padding-bottom: 20px;">
             <p>Here, you can provide a protein's UniProt-based identifier and get to know in detail about the protein's general info, the sequence and PTMs on each residue, the predicted and actual secondary structures, and SASA values.</p>
         </div>
         <div class="alert alert-info text-center" style="width: 600px; margin-top: 40px;">
@@ -50,6 +50,32 @@
             <i class="fa fa-search fa-small"></i><label style="padding: -20px; margin: 0;"><strong>Examples:</strong></label>
             <a onclick="exampleSearch(this)" style="color: #1a0dab; text-decoration: underline; font-weight: normal; cursor: pointer;">P04637</a>, 
             <a onclick="exampleSearch(this)" style="color: #1a0dab; text-decoration: underline; font-weight: normal; cursor: pointer;">G6PI_HUMAN</a>
+        </div> -->
+
+        <div class="background-wrapper-2" id="search_field">
+            <!-- <div class="background-image"></div> -->
+        
+            <div class="content-layer">
+                
+                <div class="input-group position-relative" style="margin: 15px auto 0 auto; width: 800px; font-size: 30px;">
+                    <input class="form-control" style="font-size: 18px; text-align: left;" id="form_value" type="text" placeholder="Search for a protein by entering a Uniprot Identifier/Accession Number" style="text-align: center;">
+                    <span class="form-group input-group-btn">
+                        <button type="button" id="form_submit" class="btn btn-light landing-page-button" onclick="search()">Search</button>
+                    </span>
+                    <div id="suggestions" class="suggestions-box" style="display: none;"></div>
+                </div>
+        
+                <div style="margin-top: 10px; margin-bottom: 20px;">
+                    <i class="fa fa-search fa-small"></i>
+                    <label style="margin: 0; font-weight: bold;">Examples:</label>
+                    <a onclick="exampleSearch(this)" class="index-options">P04637</a> 
+                    <a onclick="exampleSearch(this)" class="index-options">G6PI_HUMAN</a>
+                    <a onclick="exampleSearch(this)" class="index-options">VP26A_MOUSE</a>
+                    <a onclick="exampleSearch(this)" class="index-options">O14639-4</a>
+                    <a onclick="exampleSearch(this)" class="index-options">P25311</a>
+                </div>
+
+            </div>
         </div>
 
         <div class="iframe-container main-content" id="iframeContainer">

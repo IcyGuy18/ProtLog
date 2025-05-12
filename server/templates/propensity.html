@@ -51,14 +51,13 @@
         </ul>
     </nav>
 
-    <div class="container-fluid mt-5" style="width: 80%; align-content: center;">
+    <!-- <div class="container-fluid mt-5" style="width: 80%; align-content: center;">
         <div class="protein-statistics-container" style="background-color: #d8ecff; text-align: justify; text-align-last: center; max-width: 600px; margin: 0 auto; margin-bottom: -20px; padding-bottom: 20px;">
             <p>Here, you can provide a protein sequence window along with a post-translational modification (PTM) as input to calculate the <strong>Propensity</strong> of the residue - that is, the tendency of a residue to undergo said PTM.</p>
         </div>
         <div class="alert alert-info text-center" style="width: 600px; margin-top: 40px;">
             <i class="fa fa-search fa-small"></i><label><strong>Calculate Protein Subsequence Propensity</strong></label>
             <div class="input-group position-relative">
-                <!-- <input class="form-control" id="sequence_value" type="text" placeholder="Enter subsequence (valid windows - 13, 15, 17, 19, 21)" style="text-align: center; text-transform: uppercase;"> -->
                 <div contenteditable="true" class="form-control" id="sequence_value" placeholder="Enter subsequence (valid windows - 13, 15, 17, 19, 21)" style="text-align: center; text-transform: uppercase; padding: 5px;"></div>
                 <p id="sequenceLength" style="display: inline-block; width: 40px; height: 40px; line-height: 40px; text-align: center; font-family: 'Courier New', Courier, monospace; font-size: 16px; background-color: #f0f0f0; border: 2px solid #ddd; border-radius: 8px; margin: 0; color: #333;">0</p>
             </div>
@@ -74,7 +73,62 @@
             <i class="fa fa-search fa-small"></i><label style="padding: 20px; margin: 0;"><strong>Example:</strong></label>
             <a id="exampleInput" onclick="exampleSearch(this)" style="color: #1a0dab; text-decoration: underline; font-weight: normal; cursor: pointer;">WKLLPENNVLSPLPSQAMDDW; Phosphorylation</a>
         </div>
+    </div> -->
+
+    <div class="container-fluid mt-5" style="width: 80%; align-content: center;" id="search_field">
+        <div class="background-wrapper-2" id="search_field">
+            <div class="content-layer">
+                
+                <div class="input-group position-relative">
+                    <!-- <input class="form-control" id="sequence_value" type="text" placeholder="Enter subsequence (valid windows - 13, 15, 17, 19, 21)" style="text-align: center; text-transform: uppercase;"> -->
+                    <div contenteditable="true" class="form-control" id="sequence_value" placeholder="Enter subsequence (valid windows - 13, 15, 17, 19, 21)" style="text-align: center; text-transform: uppercase; padding: 5px;"></div>
+                    <p id="sequenceLength" style="display: inline-block; width: 40px; height: 40px; line-height: 40px; text-align: center; font-family: 'Courier New', Courier, monospace; font-size: 16px; background-color: #f0f0f0; border: 2px solid #ddd; border-radius: 8px; margin: 0; color: #333;">0</p>
+                </div>
+                <div class="input-group position-relative" style="width: 400px; margin: 20px auto;">
+                    <input class="form-control" id="ptm_value" type="text" placeholder="Enter Post-Translational Modification" style="text-align: center;">
+                    <div id="suggestions" class="suggestions-box" style="display: none;"></div>
+                </div>
+
+                <div>
+                    <span class="form-group input-group-btn">
+                        <button type="button" id="form_submit" class="btn btn-primary" onclick="calculate()" disabled="true">Calculate</button>
+                    </span>
+                </div>
+        
+                <div style="margin-top: 10px; margin-bottom: 20px;">
+                    <i class="fa fa-search fa-small"></i>
+                    <label style="margin: 0; font-weight: bold;">Examples:</label>
+                    <!-- <a onclick="exampleSearch(this)" class="index-options">P04637</a> 
+                    <a onclick="exampleSearch(this)" class="index-options">G6PI_HUMAN</a>
+                    <a onclick="exampleSearch(this)" class="index-options">VP26A_MOUSE</a>
+                    <a onclick="exampleSearch(this)" class="index-options">O14639-4</a>
+                    <a onclick="exampleSearch(this)" class="index-options">P25311</a> -->
+                    <a id="exampleInput" onclick="exampleSearch(this)" style="color: #1a0dab; text-decoration: underline; font-weight: normal; cursor: pointer;">WKLLPENNVLSPLPSQAMDDW; Phosphorylation</a>
+                </div>
+
+            </div>
+        </div>
     </div>
+
+
+    <div>
+        <span class="form-group input-group-btn">
+            <button id="search_again" type="button"class="btn btn-primary" style="display: none; margin: 20px auto;">Search Again</button>
+        </span>
+        <script>
+            document.getElementById('search_again').addEventListener('click', () => {
+                document.getElementById('ptmInfo').innerHTML = '';
+                document.getElementById('search_again').style.display = 'none';
+                document.getElementById('search_field').style.display = 'block';
+                document.getElementById('ptmVector').innerHTML = '';
+                document.getElementById('ptmTable').innerHTML = '';
+                document.getElementById('vectorInfo').style.display = 'none';
+                document.getElementById('tableInfo').style.display = 'none';
+                document.getElementById('subsequenceDiv').innerHTML = '';
+            });
+        </script>
+    </div>
+
     <div id="messageDiv" style="padding: 40px; margin-left: auto; margin-right: auto;"><h5>Loading tables, please wait...</h5></div>
 
     <div id="subsequenceDiv" style="padding: 40px; margin-left: auto; margin-right: auto;"></div>
