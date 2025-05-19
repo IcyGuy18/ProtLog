@@ -23,7 +23,7 @@
 <body>
     <nav class="navbar" id="navBar" style="background-color: #163c82;">
         <a href="/">
-            <img src="/picture?picture=logo/ptmkb-1-alt2.png" style="width: 150px; padding: 10px 10px;" alt="PTMKB">
+            <img src="/picture?picture=logo/ptmkb-1-alt3.png" style="width: 150px; padding: 10px 10px;" alt="PTMKB">
         </a>
         <button class="navbar-toggler" onclick="toggleNavbar()">☰</button>
         <ul class="navbar-items">
@@ -61,12 +61,17 @@
             </div>
         </div>
     </div>
-    <footer class="footer bg-light py-3">
+    <footer class="footer bg-light py-3" style="padding-top: 20px;">
         <div class="container text-center">
             <p class="mb-0">This website is free and open to all users and there is no login requirement.</p>
-            <p class="mb-0">Biomedical Informatics & Engineering Research Laboratory, Lahore University of Management Sciences, DHA, Lahore, Pakistan. +92 42 3560 8000</p>
-            <p class="mb-0"><a href="http://birl.lums.edu.pk/">© 2024 BIRL</a></p>
+            <p class="mb-0">Biomedical Informatics & Engineering Research Laboratory, Lahore University of Management Sciences, DHA, Lahore, Pakistan. +92 (42) 3560 8352</p>
+            <p class="mb-0" id="footerYear"><a href="http://birl.lums.edu.pk/">© 2024 BIRL</a></p>
         </div>
     </footer>
+    <script>
+        // Get the current year and set it to the span
+        const date = new Date().getFullYear();
+        document.getElementById("footerYear").innerHTML = `<a href="http://birl.lums.edu.pk/">© ${date} BIRL</a>`
+      </script>
 </body>
 </html>

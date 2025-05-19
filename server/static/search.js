@@ -60,7 +60,7 @@ function checkForLogin() {
             }).then(async (res) => {
                 return await res.json();
             }).catch(err => {
-                console.error(err);
+                // console.error(err);
             });
 
             if (response && response.token) {
@@ -114,7 +114,7 @@ function checkForLogin() {
             }).then(async (res) => {
                 return await res.json();
             }).catch(err => {
-                console.error(err);
+                // console.error(err);
             });
             if (response && response.reset) {
                 navigator.clipboard.writeText(response.token).then(() => {
@@ -143,10 +143,10 @@ function checkForLogin() {
                         }, 1000);
                     }, 3000);
                 }).catch(err => {
-                    console.error('Failed to reset token: ' + err);
+                    // console.error('Failed to reset token: ' + err);
                 });
             } else {
-                console.error('Failed to reset token');
+                // console.error('Failed to reset token');
             }
         });
 
@@ -166,7 +166,7 @@ function checkForLogin() {
             }).then(async (res) => {
                 return await res.json();
             }).catch(err => {
-                console.error(err);
+                // console.error(err);
             });
             if (response.logout) {
                 sessionStorage.removeItem('user');
@@ -432,7 +432,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 suggestionsBox.hide();
             }
         } catch (error) {
-            console.error("Error: ", error);
+            // console.error("Error: ", error);
             $('#suggestions').hide();
         }
     });
@@ -552,9 +552,9 @@ async function submitJob(jobid, acc, ptms) {
     } catch (error) {
         // Handle any errors, including aborting
         if (error.name === 'AbortError') {
-            console.log('Job polling aborted');
+            // // console.log('Job polling aborted');
         } else {
-            console.error('Error:', error);
+            // // console.error('Error:', error);
         }
         return error.message;
     }
@@ -1019,7 +1019,7 @@ async function fetchData(ptm, char, table) {
         )
         .then(res => res.json());
     } catch (err) {
-        console.error('Error:', err);
+        // console.error('Error:', err);
     }
 }
 
@@ -1252,7 +1252,7 @@ async function preparePTMDetails(localizedSequence, localizedSequenceInfo, ptmsD
                 valueCell.innerHTML += `<a target="_blank" href="https://proteininformationresource.org/cgi-bin/resid?id=${entry['@id']}">[${entry['@id']}]</a>`
             })
         }).catch(error => {
-            console.error(error);
+            // console.error(error);
         })
 
         row.appendChild(keyCell);
@@ -1390,7 +1390,7 @@ async function preparePTMDetails(localizedSequence, localizedSequenceInfo, ptmsD
             scoreRow.appendChild(scoreValueCell);
             ptmTable.appendChild(scoreRow);
         } else {
-            // console.log(logTableResp);
+            // // console.log(logTableResp);
         }
 
         ptmInfo.appendChild(ptmTable);
@@ -1406,7 +1406,7 @@ async function preparePTMDetails(localizedSequence, localizedSequenceInfo, ptmsD
     detailsPanel.appendChild(sequenceDisplayTitle);
     detailsPanel.appendChild(sequenceDisplay);
     detailsPanel.appendChild(positionDiv);
-    console.log(enzymesDiv.children.length);
+    // // console.log(enzymesDiv.children.length);
     if (enzymesDiv.children.length !== 0) {
         detailsPanel.appendChild(enzymesDiv);
     }
@@ -1417,6 +1417,7 @@ async function preparePTMDetails(localizedSequence, localizedSequenceInfo, ptmsD
         pdbHighlightButton.textContent = "Click here to view the residue in the PDB structure";
         pdbHighlightButton.classList.add('additional-button');
         pdbHighlightButton.style.fontWeight = 700;
+        pdbHighlightButton.style.paddingTop = '10px';
         pdbHighlightButton.addEventListener('click', async () => {
             bootstrap.Tab.getOrCreateInstance(document.querySelector('#pdb-tab')).show();
             const atoms = afPdbViewer.getAtomsFromSel({ resi: residuePosition });
@@ -2034,6 +2035,7 @@ function generatePTMHtmlTable() {
             td.style.backgroundColor = '#f4f4f4';
             
             if (ptmCounts[ptm][aa]) {
+                td.style.backgroundColor = 'rgb(218, 240, 255)';
                 td.style.fontWeight = 'regular';
                 td.style.color = 'blue';
                 td.style.cursor = 'pointer';
@@ -2095,6 +2097,7 @@ function generatePTMHtmlTable() {
                 });
             } else {
                 td.textContent = '-';
+                td.style.cursor = 'default';
             }
             
             row.appendChild(td);
@@ -2377,7 +2380,7 @@ async function displayPDBStructures(uniprotAC, alphafoldPdbData, ptms) {
         }
         return null;
     }).catch(error => {
-        console.error(error);
+        // console.error(error);
     });
 
     let response = getValue(rcsbData, 'result_set');
@@ -2570,7 +2573,7 @@ async function displayPDBStructures(uniprotAC, alphafoldPdbData, ptms) {
             // responseStr += `- Actual Structure (Right, <a id="PDB_${id}" href="https://www.rcsb.org/structure/${id}" target="_blank">RCSB</a>).</h5>`
         }).catch(error => {
             document.getElementById('rcsbHRef').innerHTML = `<h5>No RCSB Structure exists.</h5>`;
-            console.error(error);
+            // console.error(error);
             // responseStr += `- Error: no PDB entry found in RCSB.</h5>`
         });
 
@@ -2771,7 +2774,7 @@ async function displayPDBStructures(uniprotAC, alphafoldPdbData, ptms) {
                 document.getElementById('rcsbHRef').innerHTML = `<a href="https://www.rcsb.org/structure/${selectedValue}" target="_blank">RCSB Verified Structure</a>`;
             }).catch(error => {
                 document.getElementById('rcsbHRef').innerHTML = `<h5>Internet connection error - try again!</h5>`;
-                console.log(error);
+                // // console.log(error);
             });
         });
     } else {
@@ -3041,7 +3044,7 @@ async function fetchAndRenderPDB(url, uniprotAccession, datatype) {
         const data = await response.text();  // Read as text
         return data;
     } catch (error) {
-        console.error("Error rendering PDB file:", error);
+        // console.error("Error rendering PDB file:", error);
         return null;
     }
 }
@@ -3159,6 +3162,7 @@ async function search() {
         if (currentJobAbortController) {
             currentJobAbortController.abort();
         }
+        document.getElementById('info').style.background = '#fff';
         document.getElementById('proteinTabs').setAttribute('style', 'display: none;');
         document.getElementById('afProfile').style.display = 'none';
         document.getElementById('rcsbProfile').style.display = 'none';
@@ -3235,14 +3239,32 @@ async function search() {
                                     keyCell.className = 'key';
                                     // Special case #1
                                     if (key === 'proteinFunction' || key === 'subcellularLocalizations') {
+
                                         function convertPubMedReferences(text) {
-                                            const pubMedRegex = /PubMed:(\d+)/g;
-                                        
-                                            return text.replace(pubMedRegex, (match, id) => {
-                                                const url = `https://www.ncbi.nlm.nih.gov/pubmed/?term=${id}`; // Construct the URL
-                                                return `<a href="${url}" target="_blank" rel="noopener noreferrer">${match}</a>`; // Create the link
+                                            const pubMedRegex = /PubMed:(\d+)/g; // /\(PubMed:(\d+)\)/g;
+                                    
+                                            // First, replace the PubMed reference with an <a> tag, keeping parentheses
+                                            let replacedText = text.replace(pubMedRegex, (match, id) => {
+                                                const url = `https://www.ncbi.nlm.nih.gov/pubmed/?term=${id}`;
+                                                return `<a href="${url}" target="_blank" rel="noopener noreferrer">PubMed:${id}</a>`;
                                             });
+                                    
+                                            // Then, insert a <br> after a period that follows a closing parenthesis
+                                            replacedText = replacedText.replace(/\)\. /g, ').<br><br>');
+                                    
+                                            return replacedText;
                                         }
+                                    
+                                        // valueCell.innerHTML = convertPubMedReferences(value);
+
+                                        // function convertPubMedReferences(text) {
+                                        //     const pubMedRegex = /PubMed:(\d+)/g;
+                                        
+                                        //     return text.replace(pubMedRegex, (match, id) => {
+                                        //         const url = `https://www.ncbi.nlm.nih.gov/pubmed/?term=${id}`; // Construct the URL
+                                        //         return `<a href="${url}" target="_blank" rel="noopener noreferrer">${match}</a>`; // Create the link
+                                        //     });
+                                        // }
                                         valueCell.innerHTML = convertPubMedReferences(value);
                                     } else if (key === 'uniProtID' || key === 'uniProtAC') {
                                         valueCell.innerHTML = `<a href="https://www.uniprot.org/uniprotkb/${value}">${value}</a>`;
@@ -3279,6 +3301,7 @@ async function search() {
                             updateStats(updatedPtmData)
                             getJPredInference(json.proteinSequence, json.uniProtAC, updatedPtmData);
 
+                            document.getElementById('info').style.background = '#ecf6ff';
                             document.getElementById('search_field').style.display = 'none';
                             document.getElementById('sequenceDisplayer').setAttribute('style', "display: block;");
                             document.getElementById('iframeData').textContent = "";
@@ -3292,9 +3315,7 @@ async function search() {
                             document.getElementById('jpredMajor').style.display = 'block';
                             document.getElementById('pdbMajor').style.display = 'block';
                             document.getElementById('detailsPanel').innerHTML = `<h3>Click on a PTM to view details here!</h3>`
-                            console.log("Displaying...");
                             document.getElementById('proteinTabs').setAttribute('style', 'display: block;');
-                            console.log("Done!");
                         }
                         else {
                             document.getElementById('iframeData').textContent = `${json.message}`;
@@ -3305,11 +3326,11 @@ async function search() {
                     document.getElementById('iframeData').textContent = "No protein found";
                 }
             } else {
-                console.error("Response not OK: ", response.statusText);
+                // console.error("Response not OK: ", response.statusText);
                 document.getElementById('iframeData').textContent = `Could not make a valid response to server - please try again!`;
             }
         } catch (e) {
-            console.error("Error: ", e);
+            // console.error("Error: ", e);
             document.getElementById('iframeData').textContent = `Encountered server error - please try again!`;
         }
     }

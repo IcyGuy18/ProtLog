@@ -18,7 +18,7 @@
 <body>
     <nav class="navbar" id="navBar" style="background-color: #163c82;">
         <a href="/">
-            <img src="/picture?picture=logo/ptmkb-1-alt2.png" style="width: 150px; padding: 10px 10px;" alt="PTMKB">
+            <img src="/picture?picture=logo/ptmkb-1-alt3.png" style="width: 150px; padding: 10px 10px;" alt="PTMKB">
         </a>
         <button class="navbar-toggler" onclick="toggleNavbar()">☰</button>
         <ul class="navbar-items">
@@ -109,7 +109,7 @@
             <div class="tab-content mt-3" id="proteinTabsContent">
                 <div class="tab-pane fade show active" id="info" role="tabpanel" aria-labelledby="info-tab">
                     <div id="proteinInfoContainer" class="protein-info-container" style="margin-bottom: 20px;">
-                        <h1 style="text-align: center; font-size: 28px; color: #444; font-weight: bold;">Protein Information</h1>
+                        <!-- <h1 style="text-align: center; font-size: 28px; color: #444; font-weight: bold;">Protein Information</h1> -->
                         <div id="protein3DStructure" class="top-right-window"></div>
                         <div id="protein3DStructureInfo" class="top-right-window-disclaimer"></div>
                         <table class="table table-striped mx-auto">
@@ -120,7 +120,7 @@
                 </div>
                 <div class="tab-pane fade" id="statistics" role="tabpanel" aria-labelledby="statistics-tab">
                     <div id="proteinStatisticsContainer" class="protein-statistics-container">
-                        <h1 style="text-align: center; font-size: 28px; color: #444; font-weight: bold;">Protein Statistics</h1>
+                        <!-- <h1 style="text-align: center; font-size: 28px; color: #444; font-weight: bold;">Protein Statistics</h1> -->
                         <div class="row">
                             <div class="col">
                                 <div class="stat-box info">
@@ -157,16 +157,16 @@
                 </div>
                 <div class="tab-pane fade" id="ptm-sequence" role="tabpanel" aria-labelledby="ptm-sequence-tab">
                     <div id="foundProtein" style="position: relative; display: none; padding-bottom: 20px;">
-                        <div class="protein-sequence-container">
-                            <h1 style="text-align: center; font-size: 28px; color: #444; font-weight: bold; margin: 20px;">Protein PTM Sequence</h1>
-                            <div class="protein-info-container" id="uniprotSequence" style="width:70%;"></div>
-                            <div id="detailsPanel" class="details-panel" style="margin-top: 40px;">
+                        <div class="protein-info-container">
+                            <!-- <h1 style="text-align: center; font-size: 28px; color: #444; font-weight: bold; margin: 20px;">Protein PTM Sequence</h1> -->
+                            <div class="protein-info-container" id="uniprotSequence" style="width:70%; background: #efefef;"></div>
+                            <div id="detailsPanel" class="details-panel" style="margin-top: 40px; background: #eaf0f7;">
                                 <h3>Click on a highlighted residue to view its details!</h3>
                             </div>
-                            <p class="protein-statistics-container" id="iframeData2" style="padding-top: 20px; padding-bottom: 20px; width: 70%; margin: 20px auto;"></p>
+                            <p class="protein-statistics-container" id="iframeData2" style="padding-top: 20px; padding-bottom: 20px; width: 70%; margin: 20px auto; background: #f3f3f3;"></p>
                             <div class="sequence-displayer" id="sequenceDisplayer"></div>
-                            <div id="ptmSearchContainer">
-                                <p id="iframeData3"></p>
+                            <div id="ptmSearchContainer" style="margin-top: 20px;">
+                                <p id="iframeData3" style="background: #e8e8e8;"></p>
                                 <div id="giantCheckboxContainer" class="checkbox-container">
                                     <ul id="checkboxContainer"></ul>
                                 </div>
@@ -176,14 +176,14 @@
                 </div>
                 <div class="tab-pane fade" id="jpred" role="tabpanel" aria-labelledby="jpred-tab">
                     <div id="jpredMajor" class="protein-sequence-container" style="margin-bottom: 20px;">
-                        <h1 style="text-align: center; font-size: 28px; color: #444; font-weight: bold; margin: 20px;">JPred Prediction</h1>
+                        <!-- <h1 style="text-align: center; font-size: 28px; color: #444; font-weight: bold; margin: 20px;">JPred Prediction</h1> -->
                         <div id="jpredPredictions"></div>
                         <div id="jpredInfo"></div>
                     </div>
                 </div>
                 <div class="tab-pane fade" id="pdb" role="tabpanel" aria-labelledby="pdb-tab">
                     <div id="pdbMajor" class="protein-sequence-container">
-                        <h1 style="text-align: center; font-size: 28px; color: #444; font-weight: bold; margin: 20px;">Protein PDB Structures</h1>
+                        <!-- <h1 style="text-align: center; font-size: 28px; color: #444; font-weight: bold; margin: 20px;">Protein PDB Structures</h1> -->
                         <div id="pdbStructures">
                             <div id="afMajor" style="align-items: flex-start;">
                                 <h5 id="afHRef">AlphaFold Predicted Structure</h5>
@@ -220,16 +220,6 @@
                 </div>
             </div>
 
-            
-
-            
-
-            
-
-            
-            
-            
-
             <div id="ptmSiteInfo" style="display: none; align-content: center;">
                 <table class="table table-striped mx-auto">
                     <tbody class="thead-light" id="ptmInfo">
@@ -253,12 +243,17 @@
         </div>
     </div>
     <div class="main-content"></div>
-    <footer class="footer bg-light py-3">
+    <footer class="footer bg-light py-3" style="padding-top: 20px;">
         <div class="container text-center">
             <p class="mb-0">This website is free and open to all users and there is no login requirement.</p>
-            <p class="mb-0">Biomedical Informatics & Engineering Research Laboratory, Lahore University of Management Sciences, DHA, Lahore, Pakistan. +92 42 3560 8000</p>
-            <p class="mb-0"><a href="http://birl.lums.edu.pk/">© 2024 BIRL</a></p>
+            <p class="mb-0">Biomedical Informatics & Engineering Research Laboratory, Lahore University of Management Sciences, DHA, Lahore, Pakistan. +92 (42) 3560 8352</p>
+            <p class="mb-0" id="footerYear"><a href="http://birl.lums.edu.pk/">© 2024 BIRL</a></p>
         </div>
     </footer>
+    <script>
+        // Get the current year and set it to the span
+        const date = new Date().getFullYear();
+        document.getElementById("footerYear").innerHTML = `<a href="http://birl.lums.edu.pk/">© ${date} BIRL</a>`
+      </script>
 </body>
 </html>

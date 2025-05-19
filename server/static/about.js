@@ -60,7 +60,7 @@ function checkForLogin() {
             }).then(async (res) => {
                 return await res.json();
             }).catch(err => {
-                console.error(err);
+                // console.error(err);
             });
 
             if (response && response.token) {
@@ -114,7 +114,7 @@ function checkForLogin() {
             }).then(async (res) => {
                 return await res.json();
             }).catch(err => {
-                console.error(err);
+                // console.error(err);
             });
             if (response && response.reset) {
                 navigator.clipboard.writeText(response.token).then(() => {
@@ -143,10 +143,10 @@ function checkForLogin() {
                         }, 1000);
                     }, 3000);
                 }).catch(err => {
-                    console.error('Failed to reset token: ' + err);
+                    // // console.error('Failed to reset token: ' + err);
                 });
             } else {
-                console.error('Failed to reset token');
+                // // console.error('Failed to reset token');
             }
         });
 
@@ -166,7 +166,7 @@ function checkForLogin() {
             }).then(async (res) => {
                 return await res.json();
             }).catch(err => {
-                console.error(err);
+                // console.error(err);
             });
             if (response.logout) {
                 sessionStorage.removeItem('user');

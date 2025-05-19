@@ -97,7 +97,7 @@
 
     <body>
         <nav class="navbar" id="navBar" style="background-color: #163c82;">
-            <img src="/picture?picture=logo/ptmkb-1-alt2.png" style="width: 150px; padding: 10px 10px;" alt="PTMKB">
+            <img src="/picture?picture=logo/ptmkb-1-alt3.png" style="width: 150px; padding: 10px 10px;" alt="PTMKB">
             <button class="navbar-toggler" onclick="toggleNavbar()">☰</button>
             <ul class="navbar-items">
                 <li><a href="/search" class="nav-link"><span class="nav-item-box">Search</span></a></li>
@@ -114,8 +114,7 @@
                 <div class="background-image"></div>
             
                 <div class="content-layer">
-                    <img src="/picture?picture=logo/ptmkb-1-text-alt.png" style="width: 500px; margin-bottom: 20px;" alt="PTMKB">
-                    <p style="text-align: justify; text-align-last: center; font-size: 18px; margin-top: 20px; margin-bottom: 20px;">Developed by the <a href="http://birl.lums.edu.pk/" style="text-decoration: none; color: #333;">Biomedical Informatics and Engineering Research Lab</a></p>
+                    <img src="/picture?picture=logo/ptmkb-1-text-alt-2.png" style="width: 900px; margin-bottom: 20px;" alt="PTMKB">
             
                     <!-- Centered input group -->
                     <div class="input-group position-relative" style="margin: 15px auto 0 auto; width: 800px; font-size: 30px;">
@@ -144,17 +143,13 @@
 
             <div style="background-color: #95b3eb; padding: 40px 0;">
                 <p style="font-size: 24px; text-align: justify; text-align-last: center; margin-bottom: -10px; width: 65%; margin: 0 auto;">
-                    <strong>PTMKB</strong> provides streamlined access to comprehensive Post-Translational Modification data, tools, and algorithms to support research and innovation in drug discovery, disease understanding, and biotechnology.
+                    <strong>PTMKB</strong> provides streamlined access to a comprehensive Post-Translational Modification database, tools, and algorithms to support research and innovation in drug discovery, disease understanding, and biotechnology.
                 </p>
             </div>
             <section class="intro" style="box-shadow: none; margin-top: -20px;">
                 <div class="container">
 
                     <h3 class="header-bar">Background</h3>
-                    <p class="section-lead-major">
-                        PTMKB provides a comprehensive Post-Translational Modification (PTM) database, site assessment tools, and prediction algorithms to support
-                        research in drug discovery, disease understanding, and biotechnology.
-                    </p>
                     <p class="section-lead-minor">
                         We catalogue post-translational data on over 200,000 unique proteins and 70 different types of PTMs.
                         Along with that, we provide a per-residue propensity scoring metric that can be served through a RESTful API to allow for its seamless
@@ -245,9 +240,14 @@
         <footer class="footer bg-light py-3" style="padding-top: 20px;">
             <div class="container text-center">
                 <p class="mb-0">This website is free and open to all users and there is no login requirement.</p>
-                <p class="mb-0">Biomedical Informatics & Engineering Research Laboratory, Lahore University of Management Sciences, DHA, Lahore, Pakistan. +92 42 3560 8000</p>
-                <p class="mb-0"><a href="http://birl.lums.edu.pk/">© 2024 BIRL</a></p>
+                <p class="mb-0">Biomedical Informatics & Engineering Research Laboratory, Lahore University of Management Sciences, DHA, Lahore, Pakistan. +92 (42) 3560 8352</p>
+                <p class="mb-0" id="footerYear"><a href="http://birl.lums.edu.pk/">© 2024 BIRL</a></p>
             </div>
         </footer>
+        <script>
+            // Get the current year and set it to the span
+            const date = new Date().getFullYear();
+            document.getElementById("footerYear").innerHTML = `<a href="http://birl.lums.edu.pk/">© ${date} BIRL</a>`
+          </script>
     </body>
 </html>

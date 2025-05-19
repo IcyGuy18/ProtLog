@@ -60,7 +60,7 @@ function checkForLogin() {
             }).then(async (res) => {
                 return await res.json();
             }).catch(err => {
-                console.error(err);
+                // console.error(err);
             });
 
             if (response && response.token) {
@@ -114,7 +114,7 @@ function checkForLogin() {
             }).then(async (res) => {
                 return await res.json();
             }).catch(err => {
-                console.error(err);
+                // console.error(err);
             });
             if (response && response.reset) {
                 navigator.clipboard.writeText(response.token).then(() => {
@@ -143,10 +143,10 @@ function checkForLogin() {
                         }, 1000);
                     }, 3000);
                 }).catch(err => {
-                    console.error('Failed to reset token: ' + err);
+                    // console.error('Failed to reset token: ' + err);
                 });
             } else {
-                console.error('Failed to reset token');
+                // console.error('Failed to reset token');
             }
         });
 
@@ -166,7 +166,7 @@ function checkForLogin() {
             }).then(async (res) => {
                 return await res.json();
             }).catch(err => {
-                console.error(err);
+                // console.error(err);
             });
             if (response.logout) {
                 sessionStorage.removeItem('user');
@@ -372,46 +372,27 @@ document.addEventListener("DOMContentLoaded", async () => {
         // set.addRange(setPos);
         // input_elem.focus();
     });
-    $('#ptm_value').on('input', async function() {
-        const requestTerm = $(this).val();
-        if (requestTerm.length < 1) {
-            $('#suggestions').hide();
-            return;
-        }
-        let currData = [];
-        suggestions.forEach(ptm => {
-            if (ptm.toLowerCase().indexOf(requestTerm.toLowerCase()) >= 0) {
-                currData.push(ptm);
-            }
+
+    // Show dropdown on click
+    $('#ptm_value').on('click', function () {
+        const suggestionsBox = $('#suggestions');
+        suggestionsBox.empty();
+
+        suggestions.forEach(item => {
+            const suggestionItem = $(`<div class="suggestion-item" style="padding: 8px; cursor: pointer;">${item}</div>`);
+            suggestionItem.on('click', function () {
+                $('#ptm_value').val(item);
+                suggestionsBox.hide();
+            });
+            suggestionsBox.append(suggestionItem);
         });
 
-        try {
-            const suggestionsBox = $('#suggestions');
-            suggestionsBox.empty();
-            
-            if (currData.length > 0) {
-                currData.forEach(item => {
-                    const suggestionItem = $(`<div class="suggestion-item">${item}</div>`);
-                    
-                    suggestionItem.on('click', function() {
-                        $('#ptm_value').val(item);
-                        suggestionsBox.hide();
-                    });
-
-                    suggestionsBox.append(suggestionItem);
-                });
-                suggestionsBox.show();
-            } else {
-                suggestionsBox.hide();
-            }
-        } catch (error) {
-            console.error("Error: ", error);
-            $('#suggestions').hide();
-        }
+        suggestionsBox.show();
     });
 
-    $(document).on('click', function(event) {
-        if (!$(event.target).closest('.input-group').length) {
+    // Hide dropdown on click outside
+    $(document).on('click', function (e) {
+        if (!$(e.target).closest('#ptm_value, #suggestions').length) {
             $('#suggestions').hide();
         }
     });
@@ -441,21 +422,20 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 });
 
-async function exampleSearch() {
+async function exampleSearch(target) {
     if (document.getElementById('form_submit').disabled === true)
         return;
-    const value = document.getElementById('exampleInput').textContent;
-    const sequence = value.split(';')[0].trim();
-    const middleIndex = Math.floor(sequence.length / 2);
-    const middleChar = sequence[middleIndex];
-    const beforeMiddle = sequence.slice(0, middleIndex);
-    const afterMiddle = sequence.slice(middleIndex + 1);
+    const value = target.textContent.split('(')[0].trim();
+    const middleIndex = Math.floor(value.length / 2);
+    const middleChar = value[middleIndex];
+    const beforeMiddle = value.slice(0, middleIndex);
+    const afterMiddle = value.slice(middleIndex + 1);
     
     document.getElementById('sequence_value').innerHTML = beforeMiddle + 
                                                             `<span class="middle-char">${middleChar}</span>` + 
                                                             afterMiddle;
-    document.getElementById('sequenceLength').innerHTML = sequence.length;
-    document.getElementById('ptm_value').value = value.split(';')[1].trim();
+    document.getElementById('sequenceLength').innerHTML = value.length;
+    // document.getElementById('ptm_value').value = value.split(';')[1].trim();
     await calculate();
 }
 
@@ -470,6 +450,7 @@ async function calculate() {
     document.getElementById('messageDiv').innerHTML = "";
     document.getElementById('vectorInfo').style.display = 'none';
     document.getElementById('tableInfo').style.display = 'none';
+    document.getElementById('subsequenceDiv').style.marginTop = '0px';
     const AA = "A C D E F G H I K L M N P Q R S T V W Y".split(' ');
     AA.push('-');
 
@@ -510,7 +491,7 @@ async function calculate() {
                     // ).then(res => {
                     //     return res.json();
                     // }).catch(error => {
-                    //     console.log(error);
+                    //     // console.log(error);
                     // });
                     var data = null;
                     try {
@@ -528,14 +509,14 @@ async function calculate() {
                         span.setAttribute('style', `text-align: center; font-size: 28px; color: ${color}; font-weight: bold;`);
                         document.getElementById('subsequenceDiv').appendChild(span);
                     });
-                    document.getElementById('search_field').style.display = 'none';
-                    document.getElementById('search_again').style.display = 'block';
+                    // document.getElementById('search_field').style.display = 'none';
+                    // document.getElementById('search_again').style.display = 'block';
                     document.getElementById('ptmVector').innerHTML = await displayVector(data, subsequence);
                     document.getElementById('ptmTable').innerHTML = displayTable(data, ptm, residue, subsequence);
                     document.getElementById('vectorInfo').style.display = 'block';
                     document.getElementById('tableInfo').style.display = 'block';
                     document.getElementById('ptmTable').style.marginBottom = '20px';
-                    document.getElementById('subsequenceDiv').style.marginTop = '-120px';
+                    document.getElementById('subsequenceDiv').style.marginTop = '-240px';
                 }
             }
         }
@@ -692,7 +673,6 @@ async function displayVector(data, subsequence) {
     for (let i = -10; i <= 10; i++) {
         relativeIndex.push(i <= 0 ? i.toString() : `+${i}`);
     }
-    console.log(relativeIndex, vectorData);
     relativeIndex.forEach(idx => {
         const innerObj = vectorData[idx];
         if (innerObj !== undefined) {
