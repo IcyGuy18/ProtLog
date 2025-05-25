@@ -72,13 +72,13 @@
                     <a onclick="exampleSearch(this)" class="index-options">VP26A_MOUSE</a>
                     <a onclick="exampleSearch(this)" class="index-options">O14639-4</a>
                     <a onclick="exampleSearch(this)" class="index-options">P25311</a> -->
-                    <a onclick="exampleSearch(this)" class="index-options">ACERQHLSAGNKLRG <strong>(Histone H2A)</strong></a>
+                    <a onclick="exampleSearch(this)" class="index-options">ACERQHLSAGNKLRG <strong>(Histone H2A)</strong></a><br><br>
                     <a onclick="exampleSearch(this)" class="index-options">RGEDMSMQALSTL <strong>(20S Proteasome - β Subunit)</strong></a><br><br>
                     <a onclick="exampleSearch(this)" class="index-options">QKQLEDKVEELKPLSQEKS <strong>(p53 Tumor Suppressor)</strong></a><br><br>
                 </div>
 
                 <div class="input-group position-relative" style="width: 400px; margin: 20px auto;">
-                    <input class="form-control" id="ptm_value" type="text" placeholder="Select Post-Translational Modification" style="text-align: center;" readonly>
+                    <input class="form-control" id="ptm_value" type="text" placeholder="Select Post-Translational Modification" style="text-align: center; background: white;" readonly>
                     <div id="suggestions" class="suggestions-box" style="position: absolute; top: 100%; left: 0; right: 0; z-index: 1000; background: white; border: 1px solid #ccc; display: none;"></div>
                 </div>
 
@@ -130,14 +130,16 @@
     <footer class="footer bg-light py-3" style="padding-top: 20px;">
         <div class="container text-center">
             <p class="mb-0">This website is free and open to all users and there is no login requirement.</p>
-            <p class="mb-0">Biomedical Informatics & Engineering Research Laboratory, Lahore University of Management Sciences, DHA, Lahore, Pakistan. +92 (42) 3560 8352</p>
-            <p class="mb-0" id="footerYear"><a href="http://birl.lums.edu.pk/">© 2024 BIRL</a></p>
+            <p class="mb-0">Biomedical Informatics & Engineering Research Laboratory, Lahore University of Management Sciences</p>
+            <p class="mb-0">DHA, Lahore, Pakistan</p>
+            <p class="mb-0">+92 (42) 3560 8352</p>
+            <p class="mb-0" id="footerYear"><a href="http://birl.lums.edu.pk/"></a></p>
         </div>
     </footer>
     <script>
         // Get the current year and set it to the span
         const date = new Date().getFullYear();
         document.getElementById("footerYear").innerHTML = `<a href="http://birl.lums.edu.pk/">© ${date} BIRL</a>`
-      </script>
+    </script>
 </body>
 </html>

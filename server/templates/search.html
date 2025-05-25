@@ -81,25 +81,27 @@
         <div class="iframe-container main-content" id="iframeContainer">
 
             <!-- Nav tabs -->
-            <div id="proteinTabs" style="display: none;">
-                <ul class="nav nav-tabs" role="tablist" style="text-align: center; max-width: 1280px; margin: 0 auto;">
-                    <li class="nav-item" role="presentation">
-                        <a class="nav-link active" id="info-tab" data-bs-toggle="tab" href="#info" role="tab" aria-controls="info" aria-selected="true" style="color: #333;">Protein Information</a>
-                    </li>
-                    <li class="nav-item" role="presentation">
-                        <a class="nav-link" id="statistics-tab" data-bs-toggle="tab" href="#statistics" role="tab" aria-controls="statistics" aria-selected="false" style="color: #333;">Statistics</a>
-                    </li>
-                    <li class="nav-item" role="presentation">
-                        <a class="nav-link" id="ptm-sequence-tab" data-bs-toggle="tab" href="#ptm-sequence" role="tab" aria-controls="ptm-sequence" aria-selected="false" style="color: #333;">PTM Sequence</a>
-                    </li>
-                    <li class="nav-item" role="presentation">
-                        <a class="nav-link" id="jpred-tab" data-bs-toggle="tab" href="#jpred" role="tab" aria-controls="jpred" aria-selected="false" style="color: #333;">JPred Predictions</a>
-                    </li>
-                    <li class="nav-item" role="presentation">
-                        <a class="nav-link" id="pdb-tab" data-bs-toggle="tab" href="#pdb" role="tab" aria-controls="pdb" aria-selected="false" style="color: #333;">PDB Structures</a>
-                    </li>
-                </ul>
-            </div>
+            <div id="tabsHider">
+                <div id="proteinTabs" style="display: none;">
+                    <ul class="nav nav-tabs" role="tablist" style="text-align: center; max-width: 1280px; margin: 0 auto;">
+                        <li class="nav-item" role="presentation">
+                            <a class="nav-link active" id="info-tab" data-bs-toggle="tab" href="#info" role="tab" aria-controls="info" aria-selected="true" style="color: #333;">Protein Information</a>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <a class="nav-link" id="statistics-tab" data-bs-toggle="tab" href="#statistics" role="tab" aria-controls="statistics" aria-selected="false" style="color: #333;">Statistics</a>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <a class="nav-link" id="ptm-sequence-tab" data-bs-toggle="tab" href="#ptm-sequence" role="tab" aria-controls="ptm-sequence" aria-selected="false" style="color: #333;">PTM Sequence</a>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <a class="nav-link" id="jpred-tab" data-bs-toggle="tab" href="#jpred" role="tab" aria-controls="jpred" aria-selected="false" style="color: #333;">JPred Predictions</a>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <a class="nav-link" id="pdb-tab" data-bs-toggle="tab" href="#pdb" role="tab" aria-controls="pdb" aria-selected="false" style="color: #333;">PDB Structures</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>            
 
             <div id="iframeLoader"></div> <!-- Loader class here -->
             <h1 id="iframeData" style="text-align: center; font-size: 28px; color: #444; font-weight: bold;"></h1>
@@ -159,11 +161,11 @@
                     <div id="foundProtein" style="position: relative; display: none; padding-bottom: 20px;">
                         <div class="protein-info-container">
                             <!-- <h1 style="text-align: center; font-size: 28px; color: #444; font-weight: bold; margin: 20px;">Protein PTM Sequence</h1> -->
-                            <div class="protein-info-container" id="uniprotSequence" style="width:70%; background: #efefef;"></div>
-                            <div id="detailsPanel" class="details-panel" style="margin-top: 40px; background: #eaf0f7;">
+                            <div class="protein-info-container" id="uniprotSequence" style="width:80%; background: #efefef;"></div>
+                            <div id="detailsPanel" class="details-panel" style="margin-top: 20px; background: #eaf0f7; width: 80%;">
                                 <h3>Click on a highlighted residue to view its details!</h3>
                             </div>
-                            <p class="protein-statistics-container" id="iframeData2" style="padding-top: 20px; padding-bottom: 20px; width: 70%; margin: 20px auto; background: #f3f3f3;"></p>
+                            <p class="protein-statistics-container" id="iframeData2" style="padding-top: 20px; padding-bottom: 20px; width: 80%; margin: 20px auto; background: #f3f3f3;"></p>
                             <div class="sequence-displayer" id="sequenceDisplayer"></div>
                             <div id="ptmSearchContainer" style="margin-top: 20px;">
                                 <p id="iframeData3" style="background: #e8e8e8;"></p>
@@ -246,14 +248,16 @@
     <footer class="footer bg-light py-3" style="padding-top: 20px;">
         <div class="container text-center">
             <p class="mb-0">This website is free and open to all users and there is no login requirement.</p>
-            <p class="mb-0">Biomedical Informatics & Engineering Research Laboratory, Lahore University of Management Sciences, DHA, Lahore, Pakistan. +92 (42) 3560 8352</p>
-            <p class="mb-0" id="footerYear"><a href="http://birl.lums.edu.pk/">© 2024 BIRL</a></p>
+            <p class="mb-0">Biomedical Informatics & Engineering Research Laboratory, Lahore University of Management Sciences</p>
+            <p class="mb-0">DHA, Lahore, Pakistan</p>
+            <p class="mb-0">+92 (42) 3560 8352</p>
+            <p class="mb-0" id="footerYear"><a href="http://birl.lums.edu.pk/"></a></p>
         </div>
     </footer>
     <script>
         // Get the current year and set it to the span
         const date = new Date().getFullYear();
         document.getElementById("footerYear").innerHTML = `<a href="http://birl.lums.edu.pk/">© ${date} BIRL</a>`
-      </script>
+    </script>
 </body>
 </html>

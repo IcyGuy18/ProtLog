@@ -206,6 +206,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     document.getElementById('download').style.display = 'none';
     document.getElementById('downloadButton').style.display = 'none';
     document.getElementById('ptmSelect').value = '';
+    document.getElementById('tableSelect').value = '';
     checkForLogin();
     tables = await fetch('/ptmkb/all_ptms_tables').then(res => res.json());
     Object.keys(tables).forEach(key => {
@@ -311,9 +312,17 @@ async function displayTablesList() {
     document.getElementById('ptmTable').innerHTML = '';
     document.getElementById('download').style.display = 'none';
     document.getElementById('downloadButton').style.display = 'none';
-    document.getElementById('tableSelect').value = '';
     document.getElementById('tab').style.display = 'block';
-    document.getElementById('tableSelect').addEventListener('change', displayTableAndDownload)
+    document.getElementById('tableSelect').addEventListener('change', displayTableAndDownload);
+    
+
+    const ptm = document.getElementById('ptmSelect').value;
+    const aa = document.getElementById('aaSelect').value;
+    const table = document.getElementById('tableSelect').value;
+
+    if (ptm && aa && table) {
+        displayTableAndDownload();
+    }
 }
 
 async function displayTableAndDownload() {

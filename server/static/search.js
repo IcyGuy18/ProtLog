@@ -3162,6 +3162,10 @@ async function search() {
         if (currentJobAbortController) {
             currentJobAbortController.abort();
         }
+        // document.getElementById('tabsHider').style.display = 'none';
+        Array.from(document.getElementsByClassName('tab-pane')).forEach(elem => {
+            elem.style.border = 'none';
+        });
         document.getElementById('info').style.background = '#fff';
         document.getElementById('proteinTabs').setAttribute('style', 'display: none;');
         document.getElementById('afProfile').style.display = 'none';
@@ -3301,6 +3305,12 @@ async function search() {
                             updateStats(updatedPtmData)
                             getJPredInference(json.proteinSequence, json.uniProtAC, updatedPtmData);
 
+                            document.getEle
+                            // document.getElementById('tabsHider').style.display = 'block';
+                            Array.from(document.getElementsByClassName('tab-pane')).forEach(elem => {
+                                elem.style.border = '1px solid #e0e8f0';
+                                elem.style.borderTop = 'none';
+                            });
                             document.getElementById('info').style.background = '#ecf6ff';
                             document.getElementById('search_field').style.display = 'none';
                             document.getElementById('sequenceDisplayer').setAttribute('style', "display: block;");

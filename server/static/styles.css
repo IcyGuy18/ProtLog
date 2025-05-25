@@ -195,7 +195,8 @@ iframe {
 
 .tab-content > .tab-pane {
     background-color: #ecf6ff;
-    /* border: 1px solid #e0e8f0; */
+    border: 1px solid #e0e8f0;
+    border-top: none;
     border-radius: 10px;
     border-top-left-radius: 0;
     border-top-right-radius: 0;
@@ -1595,7 +1596,7 @@ iframe {
     border-color: #0056b3;
     box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
 }
-
+/* 
 .custom-download #downloadButton {
     width: 100%;
     margin-top: 20px;
@@ -1611,7 +1612,7 @@ iframe {
 .custom-download #downloadButton:hover {
     background-color: #0056b3;
     transform: translateY(-2px);
-}
+} */
 
 /* ABOUT PAGE */
 
