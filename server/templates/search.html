@@ -129,7 +129,7 @@
                                     <i class="fa fa-map-pin fa-5x"></i>
                                     <i class="fa fa-clipboard-check fa-5x"></i>
                                     <a id="totalSites">
-                                        <h3 id="total-sites">0 Sites</h3>
+                                        <h3 id="total-sites">0</h3>
                                         Experimentally Verified Site(s)
                                     </a>
                                 </div>
@@ -139,8 +139,8 @@
                                     <i class="fa fa-sitemap fa-5x"></i>
                                     <i class="fa fa-tasks fa-5x"></i>
                                     <a>
-                                        <h3 id="unique-ptms">0+ PTM Types</h3>
-                                        Types of Post-Translational Modifications
+                                        <h3 id="unique-ptms">0</h3>
+                                        Post-Translational Modifications
                                     </a>
                                 </div>
                             </div>
@@ -149,7 +149,7 @@
                                     <i class="fa fa-database fa-5x"></i>
                                     <i class="fa fa-chart-pie fa-5x"></i>
                                     <a>
-                                        <h3 id="experimentally-verified">0+ Verified PTMs</h3>
+                                        <h3 id="experimentally-verified">0</h3>
                                         Literature Verifying PTM(s)
                                     </a>
                                 </div>
@@ -160,12 +160,11 @@
                 <div class="tab-pane fade" id="ptm-sequence" role="tabpanel" aria-labelledby="ptm-sequence-tab">
                     <div id="foundProtein" style="position: relative; display: none; padding-bottom: 20px;">
                         <div class="protein-info-container">
-                            <!-- <h1 style="text-align: center; font-size: 28px; color: #444; font-weight: bold; margin: 20px;">Protein PTM Sequence</h1> -->
-                            <div class="protein-info-container" id="uniprotSequence" style="width:80%; background: #efefef;"></div>
-                            <div id="detailsPanel" class="details-panel" style="margin-top: 20px; background: #eaf0f7; width: 80%;">
+                            <div class="protein-info-container" id="uniprotSequence" style="background: #efefef;"></div>
+                            <div id="detailsPanel" class="details-panel" style="margin-top: 20px; background: #eaf0f7;">
                                 <h3>Click on a highlighted residue to view its details!</h3>
                             </div>
-                            <p class="protein-statistics-container" id="iframeData2" style="padding-top: 20px; padding-bottom: 20px; width: 80%; margin: 20px auto; background: #f3f3f3;"></p>
+                            <p class="protein-statistics-container" id="iframeData2" style="padding-top: 20px; padding-bottom: 20px; margin: 20px auto; background: #f3f3f3;"></p>
                             <div class="sequence-displayer" id="sequenceDisplayer"></div>
                             <div id="ptmSearchContainer" style="margin-top: 20px;">
                                 <p id="iframeData3" style="background: #e8e8e8;"></p>
@@ -247,17 +246,16 @@
     <div class="main-content"></div>
     <footer class="footer bg-light py-3" style="padding-top: 20px;">
         <div class="container text-center">
-            <p class="mb-0">This website is free and open to all users and there is no login requirement.</p>
+            <p class="mb-0" id="footerYear">This website is free and open to all users and there is no login requirement.</p>
             <p class="mb-0">Biomedical Informatics & Engineering Research Laboratory, Lahore University of Management Sciences</p>
             <p class="mb-0">DHA, Lahore, Pakistan</p>
             <p class="mb-0">+92 (42) 3560 8352</p>
-            <p class="mb-0" id="footerYear"><a href="http://birl.lums.edu.pk/"></a></p>
         </div>
     </footer>
     <script>
         // Get the current year and set it to the span
         const date = new Date().getFullYear();
-        document.getElementById("footerYear").innerHTML = `<a href="http://birl.lums.edu.pk/">© ${date} BIRL</a>`
+        document.getElementById("footerYear").innerHTML = `<a href="http://birl.lums.edu.pk/">© ${date} BIRL</a> — This website is free and open to all users and there is no login requirement.`
     </script>
 </body>
 </html>

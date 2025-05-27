@@ -530,7 +530,7 @@ iframe {
     font-size: 14px;
     color: #333;
     line-height: 1.6;
-    transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+    /* transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease; */
 }
 
 /* Default cell background (light blue-ish) */
@@ -553,12 +553,12 @@ iframe {
     background-color: #f7f7f7;
     font-weight: 700;
 }
-
+/* 
 .protein-info-container .table td.value:hover {
     background-color: #b0bec5;
     color: #333;
     transform: none;
-}
+} */
 
 /* Focus State for Table Cells */
 .protein-info-container .table td:focus, .protein-info-container .table th:focus {
@@ -653,7 +653,7 @@ iframe {
 
 #ptmTableSummary td {
     background-color: rgb(186, 226, 254);
-    transition: background 0.2s ease-in-out;
+    transition: background-color 0.1s ease-in-out;
 }
 
 #ptmTableSummary td:hover {
@@ -692,13 +692,7 @@ iframe {
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
     padding: 20px;
     text-align: center;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-/* Hover effect for stat boxes */
-.stat-box:hover {
-    transform: translateY(-10px);
-    box-shadow: 0 10px 15px rgba(0, 0, 0, 0.2);
+    /* transition: transform 0.3s ease, box-shadow 0.3s ease; */
 }
 
 /* Icons */
@@ -742,10 +736,6 @@ iframe {
     border-left: 5px solid #ff9800;
 }
 
-/* General hover effect for stat-boxes */
-.stat-box:hover {
-    background-color: #f5f5f5;
-}
 
 /* Focus state */
 .stat-box a:focus {
@@ -794,7 +784,7 @@ iframe {
     box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.1); 
     overflow: hidden;
     flex-grow: 1;
-    width: 95%;
+    /* width: 95%; */
     box-sizing: border-box;
     justify-items: left;
     justify-content: left;
@@ -929,7 +919,7 @@ iframe {
     border-radius: 10px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     margin-bottom: 40px;
-    max-width: 90%;
+    /* max-width: 90%; */
     margin: 0 auto;
     overflow: hidden;
     position: relative;

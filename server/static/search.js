@@ -1417,7 +1417,7 @@ async function preparePTMDetails(localizedSequence, localizedSequenceInfo, ptmsD
         pdbHighlightButton.textContent = "Click here to view the residue in the PDB structure";
         pdbHighlightButton.classList.add('additional-button');
         pdbHighlightButton.style.fontWeight = 700;
-        pdbHighlightButton.style.paddingTop = '10px';
+        pdbHighlightButton.style.marginTop = '20px';
         pdbHighlightButton.addEventListener('click', async () => {
             bootstrap.Tab.getOrCreateInstance(document.querySelector('#pdb-tab')).show();
             const atoms = afPdbViewer.getAtomsFromSel({ resi: residuePosition });
@@ -2039,6 +2039,12 @@ function generatePTMHtmlTable() {
                 td.style.fontWeight = 'regular';
                 td.style.color = 'blue';
                 td.style.cursor = 'pointer';
+                td.addEventListener('mouseover', () => {
+                    td.style.backgroundColor = 'rgb(173, 216, 244)';
+                });
+                td.addEventListener('mouseout', () => {
+                    td.style.backgroundColor = 'rgb(218, 240, 255)';
+                });
                 td.textContent = ptmCounts[ptm][aa];
                 // Add hyperlink here to all available residues
                 function colorAllResiduesOfPTM(p, residue) {

@@ -388,6 +388,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         });
 
         suggestionsBox.show();
+        document.getElementById('messageDiv').innerHTML = "";
     });
 
     // Hide dropdown on click outside
