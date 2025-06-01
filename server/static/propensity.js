@@ -721,13 +721,13 @@ async function displayVector(data, subsequence) {
         // Make notes
         var tag = new String();
         if (key === "logSum") {
-            tag = "<math><munderover><mo>∑</mo><mn>i=1</mn><mi>n</mi></munderover><msub><mi>x</mi><mi>i</mi></msub><mtext>, where&nbsp;</mtext><msub><mi>x</mi><mi>i</mi></msub><mo>≠</mo><mtext>'-inf'</mtext></math>";
+            tag = `<math><munderover><mo>∑</mo><mn>i=1</mn><mi>n</mi></munderover><msub><mi>x</mi><mi>i</mi></msub></math>`;
         }
         // else if (key === "multiplicativeScore") {
         //     tag = "<math><munderover><mo>∏</mo><mi>i=1</mi><mn>n</mn></munderover><msub><mi>x</mi><mi>i</mi></msub><mtext>, where&nbsp;</mtext><msub><mi>x</mi><mi>i</mi></msub><mo>≠</mo><mtext>'-inf' and&nbsp;</mtext><msub><mi>x</mi><mi>i</mi></msub><mo>≠</mo><mtext>0</mtext></math>";
         // }
         else {
-            tag = "<math><mrow><mo>ln</mo><mo>(</mo><mfrac><mn>1</mn><mrow><mrow><mn>-1</mn><mo>×</mo></mrow><munderover><mo>∏</mo><mi>i=1</mi><mn>n</mn></munderover><msub><mi>x</mi><mi>i</mi></msub></mrow></mfrac><mo>)</mo></mrow><mtext>, where&nbsp;</mtext><msub><mi>x</mi><mi>i</mi></msub><mo>≠</mo><mtext>'-inf' and&nbsp;</mtext><mi>i</mi><mo>≠</mo><mtext>floor(N/2)</mtext></math>";
+            tag = "<math><mrow><mo>ln</mo><mo>(</mo><mfrac><mn>1</mn><mrow><mo>|</mo><munderover><mo>∏</mo><mrow><mi>i=1</mi><mo>,</mo><mtext</mtext><mi>i</mi><mo>≠</mo><mrow><mo>⌊</mo><mfrac><mi>N</mi><mn>2</mn></mfrac><mo>⌋</mo></mrow></mrow><mi>n</mi></munderover><msub><mi>x</mi><mi>i</mi></msub><mo>|</mo></mrow></mfrac><mo>)</mo></mrow><mtext>, where&nbsp;</mtext><msub><mi>x</mi><mi>i</mi></msub><mo>≠</mo><mtext>'-inf'</mtext></math>";
         }
         notes.innerHTML = tag;
         row.appendChild(notes);
