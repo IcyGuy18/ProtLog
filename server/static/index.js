@@ -193,8 +193,15 @@ function checkForLogin() {
     }
 }
 
-async function exampleSearch() {
-    window.location.href = `/search?searchId=${document.getElementById('form_value').value}`;
+async function exampleSearch(element) {
+    var input = '';
+    if (element.textContent === "Search") {
+        input = document.getElementById('form_value').value;
+    } else {
+        input = element.textContent;
+    }
+    console.log(input);
+    window.location.href = `/search?searchId=${input}`;
 }
 
 document.addEventListener("DOMContentLoaded", () => {
