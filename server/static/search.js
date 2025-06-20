@@ -2956,6 +2956,31 @@ function updateStats(ptmData) {
     document.getElementById('proteinStatisticsContainer').appendChild(generatePTMHtmlTable());
 }
 
+function rgbToHex(rgbString) {
+  // Extract the numbers from the rgb string
+  const matches = rgbString.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/);
+
+  if (!matches) {
+    return null;
+  }
+
+  const r = parseInt(matches[1]);
+  const g = parseInt(matches[2]);
+  const b = parseInt(matches[3]);
+
+  // Convert each component to a two-digit hex string
+  const toHex = (c) => {
+    const hex = c.toString(16);
+    return hex.length === 1 ? '0' + hex : hex; // Pad with leading zero if needed
+  };
+
+  const hexR = toHex(r);
+  const hexG = toHex(g);
+  const hexB = toHex(b);
+
+  return `#${hexR}${hexG}${hexB}`.toUpperCase();
+}
+
 function colorPTMs() {
     // Find all highlighted spans in the sequence
     const highlightedSpans = document.getElementById('sequenceDisplayer').querySelectorAll('span');
@@ -2963,7 +2988,7 @@ function colorPTMs() {
     // Find all checked PTM sequences for colouring
     var allPTMs = document.getElementById('checkboxContainer').querySelectorAll('li');
     allPTMs = Array.from(new Set(Object.values(allPTMs).map(label => {
-        if (label.children[1].style.color === 'white')
+        if (rgbToHex(label.children[1].style.backgroundColor) === ptmColorMapping[label.children[1].textContent]) // This is where it's breaking
             return label.children[1].getAttribute('for');
         else
             return null;
@@ -3055,6 +3080,36 @@ async function fetchAndRenderPDB(url, uniprotAccession, datatype) {
     }
 }
 
+function getContrastingTextColor(color) {
+    let r, g, b;
+
+    if (color.startsWith('#')) {
+        // Remove "#" and convert 3-digit hex to 6-digit
+        color = color.slice(1);
+        if (color.length === 3) {
+            color = color.split('').map(c => c + c).join('');
+        }
+
+        r = parseInt(color.substr(0, 2), 16);
+        g = parseInt(color.substr(2, 2), 16);
+        b = parseInt(color.substr(4, 2), 16);
+    } else if (color.startsWith('rgb')) {
+        // Extract r, g, b from rgb or rgba string
+        const matches = color.match(/\d+/g);
+        if (matches && matches.length >= 3) {
+            r = parseInt(matches[0], 10);
+            g = parseInt(matches[1], 10);
+            b = parseInt(matches[2], 10);
+        }
+    }
+
+    // Calculate relative luminance
+    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+
+    // Return 'black' for light backgrounds, 'white' for dark
+    return luminance > 0.5 ? 'black' : 'white';
+}
+
 // USE THIS to populate ONLY APPLICABLE CHECKBOXES
 function populateCheckboxesFromResult(data) {
     const uniquePTMs = new Set(data.map(ptm => ptm[1]));
@@ -3076,19 +3131,21 @@ function populateCheckboxesFromResult(data) {
 
         const color = ptmColorMapping[ptm] || "#FFFFFF";
         const checkboxLabel = checkboxWrapper.querySelector('label');
-        checkboxLabel.style.border = `2px solid ${color}`;
+        checkboxLabel.style.border = `1px solid black`;
         checkboxLabel.style.padding = '5px';
         checkboxLabel.style.marginBottom = '10px';
         checkboxLabel.style.display = 'inline-block';
-        checkboxLabel.style.backgroundColor = 'black';
-        checkboxLabel.style.color = 'white';
+        checkboxLabel.style.backgroundColor = ptmColorMapping[ptm];
+        checkboxLabel.style.color = getContrastingTextColor(checkboxLabel.style.backgroundColor);
 
         // Event listener for checkbox change
         checkboxWrapper.querySelector('input').addEventListener('change', (e) => {
             if (e.target.checked) {
-                checkboxLabel.style.backgroundColor = 'black';
-                checkboxLabel.style.color = 'white';
+                checkboxLabel.style.border = `1px solid black`;
+                checkboxLabel.style.backgroundColor = ptmColorMapping[ptm];
+                checkboxLabel.style.color = getContrastingTextColor(checkboxLabel.style.backgroundColor);
             } else {
+                checkboxLabel.style.border = `1px solid ${color}`;
                 checkboxLabel.style.backgroundColor = 'white';
                 checkboxLabel.style.color = 'black';
             }
