@@ -193,9 +193,8 @@ function checkForLogin() {
     }
 }
 
-async function exampleSearch(element) {
-    document.getElementById('form_value').value = element.textContent;
-    window.location.href = `/search?searchId=${element.textContent}`;
+async function exampleSearch() {
+    window.location.href = `/search?searchId=${document.getElementById('form_value').value}`;
 }
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -232,12 +231,6 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         } catch (error) {
             // console.error("Error: ", error);
-            $('#suggestions').hide();
-        }
-    });
-
-    $(document).on('click', function(event) {
-        if (!$(event.target).closest('.input-group').length) {
             $('#suggestions').hide();
         }
     });

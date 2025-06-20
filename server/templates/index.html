@@ -7,6 +7,8 @@
         <title>Welcome to PTMKB!</title>
         <link rel="stylesheet" href="../static/bootstrap-min.css">
         <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+        <script src="../static/jquery.min.js"></script>
+        <script src="../static/jquery-ui.js"></script>
         <script src="../static/bootstrap-min.js"></script>
         <script src="../static/popper.js" defer></script>
         <script src="../static/toggler.js" defer></script>
@@ -120,7 +122,7 @@
                     <div class="input-group position-relative" style="margin: 15px auto 0 auto; width: 800px; font-size: 30px;">
                         <input class="form-control" style="font-size: 18px; text-align: left;" id="form_value" type="text" placeholder="Search for a protein by entering a Uniprot Identifier/Accession Number" style="text-align: center;">
                         <span class="form-group input-group-btn">
-                            <button type="button" id="form_submit" class="btn btn-light landing-page-button" onclick="search()">Search</button>
+                            <button type="button" id="form_submit" class="btn btn-light landing-page-button" onclick="exampleSearch(this)">Search</button>
                         </span>
                         <div id="suggestions" class="suggestions-box" style="display: none;"></div>
                     </div>
