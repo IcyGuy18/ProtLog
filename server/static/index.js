@@ -200,7 +200,6 @@ async function exampleSearch(element) {
     } else {
         input = element.textContent;
     }
-    console.log(input);
     window.location.href = `/search?searchId=${input}`;
 }
 
