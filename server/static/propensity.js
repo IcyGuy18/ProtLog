@@ -520,7 +520,7 @@ async function calculate() {
                     });
                     // document.getElementById('search_field').style.display = 'none';
                     // document.getElementById('search_again').style.display = 'block';
-                    document.getElementById('ptmVector').innerHTML = await displayVector(data, subsequence);
+                    document.getElementById('ptmVector').innerHTML = `<p id="vectorInfo2" style="text-align: center; color: #444; font-weight: bold; font-size: 14px;"><i>* -inf values denote that no experimentally verified record of an amino acid exists in the database</i></p>` + await displayVector(data, subsequence);
                     document.getElementById('ptmTable').innerHTML = displayTable(data, ptm, residue, subsequence);
                     document.getElementById('vectorInfo').style.display = 'block';
                     document.getElementById('tableInfo').style.display = 'block';
