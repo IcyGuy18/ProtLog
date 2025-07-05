@@ -423,6 +423,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 });
 
+async function examplePTM(target) {
+    if (document.getElementById('form_submit').disabled === true)
+        return;
+    await calculate();
+}
+
 async function exampleSearch(target) {
     if (document.getElementById('form_submit').disabled === true)
         return;
