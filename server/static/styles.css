@@ -299,7 +299,9 @@ iframe {
 .index-options {
     color: #d3d3d3;
     background-color: #1870c8;
-    padding: 5px;
+    padding: 2px;
+    padding-left: 5px;
+    padding-right: 5px;
     border-radius: 4px;
     cursor: pointer;
     margin-left: 5px;
