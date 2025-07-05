@@ -426,6 +426,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 async function examplePTM(target) {
     if (document.getElementById('form_submit').disabled === true)
         return;
+    
+    document.getElementById('ptm_value').value = target.textContent;
     await calculate();
 }
 
