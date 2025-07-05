@@ -535,7 +535,7 @@ def save_image(df: pd.DataFrame, format: str, ptm: str) -> bytes:
                     cell.set_facecolor('#E0E0E0' if i % 2 == 0 else '#FFFFFF')
 
     ax.set_title("Log-Odd values for " + ptm)
-    plt.text(-0.035, 0.37, "Amino Acid at Position", rotation=90)
+    plt.text(-0.035, 0.37, "Amino Acid", rotation=90)
     plt.text(0.365, 0.8, "Position Relative to Modification Site")
 
     plt.savefig(
