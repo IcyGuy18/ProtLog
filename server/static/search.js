@@ -2048,6 +2048,20 @@ function generatePTMHtmlTable() {
                 td.textContent = ptmCounts[ptm][aa];
                 // Add hyperlink here to all available residues
                 function colorAllResiduesOfPTM(p, residue) {
+                    //     checkboxWrapper.querySelector('input').addEventListener('change', (e) => {
+                    //     if (e.target.checked) {
+                    //         checkboxLabel.style.border = `1px solid black`;
+                    //         checkboxLabel.style.backgroundColor = ptmColorMapping[ptm];
+                    //         checkboxLabel.style.color = getContrastingTextColor(checkboxLabel.style.backgroundColor);
+                    //     } else {
+                    //         checkboxLabel.style.border = `1px solid ${color}`;
+                    //         checkboxLabel.style.backgroundColor = 'white';
+                    //         checkboxLabel.style.color = 'black';
+                    //     }
+
+                    //     // Call function to update the highlights based on checked boxes
+                    //     colorPTMs();
+                    // });
                     // Disable all checkboxes and only keep the PTM one enabled
                     document.getElementById('checkboxContainer').querySelectorAll('li').forEach(li => {
                         const checkbox = li.children[0];
@@ -2058,7 +2072,7 @@ function generatePTMHtmlTable() {
 
                         if (checkbox.name === p) {
                             checkbox.checked = true;
-                            styleStr += " background: black; color: white;"
+                            styleStr += ` background-color: ${color}; color: ${getContrastingTextColor(color)};`
                         }
                         else {
                             checkbox.checked = false;
