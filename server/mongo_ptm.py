@@ -5,7 +5,7 @@ client = pymongo.AsyncMongoClient(
     'mongodb://localhost:27017',
 )
 
-PTM = client['ptmkb2']['proteins']
+PTM = client['ptmkb']['proteins']
 
 # Functions below related to PTM
 

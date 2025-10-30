@@ -6,7 +6,7 @@ client = pymongo.AsyncMongoClient(
     'mongodb://localhost:27017',
 )
 
-USERS = client['ptmkb2']['users']
+USERS = client['ptmkb']['users']
 
 def _hash(s: str) -> str:
     return hashlib.sha256(s.encode('utf-8')).hexdigest()
