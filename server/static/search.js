@@ -401,41 +401,42 @@ document.addEventListener("DOMContentLoaded", async () => {
     tables = await fetch('/ptmkb/all_ptms_tables').then(res => res.json());
     document.getElementById('protein3DStructure').style.display = 'none';
     // Set up an autocomplete function
-    $('#form_value').on('input', async function() {
-        const requestTerm = $(this).val();
-        if (requestTerm.length < 1) {
-            $('#suggestions').hide();
-            return;
-        }
+    // Disabling it because of heavy load on server - will patch it with another logic
+    // $('#form_value').on('input', async function() {
+    //     const requestTerm = $(this).val();
+    //     if (requestTerm.length < 1) {
+    //         $('#suggestions').hide();
+    //         return;
+    //     }
 
-        try {
-            const res = await fetch(`/ptmkb/protein_autofill?_id=${requestTerm}`);
-            const data = await res.json();
-            const suggestions = data['ids'];
+    //     try {
+    //         const res = await fetch(`/ptmkb/protein_autofill?_id=${requestTerm}`);
+    //         const data = await res.json();
+    //         const suggestions = data['ids'];
             
-            const suggestionsBox = $('#suggestions');
-            suggestionsBox.empty();
+    //         const suggestionsBox = $('#suggestions');
+    //         suggestionsBox.empty();
             
-            if (suggestions.length > 0) {
-                suggestions.forEach(item => {
-                    const suggestionItem = $(`<div class="suggestion-item">${item}</div>`);
+    //         if (suggestions.length > 0) {
+    //             suggestions.forEach(item => {
+    //                 const suggestionItem = $(`<div class="suggestion-item">${item}</div>`);
                     
-                    suggestionItem.on('click', function() {
-                        $('#form_value').val(item);
-                        suggestionsBox.hide();
-                    });
+    //                 suggestionItem.on('click', function() {
+    //                     $('#form_value').val(item);
+    //                     suggestionsBox.hide();
+    //                 });
 
-                    suggestionsBox.append(suggestionItem);
-                });
-                suggestionsBox.show();
-            } else {
-                suggestionsBox.hide();
-            }
-        } catch (error) {
-            // console.error("Error: ", error);
-            $('#suggestions').hide();
-        }
-    });
+    //                 suggestionsBox.append(suggestionItem);
+    //             });
+    //             suggestionsBox.show();
+    //         } else {
+    //             suggestionsBox.hide();
+    //         }
+    //     } catch (error) {
+    //         // console.error("Error: ", error);
+    //         $('#suggestions').hide();
+    //     }
+    // });
 
     $(document).on('click', function(event) {
         if (!$(event.target).closest('.input-group').length) {
