@@ -3297,7 +3297,7 @@ async function search() {
                             "Accept": "application/json",
                             "Content-Type": "application/json"
                         },
-                        body: JSON.stringify({ "id": id })
+                        body: JSON.stringify({ "id": data.result['Accession Number'] })
                     }).then((res) => {
                         return res.json();
                     }).then(async (json) => {
@@ -3355,6 +3355,8 @@ async function search() {
                                     // Special case #2 (this is admittedly just for fun)
                                     valueCell.className = 'value';
                                     row.appendChild(keyCell);
+                                    if (key === "uniProtAC")
+                                        valueCell.textContent = data.result['Accession Number']
                                     row.appendChild(valueCell);
                                     table.appendChild(row);
                                 }
