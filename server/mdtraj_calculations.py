@@ -43,23 +43,39 @@ def create_file(pdb_data: bytes) -> Trajectory:
     return traj
 
 def get_secondary_structure(traj: Trajectory):
-    return {
-        'simplified': md.compute_dssp(traj)[0].tolist(),
-        'detailed': md.compute_dssp(traj, simplified=False)[0].tolist()
-    }
+    try:
+        return {
+            'simplified': md.compute_dssp(traj)[0].tolist(),
+            'detailed': md.compute_dssp(traj, simplified=False)[0].tolist()
+        }
+    except:
+        return {
+            'simplified': [],
+            'detailed': []
+        }
 
 def get_solvent_accessible_surface_area(
     traj: Trajectory, mode: Literal['atom', 'residue'] = 'residue'
 ):
-    return {
-        'SASA': md.shrake_rupley(traj, mode=mode)[0].tolist()
-    }
+    try:
+        return {
+            'SASA': md.shrake_rupley(traj, mode=mode)[0].tolist()
+        }
+    except:
+        return {
+            'simplified': [],
+            'detailed': []
+        }
+
 
 def get_protein_sequence(
     traj: Trajectory,
 ) -> str:
-    sequence = ''
-    for i in range(traj.n_residues):
-        residue: Residue = traj.topology.residue(i)
-        sequence += aa_dict.get(residue.name, '')
-    return sequence
+    try:
+        sequence = ''
+        for i in range(traj.n_residues):
+            residue: Residue = traj.topology.residue(i)
+            sequence += aa_dict.get(residue.name, '')
+        return sequence    
+    except:
+        return ''
