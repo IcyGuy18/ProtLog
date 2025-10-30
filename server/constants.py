@@ -1,39 +1,43 @@
 """Defining constants here for usage in the system."""
-import glob
+from pymongo import MongoClient, ASCENDING
 import json
-import os
 
-# Database loading mechanisms (since they're sufficiently small, doesn't matter how much we load)
-def load_tables() -> dict[str, dict[str, dict[str, dict[str, dict[str, float]]]]]:
-    ptms = [i.split("\\")[-1] for i in glob.glob(r'data\tables\*')]
-    response = {ptm: {} for ptm in ptms}
-    for ptm in ptms:
-        # Pick out all AAs in that folder for both tables
-        AAs = [i.split("\\")[-1].split('.')[0] for i in glob.glob(f'data/tables/{ptm}/log-e/*.json')]
-        for aa in AAs:
-            with (
-                open(f"data/tables/{ptm}/log-e/{aa}.json", 'r', encoding='utf-8') as f1,
-                open(f"data/tables/{ptm}/freq/{aa}.json", 'r', encoding='utf-8') as f2
-            ):
-                response[ptm][aa] = {
-                    'log-e': json.load(f1),
-                    'freq': json.load(f2)
-                }
+def load_tables_from_mongo(
+    mongo_uri: str = "mongodb://localhost:27017",
+    db_name: str = "ptmkb",
+    coll_name: str = "tables",
+) -> dict:
+    client = MongoClient(mongo_uri)
+    client["ptmkb"]["tables"].create_index([("ptm", ASCENDING)], unique=True)
+    coll = client[db_name][coll_name]
+    
+
+    response = {}
+
+    # Each document: { "ptm": "Acetylation", "data": { "freq": {...}, "log-e": {...} } }
+    cursor = coll.find({}, {"_id": 0, "ptm": 1, "data.freq": 1, "data.log-e": 1})
+
+    for doc in cursor:
+        ptm = doc["ptm"]
+        freq_map = doc.get("data", {}).get("freq", {}) or {}
+        loge_map = doc.get("data", {}).get("log-e", {}) or {}
+
+        # Merge AA keys from both maps
+        all_aas = set(freq_map) | set(loge_map)
+        response[ptm] = {
+            aa: {
+                "log-e": loge_map.get(aa, {}),
+                "freq":   freq_map.get(aa, {}),
+            }
+            for aa in all_aas
+        }
+
     return response
 
 def load_resid_database() -> list[dict]:
     with open('./data/resid/residues.json', 'r') as f:
         return json.load(f)['Database']['Entry']
 
-def load_users() -> dict[str, dict[str, str | dict]]:
-    if not os.path.exists('../data/users'):
-        os.mkdir('../data/users')
-        with open('../data/users/users.json', 'w') as f:
-            json.dump({}, f)
-    with open('../data/users/users.json', 'r') as f:
-        return json.load(f)
-
 # Define constants over here
-PTM_TABLES = load_tables()
+PTM_TABLES = load_tables_from_mongo()
 RESID_DATABASE = load_resid_database()
-USERS = load_users()

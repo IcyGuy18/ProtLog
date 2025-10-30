@@ -8,7 +8,7 @@ import requests
 import json
 from typing import Union, Any, TypeAlias
 
-BASE_URL = "https://ptmkb.lums.edu.pk/ptmkb/api"
+BASE_URL = "https://perceptronptmkb.lums.edu.pk/ptmkb/api"
 TIMEOUT = 30
 
 AUTHORIZATION_TOKEN = '<your_token_here>' # Please add your token assigned to your account to proceed.

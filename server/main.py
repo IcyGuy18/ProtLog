@@ -9,21 +9,14 @@ from fastapi.templating import Jinja2Templates
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.responses import Response, FileResponse
 from fastapi.staticfiles import StaticFiles
-import glob
 import pandas as pd
 import matplotlib.pyplot as plt
+import numpy as np
+import io
 import os
-import json
-import hashlib
-import threading
 
-# Enabling a MutEx here for file lock (safety purposes - I know, bad code)
-lock = threading.Lock()
-
-#### Comment whichever you want to use for the time being
-#### Only use one at a time though
-# from mongo_ptm import fetch_identifiers, search_identifier
-from local_ptm import fetch_identifiers, search_identifier, get_all_proteins
+from mongo_users import set_token, user_exists, create_user, get_access_token, validate_password
+from mongo_ptm import fetch_identifiers, search_identifier
 from calculator import additive_calculator, multiplicative_calculator
 from response_fetcher import fetch_response_uniprot_trim
 from jpred_prediction import submit_job, get_job
@@ -33,7 +26,7 @@ from mdtraj_calculations import (
     get_solvent_accessible_surface_area,
     get_protein_sequence
 )
-from constants import PTM_TABLES, RESID_DATABASE, USERS
+from constants import PTM_TABLES, RESID_DATABASE
 import random
 
 ######## TOKEN STUFF ########
@@ -44,14 +37,6 @@ import jwt
 JWT_SECRET = 'what_are_you_looking_here_for'
 JWT_ALGORITHM = 'HS256'
 
-SESSIONS = {}
-
-# Return response as a JSON
-def token_response(token: str):
-    return {
-        'access_token': token
-    }
-
 # Give the user a new token
 def sign_jwt(user_id: str) -> dict[str, str]:
     payload = {
@@ -61,10 +46,10 @@ def sign_jwt(user_id: str) -> dict[str, str]:
     }
     token = jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
 
-    return token_response(token)
+    return {"access_token": token}
 
 # Decode the token by the user
-def decode_jwt(token: str) -> dict:
+def decode_jwt(token: str) -> dict | None:
     try:
         decoded_token: dict = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
         decoded_token['expired'] = False
@@ -80,27 +65,31 @@ class JWTBearer(HTTPBearer):
 
     async def __call__(self, request: Request):
         credentials: HTTPAuthorizationCredentials = await super(JWTBearer, self).__call__(request)
-        if credentials:
-            if not credentials.scheme == "Bearer":
+        if not credentials or credentials.scheme != "Bearer":
                 raise HTTPException(status_code=403, detail="Invalid authentication scheme.")
-            validity = decode_jwt(credentials.credentials)
-            if not validity:
-                raise HTTPException(status_code=403, detail="Invalid token.")
-            if validity.get('expired'):
-                # Also, have to check if key already exists in USERS
-                if token not in USERS[username]['token']['access_token']:
-                    raise HTTPException(status_code=403, detail=f"Expired token - please use your current one!")
-                # Don't raise, just reset the token
-                username = validity.get('username')
-                token = sign_jwt(username)
-                USERS[username]['token'] = token
-                with lock:
-                    with open('../data/users/users.json', 'w') as f:
-                        json.dump(USERS, f)
-                raise HTTPException(status_code=403, detail=f"Automatically reset token! Here: {token.get('access_token')}")
-            return credentials.credentials
-        else:
-            raise HTTPException(status_code=403, detail="Invalid authorization code.")
+        
+        presented_token = credentials.credentials
+        validity = decode_jwt(presented_token)
+        if not validity:
+            raise HTTPException(status_code=403, detail="Invalid token.")
+        
+        username = validity.get('username')
+        if validity.get('expired'):
+            # ensure the expired token is the *current* stored one
+            stored = await get_access_token(username)
+            if stored is None or stored != presented_token:
+                raise HTTPException(status_code=403, detail="Expired token - please use your current one!")
+
+            # rotate token and persist
+            new_token = sign_jwt(username)
+            await set_token(username, new_token)
+
+            raise HTTPException(
+                status_code=403,
+                detail=f"Automatically reset token! Here: {new_token.get('access_token')}"
+            )
+
+        return presented_token
 
     def verify_jwt(self, jwtoken: str) -> bool:
         isTokenValid: bool = False
@@ -114,7 +103,9 @@ class JWTBearer(HTTPBearer):
 
         return isTokenValid
     
+
 ######## DEFINE PAGES ONLY ACCESSIBLE THROUGH BROWSERS ########
+
 
 BROWSER_USER_AGENTS = [
     "Mozilla",
@@ -131,6 +122,7 @@ def is_browser(user_agent: str) -> bool:
 
 ######## LOGIN AND SIGNUP PURPOSES ########
 
+
 app = FastAPI(
     docs_url=None,
     redoc_url=None,
@@ -143,19 +135,17 @@ app = FastAPI(
 @app.post('/ptmkb/check_existing_user', include_in_schema=False)
 async def check_for_existing_user(request: Request):
     user_agent = request.headers.get('user-agent', '')
-
     if not is_browser(user_agent):
         raise HTTPException(status_code=403, detail="Access restricted to browsers only")
     
     info: dict = await request.json()
     username = info.get('username')
-    exists = True if username in USERS.keys() else False
+    exists = await user_exists(username)
     return ORJSONResponse({'exists': exists})
 
 @app.post('/ptmkb/registration', include_in_schema=False)
 async def register(request: Request):
     user_agent = request.headers.get('user-agent', '')
-
     if not is_browser(user_agent):
         raise HTTPException(status_code=403, detail="Access restricted to browsers only")
     
@@ -163,105 +153,73 @@ async def register(request: Request):
         info = await request.json()
         username = info.get('username')
         password = info.get('password')
-        USERS[username] = {
-            'password': hashlib.sha256(password.encode('utf-8')).hexdigest(),
-            'token': sign_jwt(username)
-        }
-        with lock:
-            with open('../data/users/users.json', 'w') as f:
-                json.dump(USERS, f)
-        return ORJSONResponse({'registered': True})
+        ok = await create_user(username, password, sign_jwt(username))
+        return ORJSONResponse({'registered': ok})
     except:
         return ORJSONResponse({'registered': False})
 
 @app.post('/ptmkb/reset_token', include_in_schema=False)
 async def reset_token(request: Request):
     user_agent = request.headers.get('user-agent', '')
-
     if not is_browser(user_agent):
         raise HTTPException(status_code=403, detail="Access restricted to browsers only")
     
     try:
         info: dict = await request.json()
         username = info.get('username')
-        token = sign_jwt(username)
-        USERS[username]['token'] = token
-        with lock:
-            with open('../data/users/users.json', 'w') as f:
-                json.dump(USERS, f)
+        new_token = sign_jwt(username)
+        ok = await set_token(username, new_token)
         return ORJSONResponse({
-            'reset': True,
-            'token': token.get('access_token')
+            'reset': ok,
+            'token': new_token.get('access_token')
         })
     except:
-        return {'reset': False,}
+        return {'reset': False}
 
 @app.post('/ptmkb/fetch_token', include_in_schema=False)
 async def fetch_token(request: Request):
     user_agent = request.headers.get('user-agent', '')
-
     if not is_browser(user_agent):
         raise HTTPException(status_code=403, detail="Access restricted to browsers only")
     
     info: dict = await request.json()
     username = info.get('username')
-    return ORJSONResponse({
-        'token': USERS.get(username, {}).get('token', {}).get('access_token', None)
-    })
+    access_token = await get_access_token(username)
+    return ORJSONResponse({'token': access_token})
 
 @app.post('/ptmkb/login', include_in_schema=False)
 async def attempt_login(request: Request):
     user_agent = request.headers.get('user-agent', '')
-
     if not is_browser(user_agent):
         raise HTTPException(status_code=403, detail="Access restricted to browsers only")
     
     info: dict = await request.json()
     username = info.get('username')
-    if USERS.get(username, None):
-        existing_password = USERS.get(username, {}).get('password')
-        if existing_password == hashlib.sha256(
-            info.get('password').encode('utf-8')
-        ).hexdigest():
-            # User is validated.
-            token = USERS.get(username, {}).get('token', {}).get('access_token', None)
+    password = info.get('password')
+    if await user_exists(username):
+        if await validate_password(username, password):
+            token = await get_access_token(username)
             if token is None:
-                token = sign_jwt(username)
-                USERS[username]['token'] = token
-            return ORJSONResponse({
-                'verify': True,
-                'message': '',
-                'info': {
-                    'username': username,
-                    'token': token,
-                }
-            })
-        # Password is invalid.
-        return ORJSONResponse({
-            'verify': False,
-            'message': "Your password is invalid."
-        })
-    # User doesn't exist.
-    return ORJSONResponse({
-        'verify': False,
-        'message': f"No user by the name of {username} exists."
-    })
+                new_token = sign_jwt(username)
+                await set_token(username, new_token)
+                token = new_token.get('access_token')
+            return ORJSONResponse({'verify': True, 'message': '', 'info': {'username': username, 'token': token}})
+        return ORJSONResponse({'verify': False, 'message': "Your password is invalid."})
+
+    return ORJSONResponse({'verify': False, 'message': f"No user by the name of {username} exists."})
 
 @app.post('/ptmkb/logout', include_in_schema=False)
 async def logout(request: Request):
     user_agent = request.headers.get('user-agent', '')
-
     if not is_browser(user_agent):
         raise HTTPException(status_code=403, detail="Access restricted to browsers only")
     
     try:
         info: dict = await request.json()
         username = info.pop('username')
-        SESSIONS.pop(username, None)
         return ORJSONResponse({'logout': True})
     except:
         return ORJSONResponse({'logout': False})
-
 
 
 ######## ########
@@ -300,7 +258,6 @@ def sort_ids(strings: list[str], substring: str):
 @app.get('/favicon.ico', include_in_schema=False)
 async def favicon(request: Request):
     user_agent = request.headers.get('user-agent', '')
-
     if not is_browser(user_agent):
         raise HTTPException(status_code=403, detail="Access restricted to browsers only")
     
@@ -309,7 +266,6 @@ async def favicon(request: Request):
 @app.get('/download_script', include_in_schema=False)
 async def get_started_script(request: Request):
     user_agent = request.headers.get('user-agent', '')
-
     if not is_browser(user_agent):
         raise HTTPException(status_code=403, detail="Access restricted to browsers only")
     
@@ -318,7 +274,6 @@ async def get_started_script(request: Request):
 @app.get('/font', include_in_schema=False)
 async def picture(request: Request, font: str):
     user_agent = request.headers.get('user-agent', '')
-
     if not is_browser(user_agent):
         raise HTTPException(status_code=403, detail="Access restricted to browsers only")
     
@@ -328,7 +283,6 @@ async def picture(request: Request, font: str):
 @app.get('/picture', include_in_schema=False)
 async def picture(request: Request, picture: str):
     user_agent = request.headers.get('user-agent', '')
-
     if not is_browser(user_agent):
         raise HTTPException(status_code=403, detail="Access restricted to browsers only")
     
@@ -337,7 +291,6 @@ async def picture(request: Request, picture: str):
 @app.get("/", include_in_schema=False)
 def home_page(request: Request):
     user_agent = request.headers.get('user-agent', '')
-
     if not is_browser(user_agent):
         raise HTTPException(status_code=403, detail="Access restricted to browsers only")
     
@@ -348,7 +301,6 @@ def home_page(request: Request):
 @app.get("/search", include_in_schema=False)
 def home_page(request: Request):
     user_agent = request.headers.get('user-agent', '')
-
     if not is_browser(user_agent):
         raise HTTPException(status_code=403, detail="Access restricted to browsers only")
     
@@ -359,7 +311,6 @@ def home_page(request: Request):
 @app.get("/signup-login", include_in_schema=False)
 def home_page(request: Request):
     user_agent = request.headers.get('user-agent', '')
-
     if not is_browser(user_agent):
         raise HTTPException(status_code=403, detail="Access restricted to browsers only")
     
@@ -370,7 +321,6 @@ def home_page(request: Request):
 @app.get("/propensity", include_in_schema=False)
 def docs_page(request: Request):
     user_agent = request.headers.get('user-agent', '')
-
     if not is_browser(user_agent):
         raise HTTPException(status_code=403, detail="Access restricted to browsers only")
     
@@ -381,7 +331,6 @@ def docs_page(request: Request):
 @app.get("/documentation", include_in_schema=False)
 def docs_page(request: Request):
     user_agent = request.headers.get('user-agent', '')
-
     if not is_browser(user_agent):
         raise HTTPException(status_code=403, detail="Access restricted to browsers only")
     
@@ -392,7 +341,6 @@ def docs_page(request: Request):
 @app.get("/download", include_in_schema=False)
 def download_page(request: Request):
     user_agent = request.headers.get('user-agent', '')
-
     if not is_browser(user_agent):
         raise HTTPException(status_code=403, detail="Access restricted to browsers only")
     
@@ -403,7 +351,6 @@ def download_page(request: Request):
 @app.get("/integration", include_in_schema=False)
 def integration_page(request: Request):
     user_agent = request.headers.get('user-agent', '')
-
     if not is_browser(user_agent):
         raise HTTPException(status_code=403, detail="Access restricted to browsers only")
     
@@ -414,7 +361,6 @@ def integration_page(request: Request):
 @app.get("/about", include_in_schema=False)
 def integration_page(request: Request):
     user_agent = request.headers.get('user-agent', '')
-
     if not is_browser(user_agent):
         raise HTTPException(status_code=403, detail="Access restricted to browsers only")
     
@@ -432,10 +378,18 @@ async def search(_id: str, request: Request):
         raise HTTPException(status_code=403, detail="Access restricted to browsers only")
     
     # Probably best to insert elements in a database
-    ids = fetch_identifiers(_id)
+    ids = await fetch_identifiers(_id)
     ids = sort_ids(ids, _id)
     # Give only top 200 suggestions - otherwise burden on user
     return ORJSONResponse({'ids': ids[:200]})
+
+
+# We're just going to load the HTML file here to include in the iframe.
+# This information is required by an endpoint. Why I've turned it into a file,
+# even I'm not sure.
+# This is only read once so it doesn't waste I/O operations during use
+with open('./templates/protein.html', 'r', encoding='utf-8') as f:
+    HTML_PAGE = f.read()
 
 @app.post('/ptmkb/search_result', include_in_schema=False)
 async def search(request: Request):
@@ -447,28 +401,24 @@ async def search(request: Request):
     data = await request.json()
     data['id'] = data['id'].strip()
     
-    found, results = search_identifier(data['id'])
-    # Stupid check, I am aware - need to fix this somehow
+    found, results = await search_identifier(data['id'])
+    # Stupid check, I am aware
     try:
         results = results[0]
     except IndexError:
         ...
-    # We're just going to load the HTML file here to include in the iframe.
-    with open('./templates/protein.html', 'r', encoding='utf-8') as f:
-        html_page = f.read()
     if found:
         if not isinstance(results['Accession Number'], str):
             results['Accession Number'] = ''
     return ORJSONResponse({
         'found': found,
         'result': results,
-        'html': html_page
+        'html': HTML_PAGE
     })
 
 @app.post('/ptmkb/structure_calculations', include_in_schema=False)
 async def get_structure_calculations(request: Request, data: dict = Body(...)):
     user_agent = request.headers.get('user-agent', '')
-
     if not is_browser(user_agent):
         raise HTTPException(status_code=403, detail="Access restricted to browsers only")
     
@@ -493,7 +443,6 @@ async def get_structure_calculations(request: Request, data: dict = Body(...)):
 @app.post('/ptmkb/fetch_uniprot', include_in_schema=False)
 async def get_uniprot_info(request: Request):
     user_agent = request.headers.get('user-agent', '')
-
     if not is_browser(user_agent):
         raise HTTPException(status_code=403, detail="Access restricted to browsers only")
     
@@ -504,49 +453,81 @@ async def get_uniprot_info(request: Request):
     # This is necessary for web scraping purposes
     # OR we can just use the REST API to fetch the necessary information
     # without worrying about the type of ID
-    return_response = fetch_response_uniprot_trim(prot_id)
+    return_response = await fetch_response_uniprot_trim(prot_id)
 
     return ORJSONResponse(return_response)
 
 def save_image(df: pd.DataFrame, format: str, ptm: str) -> bytes:
-    _, ax = plt.subplots(figsize=(12, 8))
+    # --- 1) Make sure columns = positions (top), rows = amino acids (side)
+    cols_str = list(map(str, df.columns))
+    idx_str  = list(map(str, df.index))
+    # If '0' (the modification site) is found in the index but not the columns,
+    # this likely means positions are on the index -> transpose for display.
+    if ('0' in idx_str) and ('0' not in cols_str):
+        df = df.T
 
+    # --- 2) String-format all visible values to 2 decimals
+    def fmt(x):
+        if pd.isna(x):
+            return ""
+        if isinstance(x, (int, float, np.floating)):
+            return f"{x:.2f}"
+        return str(x)
+
+    df_fmt = df.applymap(fmt)
+    col_labels = [str(c) for c in df_fmt.columns]
+    row_labels = [str(r) for r in df_fmt.index]
+
+    # --- 3) Build figure and leave room for the y-axis label
+    fig, ax = plt.subplots(figsize=(12, 8))
+    # extra left/top space for labels so they don't overlap
+    fig.subplots_adjust(left=0.18, right=0.98, top=0.88, bottom=0.12)
     ax.axis('off')
 
-    table = ax.table(cellText=df.values, colLabels=df.columns, rowLabels=df.index, cellLoc='center', loc='center')
+    table = ax.table(
+        cellText=df_fmt.values,
+        colLabels=col_labels,
+        rowLabels=row_labels,
+        cellLoc='center',
+        loc='center'
+    )
 
-    # Color the columns
-    site_idx = 0
+    # Optional: improve readability of text size/spacing
+    table.auto_set_font_size(False)
+    table.set_fontsize(8)
+    table.scale(1.0, 1.2)
+
+    # --- 4) Color headers, row labels, site column
+    # locate site column (label '0' in the header row)
+    site_idx = None
     for (i, j), cell in table.get_celld().items():
-        if j >= 0 and i == 0 and cell.get_text().get_text() == '0':
+        if i == 0 and j >= 0 and cell.get_text().get_text() == '0':
             site_idx = j
             break
-    
+
     for (i, j), cell in table.get_celld().items():
-        if j == -1:
+        if j == -1:  # row labels (amino acids)
             cell.set_facecolor('#D0E0E3')
         elif j >= 0:
-            if i == 0:
+            if i == 0:  # header row (positions)
                 cell.set_facecolor('#A0C4FF')
             else:
-                if j == site_idx:
+                if site_idx is not None and j == site_idx:
                     cell.set_facecolor("#F2C998")
                 else:
                     cell.set_facecolor('#E0E0E0' if i % 2 == 0 else '#FFFFFF')
 
+    # --- 5) Titles/axis labels (placed on the figure so they don't collide)
     ax.set_title("Log-Odd values for " + ptm)
-    plt.text(-0.035, 0.37, "Amino Acid", rotation=90)
-    plt.text(0.365, 0.8, "Position Relative to Modification Site")
+    fig.text(0.06, 0.50, "Amino Acid", rotation=90, va='center', ha='center')
+    fig.text(0.50, 0.93, "Position Relative to Modification Site", ha='center', va='center')
 
-    plt.savefig(
-        f"./temp.{format}",
-        dpi=300
-    )
-    with open(f'./temp.{format}', 'rb') as f:
-        raw_data = f.read()
-    os.remove(f'./temp.{format}')
-
-    return raw_data
+    # --- 6) Save to bytes (no temp files)
+    buf = io.BytesIO()
+    plt.savefig(buf, format=format.lower(), dpi=300)
+    plt.close(fig)
+    buf.seek(0)
+    return buf.getvalue()
 
 def save_data(df: pd.DataFrame, format: str) -> bytes:
     if format == "CSV":
@@ -583,7 +564,8 @@ async def download(request: Request):
     format = data.get("format")
     rounded = True # data.get('rounded')
 
-    df = pd.read_json(f"./data/tables/{ptm}/{table}/{aa}.json")
+    data = PTM_TABLES.get(ptm, {}).get(aa, {}).get(table, {})
+    df = pd.DataFrame.from_dict(data, orient="index")
     
     if rounded and format in ["PNG", "PDF", "SVG"]: df = df.round(2)
     
@@ -608,7 +590,6 @@ async def get_log_value(request: Request):
     vector = list(data.values())
     # Use the above vector to calculate additive and multiplicative scores
     a_score, m_scores = additive_calculator(vector), multiplicative_calculator(vector)
-    m_score = m_scores[1]['multiplicative_score']
     asterisk_m_score = m_scores[1]['logLogProduct']
     return ORJSONResponse({
         'logSum': round(a_score, 3) if not isinstance(a_score, str) else a_score,
@@ -616,18 +597,25 @@ async def get_log_value(request: Request):
     })
 
 @app.get('/ptmkb/getAminoAcids', include_in_schema=False)
-def get_amino_acids(request: Request, ptm: str):
+async def get_amino_acids(request: Request, ptm: str):
     user_agent = request.headers.get('user-agent', '')
-
     if not is_browser(user_agent):
         raise HTTPException(status_code=403, detail="Access restricted to browsers only")
-    
+
     if not ptm:
         return ORJSONResponse({
             'response': False,
             'message': "No PTM was provided."
         })
-    data = [i.split("\\")[-1].split('.')[0] for i in glob.glob(f'./data/tables/{ptm}/log-e/*.json')]
+
+    ptm_data = PTM_TABLES.get(ptm)
+    if not ptm_data:
+        return ORJSONResponse({
+            'response': False,
+            'message': f"No such PTM: {ptm}"
+        })
+
+    data = list(ptm_data.keys())
     return ORJSONResponse({
         'response': True,
         'data': data
@@ -709,7 +697,6 @@ async def get_ptm_details(request: Request, resid: str = None, ptm: str = None, 
 @app.post('/ptmkb/unrel/submitJpred', include_in_schema=False)
 async def get_jpred_prediction(request: Request):
     user_agent = request.headers.get('user-agent', '')
-
     if not is_browser(user_agent):
         raise HTTPException(status_code=403, detail="Access restricted to browsers only")
     
@@ -717,23 +704,20 @@ async def get_jpred_prediction(request: Request):
     return await submit_job(info['sequence'])
 
 @app.get('/ptmkb/unrel/getJpred', include_in_schema=False)
-def get_jpred_prediction(request: Request, jobid: str):
+async def get_jpred_prediction_status(request: Request, jobid: str):
     user_agent = request.headers.get('user-agent', '')
-
     if not is_browser(user_agent):
         raise HTTPException(status_code=403, detail="Access restricted to browsers only")
     
-    return get_job(jobid)
+    return await get_job(jobid)
 
 @app.get('/ptmkb/ptms_list', include_in_schema=False)
-def get_ptms(request: Request):
+async def get_ptms(request: Request):
     user_agent = request.headers.get('user-agent', '')
-
     if not is_browser(user_agent):
         raise HTTPException(status_code=403, detail="Access restricted to browsers only")
 
-    options = [i.split("\\")[-1] for i in glob.glob(r'data\tables\*')]
-    return ORJSONResponse({'ptms': options})
+    return ORJSONResponse({'ptms': list(PTM_TABLES.keys())})
 
 @app.get('/ptmkb/all_ptms_tables', include_in_schema=False)
 def get_all_ptms_tables(request: Request):
@@ -763,9 +747,18 @@ def get_matrix(
         return {'message': "Please provide a residue for which you want the positional matrix."}
     if table not in ['log-e', 'freq']:
         table = 'log-e'
-    if not os.path.exists(f'./data/tables/{ptm}/{table}/{residue}.json'):
-        return {'message': f"Could not find the positional matrix of {ptm} for {residue}."}
-    return ORJSONResponse(PTM_TABLES.get(ptm, {}).get(residue, {}).get(table, None))
+    
+    ptm_data = PTM_TABLES.get(ptm)
+    if not ptm_data:
+        return {'message': f"No such PTM: {ptm}"}
+    residue_data = ptm_data.get(residue)
+    if not residue_data:
+        return {'message': f"No data available for residue {residue} in {ptm}."}
+    matrix = residue_data.get(table)
+    if matrix is None:
+        return {'message': f"Could not find the {table} matrix for {ptm} residue {residue}."}
+    
+    return ORJSONResponse(matrix)
 
 @app.get('/ptmkb/get_protein_log_scores', include_in_schema=False)
 async def calculate_propensity(
@@ -806,34 +799,28 @@ async def calculate_propensity(
         return {
             'message': f"Please ensure that the window size of the subsequence is either 13, 15, 17, 19, or 21 (current length is {len(subsequence)})."
         }
+
     char = subsequence[len(subsequence) // 2]
-    if not os.path.exists(f'./data/tables/{ptm}'):
-        return {
-            'message': f"No such Post-Translational Modification by the name of {ptm} exists."
-        }
-    if not os.path.exists(f'./data/tables/{ptm}/log-e/{char}.json'):
-        return {
-            'message': f"No such propensity calculator exists for {ptm} of residue {char}."
-        }
+
+    # --- PTM existence check ---
+    if ptm not in PTM_TABLES:
+        return {'message': f"No such Post-Translational Modification: {ptm}"}
+    if char not in PTM_TABLES[ptm]:
+        return {'message': f"No propensity calculator for {ptm} residue {char}."}
     
-    with open(f'./data/tables/{ptm}/log-e/{char}.json', 'r') as f:
-        table: dict[str, dict[str, int|str]] = json.load(f)
+    table: dict[str, dict[str, float | str]] = PTM_TABLES[ptm][char]['log-e']
 
-    KEYS = []
+    keys = [
+        f"+{i}" if i > 0 else str(i)
+        for i in range(-(len(subsequence)//2), (len(subsequence)//2)+1)
+    ]
 
-    for i in range(-(len(subsequence) // 2), (len(subsequence) // 2) + 1):
-        key = f"+{i}" if i > 0 else str(i)
-        KEYS.append(key)
+    vector = [
+        table.get(key, {}).get(subsequence[idx], '-inf')
+        for idx, key in enumerate(keys)
+    ]
 
-    vector = []
-    for index, key in enumerate(KEYS):
-        vector.append(
-            table.get(key, {})
-            .get(subsequence[index], '-inf')
-        )
-    response = {
-        'logSum': additive_calculator(vector)
-    }
+    response = {'logSum': additive_calculator(vector)}
     mult_score = multiplicative_calculator(vector)[1]
     response.update({
         'logLogProduct': mult_score.get('logLogProduct', 'NIL')
@@ -961,18 +948,19 @@ def get_post_translational_modification_details(
         _id = entry[i]["@id"]
         with open(
             f"./data/resid/images/{_id}.GIF", 'rb'
-        ) as f:
-            entry[i]['Image'] = {}
-            entry[i]['Image']['Data'] = f.read().decode('latin-1')
-            entry[i]['Image']['Encoding'] = 'latin-1'
-            entry[i]['Image']['FileType'] = '.GIF'
-        with open(
+        ) as f1, open(
             f"./data/resid/models/{_id}.PDB", 'rb'
-        ) as f:
-            entry[i]['Model'] = {}
-            entry[i]['Model']['Data'] = f.read().decode()
-            entry[i]['Model']['Encoding'] = 'utf-8'
-            entry[i]['Model']['FileType'] = '.PDB'
+        ) as f2:
+            entry[i]['Image'] = {
+                "Data": f1.read().decode('latin-1'),
+                "Encoding": "latin-1",
+                "FileType": ".GIF"
+            }
+            entry[i]['Model'] = {
+                "Data": f2.read().decode(),
+                "Encoding": "utf-8",
+                "FileType": ".PDB"
+            }
     if entry:
         return ORJSONResponse({resid: entry[0]})
     return {'message': 'Please provide a valid RESID Database ID.'}
@@ -1002,7 +990,7 @@ def get_post_translational_modification_details(
         }
     }
 })
-def get_protein_details(
+async def get_protein_details(
     upid: str = Query(None, description='UniProt Protein Identifier', example='AF9_HUMAN'),
     upac: str = Query(None, description='UniProt Accession Number', example='O14746')
 ):
@@ -1020,7 +1008,7 @@ def get_protein_details(
         return {'result': '', 'message': 'Please enter a protein identifier or an accession number first!'}
     _id = upid or upac
     _id = _id.upper()
-    found, results = search_identifier(_id)
+    found, results = await search_identifier(_id)
     if found:
         return ORJSONResponse({'result': results})
     return {'message': 'Could not find the queried protein!'}
@@ -1046,9 +1034,7 @@ async def get_available_post_translational_modifications():
     **Returns:**
     - A list of available PTMs paired with a key. (type: *JSON*)
     """
-
-    options = [i.split("\\")[-1] for i in glob.glob(r'data\tables\*')]
-    return {'ptms': options}
+    return {"ptms": list(PTM_TABLES.keys())}
 
 @app.get("/ptmkb/api/get-positional-frequency-matrix", dependencies=[Depends(JWTBearer())], responses={
     200: {
@@ -1526,31 +1512,59 @@ async def get_available_post_translational_modifications():
 async def get_positional_frequency_matrix(
     ptm: str = Query('', description='The dbPTM-annotated Post-Translational Modification.', example='Phosphorylation'),
     residue: str = Query('', description='The amino acid for which the table is required.', example='S'),
-    table: str = Query('log-e', description='The type of matrix required. Accepted values are \'freq\' and \'log-e\'.', example='freq')
+    table: str = Query('log-e', description="The type of matrix required. Accepted values are 'freq' and 'log-e'.", example='freq')
 ):
     """
     Get the positional frequency matrix of a Post-Translational Modification (PTM),
     given the PTM, amino acid, and the matrix table type.
 
     If nothing is provided, all available positional matrices for all PTMs on all residues will be supplied.
-
     If only the PTM is provided, all available positional matrices for that PTM on all residues will be supplied.
-
-    If the table is not provided or is any value other than 'freq' or 'log-e', it will default to 'log-e' and subsequently return the natural log matrix for the specified PTM on the specified residue.
-
-    **Returns:**
-    - The Positional Frequency Matrix of the Post-Translational Modification for the specified amino acid. (type: *JSON*)
+    If the table is invalid, it defaults to 'log-e'.
     """
-    residue = residue.upper() # Input validation.
-    if not ptm:
-        return {'message': "Please provide a Post Translational Modification as value."}
-    if not residue:
-        return {'message': "Please provide a residue for which you want the positional matrix."}
-    if table not in ['log-e', 'freq']:
-        table = 'log-e'
-    if not os.path.exists(f'./data/tables/{ptm}/{table}/{residue}.json'):
-        return {'message': f"Could not find the positional matrix of {ptm} for {residue}."}
-    return ORJSONResponse([i for i in PTM_TABLES.get(ptm) if i.get(residue, None) is not None].get(residue).get(table))
+    # normalize inputs
+    ptm = ptm.strip()
+    residue = (residue or '').strip().upper()
+    table = table if table in ['freq', 'log-e'] else 'log-e'
+
+    # convenience alias
+    tables = PTM_TABLES  # already in memory
+
+    # 1) nothing provided -> everything (filtered to the requested table)
+    if not ptm and not residue:
+        if not tables:
+            return {'message': 'No PTM tables are loaded.'}
+        result = {
+            ptm_name: {
+                aa: aa_maps.get(table, {}) for aa, aa_maps in aa_dict.items()
+            }
+            for ptm_name, aa_dict in tables.items()
+        }
+        return ORJSONResponse(result)
+
+    # 2) only PTM provided -> all residues for that PTM
+    if ptm and not residue:
+        ptm_map = tables.get(ptm)
+        if not ptm_map:
+            return {'message': f"Unknown PTM '{ptm}'."}
+        result = {aa: aa_maps.get(table, {}) for aa, aa_maps in ptm_map.items()}
+        return ORJSONResponse(result)
+
+    # 3) PTM + residue provided -> single matrix
+    if ptm and residue:
+        ptm_map = tables.get(ptm)
+        if not ptm_map:
+            return {'message': f"Unknown PTM '{ptm}'."}
+        aa_map = ptm_map.get(residue)
+        if not aa_map:
+            return {'message': f"No data for PTM '{ptm}' on residue '{residue}'."}
+        matrix = aa_map.get(table)
+        if matrix is None:
+            return {'message': f"No '{table}' matrix for PTM '{ptm}' on residue '{residue}'."}
+        return ORJSONResponse(matrix)
+
+    # 4) residue without PTM (not covered by your docstring) -> guide the user
+    return {'message': "Please provide a PTM (optionally with a residue) or provide nothing to retrieve all matrices."}
 
 @app.get('/ptmkb/api/calculate-propensity', dependencies=[Depends(JWTBearer())], responses={
     200: {
@@ -1575,68 +1589,47 @@ async def calculate_propensity(
     **Returns:**
     - The Log Sum and Log Log Product scores. (type: *JSON*)
     """
-    print("HERE", ptm, subsequence)
+    # input validation
     if ptm == '' and subsequence == '':
-        return {
-            'message': "Please provide both the subsequence and the PTM to use for Propensity calculation."
-        }
+        return {'message': "Please provide both the subsequence and the PTM to use for Propensity calculation."}
     if ptm == '':
-        return {
-            'message': "Please provide the PTM to use for Propensity calculation."
-        }
+        return {'message': "Please provide the PTM to use for Propensity calculation."}
     if subsequence == '':
-        return {
-            'message': "Please provide a subsequence to use for Propensity calculation."
-        }
+        return {'message': "Please provide a subsequence to use for Propensity calculation."}
     if not isinstance(ptm, str):
-        return {
-            'message': "Please ensure that the Post-Translational Modification input is a string."
-        }
+        return {'message': "Please ensure that the Post-Translational Modification input is a string."}
     if not isinstance(subsequence, str):
-        return {
-            'message': "Please ensure that the Subsequence input is a string."
-        }
+        return {'message': "Please ensure that the Subsequence input is a string."}
     if len(subsequence) < 13 or len(subsequence) > 21:
-        return {
-            'message': f"Please ensure that the length of the subsequence is at leats 13 residues long."
-        }
+        return {'message': "Please ensure that the length of the subsequence is at leats 13 residues long."}
     if len(subsequence) % 2 != 1:
-        return {
-            'message': f"Please ensure that the window size of the subsequence is either 13, 15, 17, 19, or 21 (current length is {len(subsequence)})."
-        }
-    char = subsequence[len(subsequence) // 2]
-    if not os.path.exists(f'./data/tables/{ptm}'):
-        return {
-            'message': f"No such Post-Translational Modification by the name of {ptm} exists."
-        }
-    if not os.path.exists(f'./data/tables/{ptm}/log-e/{char}.json'):
-        return {
-            'message': f"No such propensity calculator exists for {ptm} of residue {char}."
-        }
-    
-    # With all input validation done, proceed with the calculation.
-    with open(f'./data/tables/{ptm}/log-e/{char}.json', 'r') as f:
-        table: dict[str, dict[str, int|str]] = json.load(f)
+        return {'message': f"Please ensure that the window size of the subsequence is either 13, 15, 17, 19, or 21 (current length is {len(subsequence)})."}
 
-    KEYS = []
+    # obtaining central residue
+    center_idx = len(subsequence) // 2
+    char = subsequence[center_idx].upper()
 
-    for i in range(-(len(subsequence) // 2), (len(subsequence) // 2) + 1):
-        key = f"+{i}" if i > 0 else str(i)
-        KEYS.append(key)
+    if ptm not in PTM_TABLES:
+        return {'message': f"No such Post-Translational Modification by the name of {ptm} exists."}
+    if char not in PTM_TABLES[ptm]:
+        return {'message': f"No such propensity calculator exists for {ptm} of residue {char}."}
 
-    vector = []
-    for index, key in enumerate(KEYS):
-        vector.append(
-            table.get(key, {})
-            .get(subsequence[index], '-inf')
-        )
-    response = {
-        'logSum': additive_calculator(vector)
-    }
+    table: dict[str, dict[str, float | str]] = PTM_TABLES[ptm][char].get('log-e', {})
+    if not table:
+        return {'message': f"No such propensity calculator exists for {ptm} of residue {char}."}
+
+    keys = [f"+{i}" if i > 0 else str(i)
+        for i in range(-center_idx, center_idx + 1)]
+
+    # Build vector of log-e values (or '-inf' for missing symbols)
+    vector = [
+        table.get(key, {}).get(subsequence[idx], '-inf')
+        for idx, key in enumerate(keys)
+    ]
+
+    # Scores
+    response = {'logSum': additive_calculator(vector)}
     mult_score = multiplicative_calculator(vector)[1]
-    response.update({
-        'logLogProduct': mult_score.get('logLogProduct', 'NIL')
-    })
-    # A minor change here to account for non-showing of raw multiplicative scores
-    # because the value is too large to be used for anything substantial
+    response['logLogProduct'] = mult_score.get('logLogProduct', 'NIL')
+
     return ORJSONResponse(response)

@@ -13,3 +13,4 @@ PyJWT==2.10.1
 fastapi-sessions==0.3.2
 ujson==5.10.0
 orjson==3.10.16
+aiohttp==3.13.2
