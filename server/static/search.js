@@ -3283,7 +3283,7 @@ async function search() {
                     "Accept": "application/json",
                     "Content-Type": "application/json"
                 },
-                body: JSON.stringify({ "id": id })
+                body: JSON.stringify({ "id": id, "userData": sessionStorage.getItem('user') })
             });
 
             if (response.ok) {
