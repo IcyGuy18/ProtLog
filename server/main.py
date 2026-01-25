@@ -20,7 +20,7 @@ import orjson
 
 from mongo_users import (
     set_token, user_exists, create_user, get_access_token, validate_password,
-    log_search_history
+    log_search_history, retrieve_history
 )
 from mongo_ptm import fetch_identifiers, search_identifier
 from calculator import additive_calculator, multiplicative_calculator
@@ -129,6 +129,12 @@ def is_browser(user_agent: str) -> bool:
 
 ######## LOGIN AND SIGNUP PURPOSES ########
 
+from contextlib import asynccontextmanager
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    app.state.SESSIONS = {}
+    yield
+    del app.state.SESSIONS
 
 app = FastAPI(
     docs_url=None,
@@ -137,6 +143,7 @@ app = FastAPI(
     version="1.0.0",
     swagger_ui_oauth2_redirect_url=None,
     redirect_slashes=False,
+    lifespan=lifespan
 )
 app.add_middleware(GZipMiddleware, minimum_size=1000)
 
@@ -211,10 +218,17 @@ async def attempt_login(request: Request):
                 new_token = sign_jwt(username)
                 await set_token(username, new_token)
                 token = new_token.get('access_token')
+            app.state.SESSIONS[username] = request.client.host
             return ORJSONResponse({'verify': True, 'message': '', 'info': {'username': username, 'token': token}})
         return ORJSONResponse({'verify': False, 'message': "Your password is invalid."})
 
     return ORJSONResponse({'verify': False, 'message': f"No user by the name of {username} exists."})
+
+@app.post('/ptmkb/verify', include_in_schema=False)
+async def verify_login(request: Request):
+    data: dict = await request.json()
+    is_logged_in = app.state.SESSIONS.get(data.get('username', ''), '') == request.client.host
+    return ORJSONResponse({"logged_in": is_logged_in})
 
 @app.post('/ptmkb/logout', include_in_schema=False)
 async def logout(request: Request):
@@ -225,6 +239,7 @@ async def logout(request: Request):
     try:
         info: dict = await request.json()
         username = info.pop('username')
+        app.state.SESSIONS.pop(username, None)
         return ORJSONResponse({'logout': True})
     except:
         return ORJSONResponse({'logout': False})
@@ -314,6 +329,16 @@ def home_page(request: Request):
     
     return templates.TemplateResponse(
         "search.html", context={"request": request}
+    )
+
+@app.get("/profile", include_in_schema=False)
+def home_page(request: Request):
+    user_agent = request.headers.get('user-agent', '')
+    if not is_browser(user_agent):
+        raise HTTPException(status_code=403, detail="Access restricted to browsers only")
+    
+    return templates.TemplateResponse(
+        "profile.html", context={"request": request}
     )
 
 @app.get("/signup-login", include_in_schema=False)
@@ -419,9 +444,16 @@ async def search(request: Request):
         if not isinstance(results['Accession Number'], str):
             results['Accession Number'] = ''
             
-        user = orjson.loads(data.get('userData', {}))
-        if len(user):
-            await log_search_history(decode_jwt(user.get('token')), 'Web', data['id'], results)
+        user = data.get('userData')
+        if isinstance(user, str):
+            try:
+                user = orjson.loads(user)
+                token = user.get('token')
+                res = decode_jwt(token)
+                if res is not None:
+                    await log_search_history(decode_jwt(user.get('token')), 'Web', data['id'], results)
+            except:
+                ...
 
     return ORJSONResponse({
         'found': found,
@@ -837,6 +869,13 @@ async def calculate_propensity(
     })
     return ORJSONResponse(response)
 
+@app.get('/ptmkb/history', include_in_schema=False)
+async def get_user_search_history(request: Request, username: str):
+    user_agent = request.headers.get('user-agent', '')
+    if not is_browser(user_agent):
+        raise HTTPException(status_code=403, detail="Access restricted to browsers only")
+    return ORJSONResponse(await retrieve_history(username))
+
 ######## API CALLS ########
 
 @app.get('/ptmkb/api/get-ptm-details', responses={
@@ -942,7 +981,6 @@ def get_post_translational_modification_details(
     token_data: dict = Depends(JWTBearer()),
     resid: str = Query('', description='The RESID Database ID to use.', example='AA0039')
 ):
-    print(token_data)
     """
     Get information on a Post-Translational Modification using RESID ID.
 
@@ -1023,6 +1061,11 @@ async def get_protein_details(
     _id = _id.upper()
     found, results = await search_identifier(_id)
     if found:
+        try:
+            results = results[0]
+        except IndexError:
+            ...
+        await log_search_history(token_data, 'API', _id, results)
         return ORJSONResponse({'result': results})
     return ORJSONResponse({'message': 'Could not find the queried protein!'})
 

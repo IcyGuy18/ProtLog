@@ -55,3 +55,10 @@ async def log_search_history(token_data: dict, mode: Literal['Web', 'API'], item
         }
     )
     return res.acknowledged
+
+async def retrieve_history(username: str):
+    res = [i async for i in HISTORIES.find(
+        { "username": username },
+        { '_id': 0 }
+    )]
+    return list(res)
