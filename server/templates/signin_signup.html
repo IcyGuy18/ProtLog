@@ -5,7 +5,7 @@
     <script>
         async function check() {
             const user = sessionStorage.getItem('user');
-            if (user !== null) {
+            if (user !== null) { // logged in
                 const username = JSON.parse(user).username;
                 const isLoggedIn = await fetch('/ptmkb/verify', {
                     method: "POST",
@@ -20,8 +20,6 @@
                 if (!isLoggedIn['logged_in']) {
                     document.location.href = '/';
                 }
-            } else {
-                document.location.href = '/';
             }
         }
         check();
