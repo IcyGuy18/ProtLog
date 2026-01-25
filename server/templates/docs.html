@@ -135,10 +135,13 @@
             the response from JPred's server when it is done. Once the job is completed, we fetch and process the results.
         </p>
         <p style="text-align: justify;">
-            Since JPred also provides hyperlink-embedded alignments, we have shown them as a separate page ([<a style="color: #ff0000">1</a>]).
+            As JPred also provides hyperlink-embedded alignments, we have shown them as a separate page ([<a style="color: #ff0000">1</a>]).
             As for the prediction, JPred's own format is followed. Upon clicking on a PTM ([<a style="color: #ff0000">2</a>]), the entire column
             is highlighted to make it easier for the user to see the secondary structure, any coils, the residue burial percentage,
             and the confidence scores. Finally, all of the aforementioned information can be downloaded as a JSON file ([<a style="color: #ff0000">3</a>]).
+        </p>
+        <p style="text-align: justify;">
+            Please note, however, that <strong>JPred can only cater sequences up to 800 residues in length</strong>. The authors recommend to split up the sequence into smaller windows but there is a chance the results might not be as reliable.
         </p>
         <p style="text-align: justify;">
             Finally, we also present predicted and experimentally verified structures for the protein observed from AlphaFoldDB and RCSB Database respectively:
@@ -149,13 +152,22 @@
         <p style="text-align: justify;">
             [<a style="color: #ff0000">1</a>] and [<a style="color: #ff0000">2</a>] are hyperlinks to the respective database for extensive additional
             information. We use 3Dmol.js to view the PDB structures. Some buttons are provided to cycle through three different styles, 
-            clear all selections made by the user, and re-center the render should the user lose sight of the structure. You can interact with the structure by 
-            clicking on a residue, at which point it will display a label that contains the position of the residue in the sequence, the <strong>3-letter code for the residue</strong>,
+            clear all selections made by the user, and re-center the render should the user lose sight of the structure.
+            For the AlphaFold sequence, you can view the PTMs by selecting one PTM or all PTMs from the dropdown in [<a style="color: #ff0000">3</a>].
+            Additionally, since all PDBs in the RCSB Protein Data Bank are queried using the UniProt Accession Number, you can select from one of many possible PDB IDs in [<a style="color: #ff0000">4</a>].
+        </p>
+        <p style="text-align: justify;">
+            You can interact with the structure by clicking on a residue, at which point it will display a label that contains the position of the residue in the sequence, the <strong>3-letter code for the residue</strong>,
             any and all <strong>PTMs that have been observed on the residue</strong>, the <strong>Solvent Accessible Surface Area</strong> (SASA) in square Angstroms (Å²) (calculated using the Shrake-Rupley
             algorithm), and the <strong>DSSP-calculated secondary structure of the PDB</strong> (the letter after DSSP denotes the simplified structure, while the letter inside the
-            parentheses denotes the detailed structure of the residue, if any), all observed in [<a style="color: #ff0000">3</a>].
-            Additionally, for RCSB database, since all PDBs are queried using the UniProt Accession Number, you can select from one of many possible RCSB PDBs in [<a style="color: #ff0000">4</a>].
+            parentheses denotes the detailed structure of the residue, if any), all observed in [<a style="color: #ff0000">5</a>].
         </p>
+        <p>
+            In the PDB renders above, <span style="color: rgb(0, 191, 0); font-weight: 700;">green</span> chains represent unstructured regions of coils,
+            <span style="color: rgb(198, 168, 0); font-weight: 700;">yellow</span> chains represent β-sheets (or beta strands), and
+            <span style="color: rgb(232, 0, 0); font-weight: 700;">red</span> chains represent α-helices.
+        </p>
+
         <p style="text-align: justify;">
             Finally, the information can also be viewed in a tabular form:
         </p>
