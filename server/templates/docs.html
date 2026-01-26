@@ -116,16 +116,21 @@
             <img src="/picture?picture=docs/search-6.png" style="width: 90%; border: 2px solid black;">
         </div>
         <p style="text-align: justify;">
-            A localised sequence of 21 amino acids is shown in [<a style="color: #ff0000">1</a>], with the position of the center amino acid
-            mentioned in [<a style="color: #ff0000">2</a>]. Below them is the dbPTM-annotated PTM information about the amino acid. If 
-            applicable, a RESID Database ID is also provided alongside the PTM type ([<a style="color: #ff0000">3</a>]). For the PTM,
-            evidence identifiers ([<a style="color: #ff0000">4</a>]) are provided as hyperlinks to their respective PubMed article.
-            The Log Sum and Log-Log Product scores (if applicable) are shown as well (see [<a style="color: #ff0000">6</a>]). If you want to
-            know how these scores are calculated, you can click on the question mark ([<a style="color: #ff0000">5</a>]) and it will lead you
-            to a new page explaining the calculation (see the <a onclick="scrollToSection('propensity-block')" style="color: #0051ff; cursor: pointer;">Propensity</a> page info below).
+            A localized sequence of 21 amino acids is shown in [<a style="color: #ff0000">1</a>], with the position of the center amino acid
+            mentioned in [<a style="color: #ff0000">2</a>].
         </p>
         <p style="text-align: justify;">
-            This is the base information gathered for the proteins. Extra information is also provided by scrolling down:
+            For the specific residue, you can see which upstream proteins cause the modification type,
+            along with its source in [<a style="color: #ff0000">3</a>].
+        </p>
+        <p style="text-align: justify;">
+            Below the modification table is the dbPTM-annotated information about the amino acid. If 
+            applicable, a RESID Database ID is also provided alongside the PTM type ([<a style="color: #ff0000">4</a>]).
+            The source database where this PTM is fetched can be see in [<a style="color: #ff0000">5</a>].
+            For the PTM, evidence identifiers ([<a style="color: #ff0000">6</a>]) are provided as hyperlinks to their respective PubMed article.
+            The Log Sum and Log-Log Product scores (if applicable) are shown as well (see [<a style="color: #ff0000">8</a>]). If you want to
+            know how these scores are calculated, you can click on the question mark ([<a style="color: #ff0000">7</a>]) and it will lead you
+            to a new page explaining the calculation (see the <a onclick="scrollToSection('propensity-block')" style="color: #0051ff; cursor: pointer;">Propensity</a> page info below).
         </p>
         <div style="margin: 0 auto; display: block; text-align: center;">
             <img src="/picture?picture=docs/search-7.png" style="width: 90%; border: 2px solid black;">
@@ -161,7 +166,7 @@
             You can interact with the structure by clicking on a residue, at which point it will display a label that contains the position of the residue in the sequence, the <strong>3-letter code for the residue</strong>,
             any and all <strong>PTMs that have been observed on the residue</strong>, the <strong>Solvent Accessible Surface Area</strong> (SASA) in square Angstroms (Å²) (calculated using the Shrake-Rupley
             algorithm), and the <strong>DSSP-calculated secondary structure of the PDB</strong> (the letter after DSSP denotes the simplified structure, while the letter inside the
-            parentheses denotes the detailed structure of the residue, if any), all observed in [<a style="color: #ff0000">5</a>].
+            parentheses denotes the detailed structure of the residue, if any), as shown in [<a style="color: #ff0000">5</a>].
         </p>
         <p>
             In the PDB renders above, <span style="color: rgb(0, 191, 0); font-weight: 700;">green</span> chains represent unstructured regions of coils,
