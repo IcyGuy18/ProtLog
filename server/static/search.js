@@ -3186,10 +3186,13 @@ async function exampleSearch(element) {
     }
 }
 
+let activeSearchRun = 0;
+
 async function search() {
     // I need to clean this messy code...
     const id = document.getElementById('form_value').value.trim();
     if (id) {
+        const myRun = ++activeSearchRun;
         afPdbViewer = null
         rcsbPdbViewer = null;
         if (currentJobAbortController) {
@@ -3240,9 +3243,11 @@ async function search() {
                 },
                 body: JSON.stringify({ "id": id, "userData": sessionStorage.getItem('user') })
             });
+            if (myRun !== activeSearchRun) return;
 
             if (response.ok) {
                 const data = await response.json();
+                if (myRun !== activeSearchRun) return;
                 if (data.found) {
                     ptmSites = data.result['PTMs']
                     document.getElementById('iframeData').textContent = "Loading protein info...";
@@ -3256,6 +3261,7 @@ async function search() {
                     }).then((res) => {
                         return res.json();
                     }).then(async (json) => {
+                        if (myRun !== activeSearchRun) return;
                         // Now do something with that JSON.
                         if (json.message === "") {
                             // Time to fill the table

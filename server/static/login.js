@@ -56,7 +56,7 @@ async function checkForLogin() {
                 const rect = a_user.getBoundingClientRect();
                 var margin = 0;
                 if (window.innerWidth > 1080) {
-                    margin = -140;
+                    margin = -50;
                 }
                 dropdownMenu.style.top = `${rect.bottom + window.scrollY}px`;
                 dropdownMenu.style.left = `${rect.left + margin + window.scrollX}px`; 
