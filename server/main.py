@@ -8,7 +8,7 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.templating import Jinja2Templates
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
-from starlette.responses import Response, FileResponse
+from starlette.responses import Response, FileResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 import pandas as pd
 import matplotlib
@@ -17,12 +17,17 @@ import matplotlib.pyplot as plt
 import numpy as np
 import io
 import orjson
+import json # for a very specific issue
+import zipfile
+from datetime import datetime
+from bson import ObjectId
+import csv
 
 from mongo_users import (
     set_token, user_exists, create_user, get_access_token, validate_password,
     log_search_history, retrieve_history
 )
-from mongo_ptm import fetch_identifiers, search_identifier
+from mongo_ptm import fetch_identifiers, search_identifier, PTM
 from calculator import additive_calculator, multiplicative_calculator
 from response_fetcher import fetch_response_uniprot_trim
 from jpred_prediction import submit_job, get_job
@@ -603,7 +608,8 @@ def download(request: Request, data: dict = Body(...)):
     ptm = data.get("ptm")
     aa = data.get('aa')
     table = data.get('table')
-    format = data.get("format")
+    format: str = data.get("format")
+    format = format.upper()
     rounded = True # data.get('rounded')
 
     data = PTM_TABLES.get(ptm, {}).get(aa, {}).get(table, {})
@@ -875,6 +881,80 @@ async def get_user_search_history(request: Request, username: str):
     if not is_browser(user_agent):
         raise HTTPException(status_code=403, detail="Access restricted to browsers only")
     return ORJSONResponse(await retrieve_history(username))
+
+@app.get("/ptmkb/download-all-tables")
+def download_all_tables():
+    async def gen():
+        buf = io.BytesIO()
+        with zipfile.ZipFile(buf, "w", compression=zipfile.ZIP_DEFLATED) as z:
+            for ptm, aa_map in (PTM_TABLES or {}).items():
+                if not isinstance(aa_map, dict):
+                    continue
+                for aa, table_map in aa_map.items():
+                    if not isinstance(table_map, dict):
+                        continue
+                    for table_name, table_data in table_map.items():
+                        path = f"{ptm}/{aa}/{table_name}.json"
+                        z.writestr(path, orjson.dumps(table_data).decode("utf-8"))
+
+            z.writestr(
+                "README.txt",
+                "Structure:\n"
+                "  <PTM>/<AA>/<table>.json\n\n"
+                "Source:\n"
+                "  /ptmkb/all_ptms_table\n"
+            )
+
+        buf.seek(0)
+        yield buf.getvalue()
+
+    return StreamingResponse(
+        gen(),
+        media_type="application/zip",
+        headers={"Content-Disposition": f'attachment; filename="ptmkb_ptm_tables.zip"'},
+    )
+
+@app.get("/ptmkb/download-dataset")
+async def download_dataset_csv():
+    async def gen():
+        def default(o):
+            if isinstance(o, datetime):
+                return o.isoformat()
+            if isinstance(o, ObjectId):
+                return str(o)
+            return str(o)
+
+        # yield header immediately (so the request starts streaming right away)
+        sio = io.StringIO(newline="")
+        w = csv.writer(sio)
+        w.writerow(["collection", "document_json"])
+        yield sio.getvalue().encode("utf-8")
+        sio.close()
+
+        batch_rows = 0
+        sio = io.StringIO(newline="")
+        w = csv.writer(sio)
+
+        async for doc in PTM.find({}, {'_id': 0}):
+            doc_json = orjson.dumps(doc, default=default).decode("utf-8")
+            w.writerow(["proteins", doc_json])
+
+            batch_rows += 1
+            if batch_rows >= 500:
+                yield sio.getvalue().encode("utf-8")
+                sio.seek(0)
+                sio.truncate(0)
+                batch_rows = 0
+
+        if batch_rows:
+            yield sio.getvalue().encode("utf-8")
+        sio.close()
+
+    return StreamingResponse(
+        gen(),
+        media_type="text/csv; charset=utf-8",
+        headers={"Content-Disposition": 'attachment; filename="ptmkb_dataset.csv"'},
+    )
 
 ######## API CALLS ########
 

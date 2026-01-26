@@ -200,6 +200,13 @@ const ptmColorMapping = {
     "UMPylation": "#A3A3A3"  // Slightly darker Gray
 };
 
+async function exampleSearch(element) {
+    document.getElementById('form_value').value = element.textContent;
+    if (document.getElementById('form_submit').disabled === false) {
+        search();
+    }
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   // Close suggestions when clicking outside
   $(document).on("click", function (event) {
