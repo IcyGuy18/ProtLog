@@ -3,6 +3,7 @@ var currentSequence = null;
 var tables = null
 var afPdbViewer = null
 var rcsbPdbViewer = null;
+let currentRcsbPdbAbortController = null;
 
 function getValue(obj, key, defaultValue = null) {
     if (obj === undefined || obj === null)
@@ -218,6 +219,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const urlParams = new URLSearchParams(window.location.search);
     const searchId = urlParams.get("searchId");
     if (searchId) {
+      console.log("Started searching");
       const fv = document.getElementById("form_value");
       if (fv) fv.value = searchId;
       search(); // kick off immediately
@@ -803,7 +805,7 @@ async function fetchData(ptm, char, table) {
     }
 }
 
-async function preparePTMDetails(localizedSequence, localizedSequenceInfo, ptmsData) {
+async function preparePTMDetails(localizedSequence, localizedSequenceInfo, ptmsData, upid) {
     // Prepare to display the localized sequence with bolded PTMs
     const detailsPanel = document.getElementById("detailsPanel");
     detailsPanel.innerHTML = ``;
@@ -933,46 +935,60 @@ async function preparePTMDetails(localizedSequence, localizedSequenceInfo, ptmsD
             var check = false;
     
             enzymesDiv.classList.add('protein-info-container');
-            centerEnzymes.forEach(enzyme =>  {
-                if (enzyme[1].length !== 0) {
-                    if (!check) {
-                        const row = document.createElement('tr');
-
-                        const keyCell = document.createElement('td');
-                        keyCell.classList.add('key');
-                        keyCell.textContent = 'Modification Type';
-                        
-                        const valueCell = document.createElement('td');
-                        valueCell.classList.add('key');
-                        valueCell.textContent = "Upstream Protein(s)";
-                        check = true;
-
-                        row.appendChild(keyCell);
-                        row.appendChild(valueCell);
-
-                        enzymesTable.appendChild(row)
-                    }
-                    const enzymeRow = document.createElement('tr');
+            centerEnzymes.forEach(enzyme => {
+                if (!check) {
+                    const row = document.createElement('tr');
 
                     const keyCell = document.createElement('td');
-                    keyCell.classList.add('value');
-                    keyCell.setAttribute('style', 'text-align: center; font-weight: 700;');
-                    keyCell.textContent = enzyme[0];
+                    keyCell.classList.add('key');
+                    keyCell.textContent = 'Modification Type';
                     
                     const valueCell = document.createElement('td');
-                    valueCell.classList.add('value');
-                    valueCell.setAttribute('style', 'text-align: center; font-weight: 700;');
-                    var htmlVal = '';
-                    enzyme[1].forEach(e => {
-                        htmlVal += `<a href="https://www.uniprot.org/uniprotkb?query=gene:${e}" target="-_blank">${e}</a> `
-                    });
-                    valueCell.innerHTML = htmlVal; //enzyme[1].join(', ');
+                    valueCell.classList.add('key');
+                    valueCell.textContent = "Upstream Protein(s)";
 
-                    enzymeRow.appendChild(keyCell);
-                    enzymeRow.appendChild(valueCell);
+                    const sourceCell = document.createElement('td');
+                    sourceCell.classList.add('key');
+                    sourceCell.textContent = "Source";
+                    check = true;
 
-                    enzymesTable.appendChild(enzymeRow);
+                    row.appendChild(keyCell);
+                    row.appendChild(valueCell);
+                    row.appendChild(sourceCell);
+
+                    enzymesTable.appendChild(row)
                 }
+                const enzymeRow = document.createElement('tr');
+
+                const keyCell = document.createElement('td');
+                keyCell.classList.add('value');
+                keyCell.setAttribute('style', 'text-align: center; font-weight: 700;');
+                keyCell.textContent = enzyme[0];
+                
+                const valueCell = document.createElement('td');
+                valueCell.classList.add('value');
+                valueCell.setAttribute('style', 'text-align: center; font-weight: 700;');
+                var htmlVal = '';
+                enzyme[1].forEach(e => {
+                    if (e !== 'alternate')
+                        htmlVal += `<a href="https://www.uniprot.org/uniprotkb?query=gene:${e}" target="-_blank">${e}</a> `
+                    else
+                        htmlVal = e;
+                });
+                if (enzyme[1].length === 0)
+                    htmlVal = '-';
+                valueCell.innerHTML = htmlVal; //enzyme[1].join(', ');
+
+                const sourceCell = document.createElement('td');
+                sourceCell.classList.add('value');
+                sourceCell.setAttribute('style', 'text-align: center; font-weight: 700;');
+                sourceCell.textContent = 'UniProt';
+
+                enzymeRow.appendChild(keyCell);
+                enzymeRow.appendChild(valueCell);
+                enzymeRow.appendChild(sourceCell);
+
+                enzymesTable.appendChild(enzymeRow);
             });
             enzymesDiv.appendChild(enzymesTable);
         }
@@ -982,16 +998,6 @@ async function preparePTMDetails(localizedSequence, localizedSequenceInfo, ptmsD
     const ptmInfo = document.createElement('div');
     ptmInfo.classList.add('protein-info-container'); // Apply the table styles
     ptmInfo.style.backgroundColor = '#eeeeee';
-
-    // Create the table header row
-    // const headerRow = document.createElement('tr');
-    // const headerKey = document.createElement('th');
-    // headerKey.textContent = 'Key';
-    // const headerValue = document.createElement('th');
-    // headerValue.textContent = 'Value';
-    // headerRow.appendChild(headerKey);
-    // headerRow.appendChild(headerValue);
-    // ptmTable.appendChild(headerRow);
 
     function convertPubMedReferencesMinor(text) {
         const pubMedRegex = /(\d+)/g; // Regex to match PubMed references
@@ -1051,12 +1057,23 @@ async function preparePTMDetails(localizedSequence, localizedSequenceInfo, ptmsD
         positionDiv.innerHTML = `<h5>Position - ${ptm[0]}</h5>`
         if (residuePosition === 0)
             residuePosition = ptm[0];
-        
-        // positionRow.appendChild(positionKeyCell);
-        // positionRow.appendChild(positionValueCell);
-        // ptmTable.appendChild(positionRow);
+
+        const ptmSourceRow = document.createElement('tr');
+        const ptmSourceKeyCell = document.createElement('td');
+        ptmSourceKeyCell.classList.add('key');
+        ptmSourceKeyCell.textContent = 'Database'; // This will always be dbPTM
+
+        const ptmSourceCell = document.createElement('td');
+        ptmSourceCell.classList.add('value');
+        const ptmSource = `<a href='https://biomics.lab.nycu.edu.tw/dbPTM/info.php?id=${upid}' target='_blank'>dbPTM</a>`
+        ptmSourceCell.innerHTML = ptmSource;
+
+        ptmSourceRow.append(ptmSourceKeyCell);
+        ptmSourceRow.append(ptmSourceCell);
+        ptmTable.appendChild(ptmSourceRow);
 
         // Add evidence identifiers to table
+
         const evidenceRow = document.createElement('tr');
         const evidenceKeyCell = document.createElement('td');
         evidenceKeyCell.classList.add('key');
@@ -1239,6 +1256,7 @@ async function preparePTMDetails(localizedSequence, localizedSequenceInfo, ptmsD
 async function displayPTMDetails(event) {
     // Retrieve PTM information from the clicked highlighted span
     const ptmsData = JSON.parse(event.target.getAttribute("data-all-ptms"));
+    const upid = event.target.getAttribute('data-upid');
 
     // Get the parent sequence block of the clicked highlighted text
     const clickedSpan = event.target;
@@ -1321,20 +1339,21 @@ async function displayPTMDetails(event) {
     localizedSequence = localizedSequence.replace('>', '')
     localizedSequence = localizedSequence.slice(0, 21)
 
-    preparePTMDetails(localizedSequence, localizedSequenceInfo, ptmsData);
-    initializePTMClickListenersForPTMSequence();
+    preparePTMDetails(localizedSequence, localizedSequenceInfo, ptmsData, upid);
+    initializePTMClickListenersForPTMSequence(upid);
 }
 
 // Function to initialize the sequence blocks and attach event listeners
-function initializePTMClickListenersForProteinSequence() {
+function initializePTMClickListenersForProteinSequence(upid) {
     // Attach event listeners for the highlighted spans (to display PTM info)
     const highlightedSpans = document.querySelectorAll('.highlighted');
     highlightedSpans.forEach(span => {
+        span.setAttribute('data-upid', upid);
         span.addEventListener('click', displayPTMDetails);
     });
 }
 
-function initializePTMClickListenersForPTMSequence() {
+function initializePTMClickListenersForPTMSequence(upid) {
     const localSpans = document.querySelector('.localized-sequence').querySelectorAll('span');
     document.querySelectorAll('.custom-tooltip').forEach(function(tooltip) {
         tooltip.remove();  // This removes the tooltip element from the DOM
@@ -1389,21 +1408,16 @@ function initializePTMClickListenersForPTMSequence() {
                     );
                 })
 
-                preparePTMDetails(localizedSequence, localizedSequenceInfo, ptmsData);
-                initializePTMClickListenersForPTMSequence()
+                preparePTMDetails(localizedSequence, localizedSequenceInfo, ptmsData, upid);
+                initializePTMClickListenersForPTMSequence(upid)
             });
         }
     });
 }
 
 // Function to display the protein sequence with color-coded PTM highlights
-function displayProteinSequence(sequence, modificationData, additionalUniprotInfo, lastUpdate, acc, upstreamProteins) {
+function displayProteinSequence(sequence, modificationData, additionalUniprotInfo, lastUpdate, acc, upstreamProteins, upid) {
     // Display additional information about the protein sequence
-    // KEYS
-            // "length": 568,
-            // "molWeight": 63351,
-            // "crc64": "0A020B7FB34132F9",
-            // "md5": "BA05ABF472C72920B0D36DB229B3D33B"
     document.getElementById('uniprotSequence').innerHTML = '';
 
     // Create the table for displaying the key-value pairs
@@ -1702,7 +1716,7 @@ function displayProteinSequence(sequence, modificationData, additionalUniprotInf
     });
 
     // After blocks are created, initialize the click event listeners
-    initializePTMClickListenersForProteinSequence();
+    initializePTMClickListenersForProteinSequence(upid);
 }
 
 
@@ -1917,47 +1931,6 @@ function generatePTMHtmlTable() {
     HELPERS for PDB Structures PTM filtering
 */
 
-function buildPtmMaps(ptms) {
-    const resiToTypes = new Map(); // position -> Set(types)
-    const typeToResis = new Map(); // type -> Set(positions)
-
-    (ptms || []).forEach(ptm => {
-        const pos = ptm[0];
-        const type = ptm[1];
-        if (pos == null || !type) return;
-
-        if (!resiToTypes.has(pos)) resiToTypes.set(pos, new Set());
-        resiToTypes.get(pos).add(type);
-
-        if (!typeToResis.has(type)) typeToResis.set(type, new Set());
-        typeToResis.get(type).add(pos);
-    });
-
-    return { resiToTypes, typeToResis };
-}
-
-// Creates/returns a dropdown next to an existing button (single-select)
-function ensurePtmDropdown(buttonId, dropdownId) {
-    const btn = document.getElementById(buttonId);
-    if (!btn) return null;
-
-    let sel = document.getElementById(dropdownId);
-    if (sel) return sel;
-
-    sel = document.createElement('select');
-    sel.id = dropdownId;
-    sel.className = btn.className;       // reuse your styling
-    sel.style.marginLeft = '8px';
-    sel.style.display = 'none';
-
-    // Default options
-    sel.appendChild(new Option('PTMs: None', '__none__'));
-    sel.appendChild(new Option('PTMs: All', '__all__'));
-
-    btn.insertAdjacentElement('afterend', sel);
-    return sel;
-}
-
 function setupPtmFilterForViewer({
     viewer,
     selectId,
@@ -2010,8 +1983,7 @@ function setupPtmFilterForViewer({
         if (allTypesHere.length >= 2 && selectedType==="all") return "#000000";
 
         // otherwise use the single PTM's color mapping
-        const only = allTypesHere[0];
-        console.log(only);
+        const only = selectedType;
         return (typeof ptmColorMapping !== "undefined" && ptmColorMapping[only])
             ? ptmColorMapping[only]
             : "#666666";
@@ -2052,7 +2024,7 @@ function setupPtmFilterForViewer({
                 {
                     position: atom,
                     backgroundColor: bg,
-                    backgroundOpacity: 1.0,
+                    backgroundOpacity: 0.9,
                     fontColor: font,
                     fontSize: 12
                 }
@@ -2156,50 +2128,6 @@ async function displayPDBStructures(uniprotAC, alphafoldPdbData, ptms) {
             callback: (e) => {
                 afPdbViewer = e;
                 e.addModel(alphafoldPdbData, 'pdb', { vibrate: true });
-
-                // show/hide indices
-                // let idxLabels = []
-                // document.getElementById('afShowIndices').addEventListener('click', () => {
-                //     if (document.getElementById('afShowIndices').getAttribute('data-showing') === 'false') {
-                //         // create indices labels
-                //         var residues = {};
-                //         const atoms = e.getAtomsFromSel({});
-                //         atoms.forEach(function(atom) {
-                //             if (!residues[atom.resi]) {
-                //                 if (atom.atom === 'CA') {
-                //                     residues[atom.resi] = atom;
-                //                 }
-                //             }
-                //         });
-                //         residues = Object.values(residues);
-                        
-                //         residues.forEach(res => {
-                //             idxLabels.push(
-                //                 e.addLabel(
-                //                     res.resi,
-                //                     {
-                //                         position: res,
-                //                         showBackground: false,
-                //                         fontColor: 'black',
-                //                         fontSize: 14,
-                //                         alignment: 'center',
-                //                     },
-                //                     {resi: res.resi},
-                //                     true
-                //                 )
-                //             );
-                //         });
-                //         document.getElementById('afShowIndices').setAttribute('data-showing', 'true');
-                //     } else {
-                //         // just delete all indices labels using the stored information
-                //         idxLabels.forEach((idxLabel) => {
-                //             e.removeLabel(idxLabel);
-                //         });
-                //         idxLabels.splice(0, idxLabels.length);
-                //         document.getElementById('afShowIndices').setAttribute('data-showing', 'false');
-                //     }
-                //     e.render();
-                // });
                 e.setStyle( {}, { cartoon: { colorscheme: 'ssPyMol' } }); // Default style is 2
                 e.zoomTo();
                 document.getElementById('afPdbStructure').classList.remove('lds-dual-ring');
@@ -2562,6 +2490,15 @@ async function displayPDBStructures(uniprotAC, alphafoldPdbData, ptms) {
         });
 
         document.getElementById('pdbDropdownSelect').addEventListener('change', async function(event) {
+
+            if (currentRcsbPdbAbortController) {
+                currentRcsbPdbAbortController.abort();
+            }
+            currentRcsbPdbAbortController = new AbortController();
+            const signal = currentRcsbPdbAbortController.signal;
+
+            document.getElementById('rcsbHRef').innerHTML = `<h5>RCSB Verified Structure</h5>`;
+
             document.getElementById('rcsbPdbStructure').innerHTML = '';
             document.getElementById('rcsbProfile').style.display = 'none';
             document.getElementById('rcsbPdbStructure').classList.add('lds-dual-ring');
@@ -2569,10 +2506,12 @@ async function displayPDBStructures(uniprotAC, alphafoldPdbData, ptms) {
             const selectedValue = event.target.value;
             
             rcsbData = await fetch(
-                encodeURI(`https://files.rcsb.org/download/${selectedValue}.pdb`)
+                encodeURI(`https://files.rcsb.org/download/${selectedValue}.pdb`), { signal }
             ).then(async (res) => {
                 // Use this PDB data to display actual PDB structure.
+                if (signal.aborted) return;
                 res = await res.text();
+                if (signal.aborted) return;
                 const rcsbCalculations = await fetch('/ptmkb/structure_calculations', { // Use this later on
                     method: 'POST',
                     headers: {
@@ -2583,6 +2522,7 @@ async function displayPDBStructures(uniprotAC, alphafoldPdbData, ptms) {
                 }).then(async (res) => {
                     return await res.json();
                 });
+                if (signal.aborted) return;
 
                 const downloadButton = document.createElement('button');
                 downloadButton.setAttribute('id', 'afPdbDownload');
@@ -2749,7 +2689,7 @@ async function displayPDBStructures(uniprotAC, alphafoldPdbData, ptms) {
                 document.getElementById('rcsbProfile').style.display = 'block';
                 document.getElementById('rcsbHRef').innerHTML = `<a href="https://www.rcsb.org/structure/${selectedValue}" target="_blank">RCSB Verified Structure</a>`;
             }).catch(error => {
-                document.getElementById('rcsbHRef').innerHTML = `<h5>Internet connection error - try again!</h5>`;
+                document.getElementById('rcsbHRef').innerHTML = `<h5>RCSB Verified Structure</h5>`;
                 // // console.log(error);
             });
         });
@@ -3145,47 +3085,6 @@ function populateCheckboxesFromResult(data) {
     // filterCheckboxes();
 }
 
-// Function for getting the subsequence for vector calculation
-function sliceWithPadding(sequenceArray, index, length = 10) {
-    const totalLength = 2 * length + 1; // Total items including the index itself
-    let start = index - length;
-    let end = index + length + 1; // +1 to include the item at `index`
-
-    // Handle cases where the start or end is out of bounds
-    if (start < 0) {
-        const padding = new Array(-start).fill('-');
-        const slice = sequenceArray.slice(0, end);
-        return [...padding, ...slice];
-    } else if (end > sequenceArray.length) {
-        const slice = sequenceArray.slice(start);
-        const padding = new Array(end - sequenceArray.length).fill('-');
-        return [...slice, ...padding];
-    } else {
-        return sequenceArray.slice(start, end);
-    }
-}
-
-async function fetchOptions() {
-    const response = await fetch("/api/options");
-    const options = await response.json();
-
-    const select = document.getElementById("ptmSelect");
-
-    options.forEach(option => {
-        const opt = document.createElement("option");
-        opt.value = option;
-        opt.textContent = option;
-        select.appendChild(opt);
-    });
-}
-
-async function exampleSearch(element) {
-    document.getElementById('form_value').value = element.textContent;
-    if (document.getElementById('form_submit').disabled === false) {
-        search();
-    }
-}
-
 let activeSearchRun = 0;
 
 async function search() {
@@ -3207,15 +3106,12 @@ async function search() {
         document.getElementById('afProfile').style.display = 'none';
         document.getElementById('rcsbProfile').style.display = 'none';
         document.getElementById('proteinStatisticsContainer').style.display = 'none';
-        // document.getElementById('protein3DStructure').innerHTML = '';
-        // document.getElementById('protein3DStructureInfo').innerHTML = '';
         document.getElementById('proteinInfoContainer').style.display = 'none';
         try {document.getElementById('ptmTableSummary').remove();} catch(e) {} // Special case
         document.getElementById('pdbMajor').style.display = 'none';
         document.getElementById('jpredMajor').style.display = 'none';
         document.getElementById('jpredPredictions').innerHTML = '';
         document.getElementById('jpredInfo').innerHTML = '<h5>Predicting, please wait!</h5><br><h5>(This can take minutes depending on the sequence and job queues)</h5>';
-        // document.getElementById('ptmSearch').style.display = 'none';
         document.getElementById('giantCheckboxContainer').style.display = 'none';
         document.getElementById('form_submit').disabled = true;
         const table = document.getElementById('proteinInfo');
@@ -3298,16 +3194,6 @@ async function search() {
                                             return replacedText;
                                         }
                                     
-                                        // valueCell.innerHTML = convertPubMedReferences(value);
-
-                                        // function convertPubMedReferences(text) {
-                                        //     const pubMedRegex = /PubMed:(\d+)/g;
-                                        
-                                        //     return text.replace(pubMedRegex, (match, id) => {
-                                        //         const url = `https://www.ncbi.nlm.nih.gov/pubmed/?term=${id}`; // Construct the URL
-                                        //         return `<a href="${url}" target="_blank" rel="noopener noreferrer">${match}</a>`; // Create the link
-                                        //     });
-                                        // }
                                         valueCell.innerHTML = convertPubMedReferences(value);
                                     } else if (key === 'uniProtID' || key === 'uniProtAC') {
                                         valueCell.innerHTML = `<a href="https://www.uniprot.org/uniprotkb/${value}">${value}</a>`;
@@ -3341,7 +3227,8 @@ async function search() {
                                 json.proteinSequenceFull,
                                 json.lastUpdate,
                                 json.uniProtAC,
-                                json.upstreamProteins
+                                json.upstreamProteins,
+                                json.uniProtID
                             );
                             updateStats(updatedPtmData)
                             getJPredInference(json.proteinSequence, json.uniProtAC, updatedPtmData);

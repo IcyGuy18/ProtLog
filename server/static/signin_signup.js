@@ -198,7 +198,7 @@ async function signup() {
                             console.error(err);
                         });
                         if (response.registered)
-                            document.getElementById('errorMsg').textContent = "Successful! Please log in above.";
+                            document.getElementById('errorMsg').textContent = "Successful! Please log in below.";
                         else
                         document.getElementById('errorMsg').textContent = "Error - please try signing up later!";
                     }

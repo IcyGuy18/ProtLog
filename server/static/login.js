@@ -6,7 +6,6 @@ async function checkForLogin() {
         const tabs = document.getElementById('navBar').querySelector('.navbar-items');
         tabs.appendChild(loginTab);
     }
-    console.log(user);
     if (user !== null) { // That means user is already logged in.
         // Append some new tabs with some functionality.
         const username = JSON.parse(user).username;

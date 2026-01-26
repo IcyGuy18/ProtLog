@@ -72,10 +72,28 @@ var tables = null;
 
 document.addEventListener("DOMContentLoaded", async () => {
     document.getElementById('messageDiv').innerHTML = "<h5>Loading tables, please wait...</h5>";
-    tables = await fetch('/ptmkb/all_ptms_tables').then(res => res.json());
-    suggestions = Array.from(Object.keys(tables));
-    document.getElementById('messageDiv').innerHTML = "";
-    document.getElementById('form_submit').disabled = false;
+    try {
+        const resp = await fetch('/ptmkb/all_ptms_tables');
+
+        if (!resp.ok) {
+            throw new Error(`all_ptms_tables failed: HTTP ${resp.status}`);
+        }
+
+        tables = await resp.json();
+        suggestions = Array.from(Object.keys(tables || {}));
+
+        document.getElementById('messageDiv').innerHTML = '';
+    } catch (err) {
+        tables = {};
+        suggestions = [];
+        document.getElementById('messageDiv').innerHTML = "<h5>Failed to load PTM tables. Please refresh or try again later.</h5>";
+    } finally {
+        document.getElementById('form_submit').disabled = false;
+    }
+    // tables = await fetch('/ptmkb/all_ptms_tables').then(res => res.json());
+    // suggestions = Array.from(Object.keys(tables));
+    // document.getElementById('messageDiv').innerHTML = "";
+    // document.getElementById('form_submit').disabled = false;
 
     // Set up an autocomplete function
     const input_elem = document.getElementById('sequence_value');
@@ -266,7 +284,7 @@ async function calculate() {
     const AA = "A C D E F G H I K L M N P Q R S T V W Y".split(' ');
     AA.push('-');
 
-    const subsequence = document.getElementById('sequence_value').textContent;
+    const subsequence = document.getElementById('sequence_value').textContent.trim();
     const ptm = document.getElementById('ptm_value').value;
 
     var validAA = new Boolean(true);
@@ -474,7 +492,7 @@ async function displayVector(data, subsequence) {
         if (dataPoint === '-inf')
             cell.style.backgroundColor = `rgba(0, 0, 255, 0.1)`;
 
-        if (index == 10)
+        if (index == Math.floor(vector.length / 2))
             cell.style.backgroundColor = '#F2C998';
         vectorBody.appendChild(cell);
     });
