@@ -287,7 +287,8 @@
         <div class="muted" style="margin-top: 6px;">
           Copy the token using the button above, then send it as a Bearer token in the Authorization header. Use the Python code below to simulate an example.
         </div>
-
+<div class="code-wrapper">
+  <button class="additional-button" onclick="copyCode(this)">Copy Code</button>
         <pre class="codebox"><code class="language-python"># 1) Install:
 #    pip install requests
 #
@@ -309,6 +310,15 @@ else:
     print(resp.text)
  </code>
 </pre>
+</div>
+<script>
+function copyCode(btn) {
+  const code = btn.nextElementSibling.innerText;
+  navigator.clipboard.writeText(code);
+  btn.innerText = "Copied!";
+  setTimeout(() => btn.innerText = "Copy", 1500);
+}
+</script>
         <div class="muted" style="margin-top: 6px;">
           With your token, navigate to the <a href="/integration">Integration</a> tab and download the script to get started.
         </div>
@@ -343,11 +353,6 @@ else:
       </div>
 
       <div id="historyAccordion" class="history-accordion"></div>
-
-      <div class="muted" style="margin-top: 10px;">
-        Tip: history items can be rendered as collapsible entries (closed by default) using your existing
-        <span class="mono">.accordion</span> / <span class="mono">.panel</span> styles in <span class="mono">styles.css</span>.
-      </div>
     </div>
 
     <div id="toastish">Copied!</div>

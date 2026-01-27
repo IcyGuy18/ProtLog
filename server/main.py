@@ -54,7 +54,7 @@ def sign_jwt(user_id: str) -> dict[str, str]:
     payload = {
         '_id_': random.randint(1, 10000000000),
         "username": user_id,
-        "expires": time.time() + 432000 # Valid for 5 days
+        "expires": time.time() + (30 * 24 * 60 * 60) # Valid for 30 days
     }
     token = jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
 
@@ -917,45 +917,11 @@ def download_all_tables():
     )
 
 @app.get("/ptmkb/download-dataset")
-async def download_dataset_csv():
-    async def gen():
-        def default(o):
-            if isinstance(o, datetime):
-                return o.isoformat()
-            if isinstance(o, ObjectId):
-                return str(o)
-            return str(o)
-
-        # yield header immediately (so the request starts streaming right away)
-        sio = io.StringIO(newline="")
-        w = csv.writer(sio)
-        w.writerow(["collection", "document_json"])
-        yield sio.getvalue().encode("utf-8")
-        sio.close()
-
-        batch_rows = 0
-        sio = io.StringIO(newline="")
-        w = csv.writer(sio)
-
-        async for doc in PTM.find({}, {'_id': 0}):
-            doc_json = orjson.dumps(doc, default=default).decode("utf-8")
-            w.writerow(["proteins", doc_json])
-
-            batch_rows += 1
-            if batch_rows >= 500:
-                yield sio.getvalue().encode("utf-8")
-                sio.seek(0)
-                sio.truncate(0)
-                batch_rows = 0
-
-        if batch_rows:
-            yield sio.getvalue().encode("utf-8")
-        sio.close()
-
-    return StreamingResponse(
-        gen(),
-        media_type="text/csv; charset=utf-8",
-        headers={"Content-Disposition": 'attachment; filename="ptmkb_dataset.csv"'},
+def download_dataset():
+    return FileResponse(
+        path='ptmkb_dataset.zip',
+        media_type='application/zip',
+        filename='ptmkb_dataset.zip'
     )
 
 ######## API CALLS ########

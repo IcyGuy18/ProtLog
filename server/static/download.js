@@ -320,7 +320,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     setDisabled("aaSelect", false);
 
-    el("tableSelect").innerHTML = "";
+    // el("tableSelect").innerHTML = "";
     ensurePlaceholder(el("tableSelect"), "Select table type");
     setDisabled("tableSelect", true);
 
