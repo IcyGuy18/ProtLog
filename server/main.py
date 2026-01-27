@@ -22,6 +22,7 @@ import zipfile
 from datetime import datetime
 from bson import ObjectId
 import csv
+import asyncio
 
 from mongo_users import (
     set_token, user_exists, create_user, get_access_token, validate_password,
@@ -410,10 +411,10 @@ def integration_page(request: Request):
 
 @app.get('/ptmkb/protein_autofill', include_in_schema=False)
 async def search(_id: str, request: Request):
-    user_agent = request.headers.get('user-agent', '')
+    # user_agent = request.headers.get('user-agent', '')
 
-    if not is_browser(user_agent):
-        raise HTTPException(status_code=403, detail="Access restricted to browsers only")
+    # if not is_browser(user_agent):
+    #     raise HTTPException(status_code=403, detail="Access restricted to browsers only")
     
     # Probably best to insert elements in a database
     ids = await fetch_identifiers(_id)
@@ -431,10 +432,10 @@ with open('./templates/protein.html', 'r', encoding='utf-8') as f:
 
 @app.post('/ptmkb/search_result', include_in_schema=False)
 async def search(request: Request):
-    user_agent = request.headers.get('user-agent', '')
+    # user_agent = request.headers.get('user-agent', '')
 
-    if not is_browser(user_agent):
-        raise HTTPException(status_code=403, detail="Access restricted to browsers only")
+    # if not is_browser(user_agent):
+    #     raise HTTPException(status_code=403, detail="Access restricted to browsers only")
     
     data = await request.json()
     data['id'] = data['id'].strip()
@@ -590,10 +591,10 @@ def save_data(df: pd.DataFrame, format: str) -> bytes:
 
 @app.post('/ptmkb/download', include_in_schema=False)
 def download(request: Request, data: dict = Body(...)):
-    user_agent = request.headers.get('user-agent', '')
+    # user_agent = request.headers.get('user-agent', '')
 
-    if not is_browser(user_agent):
-        raise HTTPException(status_code=403, detail="Access restricted to browsers only")
+    # if not is_browser(user_agent):
+    #     raise HTTPException(status_code=403, detail="Access restricted to browsers only")
     
     # data: dict = request.json()
 
@@ -628,10 +629,10 @@ def download(request: Request, data: dict = Body(...)):
 # This function is a separate call
 @app.post('/ptmkb/get_protein_log', include_in_schema=False)
 async def get_log_value(request: Request):
-    user_agent = request.headers.get('user-agent', '')
+    # user_agent = request.headers.get('user-agent', '')
 
-    if not is_browser(user_agent):
-        raise HTTPException(status_code=403, detail="Access restricted to browsers only")
+    # if not is_browser(user_agent):
+    #     raise HTTPException(status_code=403, detail="Access restricted to browsers only")
     
     data: dict = await request.json()
     data = dict(sorted(data.items(), key=lambda item: int(item[0])))
@@ -671,35 +672,34 @@ async def get_amino_acids(request: Request, ptm: str):
 
 @app.get('/ptmkb/getPTM', include_in_schema=False)
 async def get_ptm_details(request: Request, resid: str = None, ptm: str = None, aa: str = None):
-    user_agent = request.headers.get('user-agent', '')
+    # user_agent = request.headers.get('user-agent', '')
 
-    if not is_browser(user_agent):
-        raise HTTPException(status_code=403, detail="Access restricted to browsers only")
-    
-    # Check whether RESID ID or both PTM and Residue are given.
-    # Both will be handled differently.
+    # if not is_browser(user_agent):
+    #     raise HTTPException(status_code=403, detail="Access restricted to browsers only")
+
     entry = None
     if resid:
         resid = resid.upper()
         entry = [entry for entry in RESID_DATABASE if entry['@id'] == resid]
-        # If caught entry,
         if entry:
             _id = entry[0]['@id']
-            # going to send image and model files as raw data.
-            with open(
-                f"./data/resid/images/{_id}.GIF", 'rb'
-            ) as f:
-                entry[0]['Image'] = {}
-                entry[0]['Image']['Data'] = f.read().decode('latin-1')
-                entry[0]['Image']['Encoding'] = 'latin-1'
-                entry[0]['Image']['FileType'] = '.GIF'
-            with open(
-                f"./data/resid/models/{_id}.PDB", 'rb'
-            ) as f:
-                entry[0]['Model'] = {}
-                entry[0]['Model']['Data'] = f.read().decode()
-                entry[0]['Model']['Encoding'] = 'utf-8'
-                entry[0]['Model']['FileType'] = '.PDB'
+
+            async def _read_bytes(path, mode='rb'):
+                return await asyncio.to_thread(lambda: open(path, mode).read())
+
+            img_bytes = await _read_bytes(f"./data/resid/images/{_id}.GIF", 'rb')
+            pdb_bytes = await _read_bytes(f"./data/resid/models/{_id}.PDB", 'rb')
+
+            entry[0]['Image'] = {
+                "Data": img_bytes.decode('latin-1'),
+                "Encoding": "latin-1",
+                "FileType": ".GIF"
+            }
+            entry[0]['Model'] = {
+                "Data": pdb_bytes.decode(),
+                "Encoding": "utf-8",
+                "FileType": ".PDB"
+            }
 
     elif (ptm and aa):
         aa = aa.upper()
@@ -717,27 +717,29 @@ async def get_ptm_details(request: Request, resid: str = None, ptm: str = None, 
             )
         ]
         if entry:
+            async def _read_bytes(path, mode='rb'):
+                return await asyncio.to_thread(lambda: open(path, mode).read())
+
             for i in range(len(entry)):
                 _id = entry[i]['@id']
-                # going to send image and model files as raw data.
-                with open(
-                    f"./data/resid/images/{_id}.GIF", 'rb'
-                ) as f:
-                    entry[i]['Image'] = {}
-                    entry[i]['Image']['Data'] = f.read().decode('latin-1')
-                    entry[i]['Image']['Encoding'] = 'latin-1'
-                    entry[i]['Image']['FileType'] = '.GIF'
-                with open(
-                    f"./data/resid/models/{_id}.PDB", 'rb'
-                ) as f:
-                    entry[i]['Model'] = {}
-                    entry[i]['Model']['Data'] = f.read().decode()
-                    entry[i]['Model']['Encoding'] = 'utf-8'
-                    entry[i]['Model']['FileType'] = '.PDB'
+                img_bytes = await _read_bytes(f"./data/resid/images/{_id}.GIF", 'rb')
+                pdb_bytes = await _read_bytes(f"./data/resid/models/{_id}.PDB", 'rb')
+
+                entry[i]['Image'] = {
+                    "Data": img_bytes.decode('latin-1'),
+                    "Encoding": "latin-1",
+                    "FileType": ".GIF"
+                }
+                entry[i]['Model'] = {
+                    "Data": pdb_bytes.decode(),
+                    "Encoding": "utf-8",
+                    "FileType": ".PDB"
+                }
     else:
         return ORJSONResponse({'message': "Please enter either a RESID ID or a PTM name along with a residue!"})
 
     return ORJSONResponse({'response': entry})
+ 
 
 
 ######## Non-API CALLS ########
@@ -769,10 +771,10 @@ async def get_ptms(request: Request):
 
 @app.get('/ptmkb/all_ptms_tables', include_in_schema=False)
 def get_all_ptms_tables(request: Request):
-    user_agent = request.headers.get('user-agent', '')
+    # user_agent = request.headers.get('user-agent', '')
 
-    if not is_browser(user_agent):
-        raise HTTPException(status_code=403, detail="Access restricted to browsers only")
+    # if not is_browser(user_agent):
+    #     raise HTTPException(status_code=403, detail="Access restricted to browsers only")
     
     return ORJSONResponse(PTM_TABLES)
 
@@ -783,10 +785,10 @@ def get_matrix(
     residue: str = Query(''),
     table: str = Query('log-e')
 ):
-    user_agent = request.headers.get('user-agent', '')
+    # user_agent = request.headers.get('user-agent', '')
 
-    if not is_browser(user_agent):
-        raise HTTPException(status_code=403, detail="Access restricted to browsers only")
+    # if not is_browser(user_agent):
+    #     raise HTTPException(status_code=403, detail="Access restricted to browsers only")
     
     residue = residue.upper()
     if not ptm:
@@ -814,10 +816,10 @@ async def calculate_propensity(
     ptm: str = Query(''),
     subsequence: str = Query('')
 ) -> dict:
-    user_agent = request.headers.get('user-agent', '')
+    # user_agent = request.headers.get('user-agent', '')
 
-    if not is_browser(user_agent):
-        raise HTTPException(status_code=403, detail="Access restricted to browsers only")
+    # if not is_browser(user_agent):
+    #     raise HTTPException(status_code=403, detail="Access restricted to browsers only")
     
     if ptm == '' and subsequence == '':
         return {
@@ -1056,44 +1058,37 @@ async def download_dataset_csv():
         }
     }
 })
-def get_post_translational_modification_details(
+async def get_post_translational_modification_details(
     request: Request,
-    token_data: dict = Depends(JWTBearer()),
     resid: str = Query('', description='The RESID Database ID to use.', example='AA0039')
 ):
-    """
-    Get information on a Post-Translational Modification using RESID ID.
-
-    **Returns:**
-    - Detailed information on a Post-Translational Modification. (type: *JSON*)
-    """
-
-    # Let's do some input validation first.
-    resid = resid.upper().strip() # And that's about it.
+    resid = resid.upper().strip()
 
     entry = [i for i in RESID_DATABASE if i.get('@id', '') == resid]
+    if not entry:
+        return {'message': 'Please provide a valid RESID Database ID.'}
 
-    # We also have to include raw bytes of PDB and image
+    async def _read_bytes(path, mode='rb'):
+        return await asyncio.to_thread(lambda: open(path, mode).read())
+
     for i in range(len(entry)):
         _id = entry[i]["@id"]
-        with open(
-            f"./data/resid/images/{_id}.GIF", 'rb'
-        ) as f1, open(
-            f"./data/resid/models/{_id}.PDB", 'rb'
-        ) as f2:
-            entry[i]['Image'] = {
-                "Data": f1.read().decode('latin-1'),
-                "Encoding": "latin-1",
-                "FileType": ".GIF"
-            }
-            entry[i]['Model'] = {
-                "Data": f2.read().decode(),
-                "Encoding": "utf-8",
-                "FileType": ".PDB"
-            }
-    if entry:
-        return ORJSONResponse({resid: entry[0]})
-    return ORJSONResponse({'message': 'Please provide a valid RESID Database ID.'})
+        img_bytes = await _read_bytes(f"./data/resid/images/{_id}.GIF", 'rb')
+        pdb_bytes = await _read_bytes(f"./data/resid/models/{_id}.PDB", 'rb')
+
+        entry[i]['Image'] = {
+            "Data": img_bytes.decode('latin-1'),
+            "Encoding": "latin-1",
+            "FileType": ".GIF"
+        }
+        entry[i]['Model'] = {
+            "Data": pdb_bytes.decode(),
+            "Encoding": "utf-8",
+            "FileType": ".PDB"
+        }
+
+    return ORJSONResponse({resid: entry[0]})
+ 
 
 
 @app.get("/ptmkb/api/get-protein-details", responses={
