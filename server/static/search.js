@@ -119,6 +119,274 @@ function getSubstringVector(substring) {
     return vector;
 }
 
+// Additional helper for PTM Score listing
+
+function getSitePTMScores(sequence, position, ptm) {
+    if (!tables || !tables[ptm]) return null;
+
+    const residue = sequence[position - 1];
+    if (!residue || tables[ptm][residue] === undefined) return null;
+
+    const relativeIndex = [];
+    for (let i = -10; i <= 10; i++) {
+        relativeIndex.push(i <= 0 ? i.toString() : `+${i}`);
+    }
+
+    const subsequence = getSubstring(sequence, position - 1);
+    const vector = getSubstringVector(subsequence);
+    const table = tables[ptm][residue]['log-e'];
+    const currScores = [];
+
+    vector.forEach((elem, relIdx) => {
+        if (elem === '-inf') {
+            currScores.push(elem);
+        } else {
+            try {
+                currScores.push(table[relativeIndex[relIdx]][subsequence[relIdx]]);
+            } catch (e) {
+                currScores.push('-inf');
+            }
+        }
+    });
+
+    let logSum = additiveCalculator(currScores);
+    let logLogProduct = multiplicativeCalculator(currScores)['logLogProduct'];
+
+    return {
+        position: position,
+        residue: residue,
+        logSumValue: typeof (logSum) === "number" ? logSum : Number.NEGATIVE_INFINITY,
+        logLogProductValue: typeof (logLogProduct) === "number" ? logLogProduct : Number.NEGATIVE_INFINITY,
+        logSum: typeof (logSum) === "number" ? logSum.toFixed(2) : logSum,
+        logLogProduct: typeof (logLogProduct) === "number" ? logLogProduct.toFixed(2) : logLogProduct
+    };
+}
+
+function renderPTMScoreTabs(sequence, modificationData) {
+    const container = document.getElementById('ptmScoreTabsContainer');
+    container.innerHTML = '';
+    container.style.display = 'none';
+
+    if (!tables || !sequence || !modificationData || modificationData.length === 0) {
+        return;
+    }
+
+    const groupedScores = {};
+    const seen = new Set();
+
+    modificationData.forEach(mod => {
+        const position = mod[0];
+        const ptm = mod[1];
+        const dedupeKey = `${ptm}::${position}`;
+
+        if (seen.has(dedupeKey)) return;
+        seen.add(dedupeKey);
+
+        const scoreRow = getSitePTMScores(sequence, position, ptm);
+        if (!scoreRow) return;
+
+        if (!groupedScores[ptm]) groupedScores[ptm] = [];
+        groupedScores[ptm].push(scoreRow);
+    });
+
+    const ptmTypes = Object.keys(groupedScores).sort();
+    if (ptmTypes.length === 0) return;
+
+    const title = document.createElement('h4');
+    title.textContent = 'PTM Site Scores';
+    title.style.marginBottom = '15px';
+    title.style.textAlign = 'center';
+    container.appendChild(title);
+
+    const tabs = document.createElement('ul');
+    tabs.className = 'nav nav-tabs';
+    tabs.setAttribute('role', 'tablist');
+    tabs.style.textAlign = 'center';
+    tabs.style.maxWidth = '1280px';
+    tabs.style.margin = '0 auto';
+
+    const tabContent = document.createElement('div');
+    tabContent.className = 'tab-content';
+
+    ptmTypes.forEach((ptm, idx) => {
+        const safeId = `ptm-score-tab-${idx}`;
+        const ptmColor = ptmColorMapping[ptm] || '#007bff';
+
+        const navItem = document.createElement('li');
+        navItem.className = 'nav-item';
+        navItem.setAttribute('role', 'presentation');
+
+        const navLink = document.createElement('button');
+        navLink.className = `nav-link${idx === 0 ? ' active' : ''}`;
+        navLink.id = `${safeId}-tab`;
+        navLink.setAttribute('data-bs-toggle', 'tab');
+        navLink.setAttribute('data-bs-target', `#${safeId}`);
+        navLink.setAttribute('type', 'button');
+        navLink.setAttribute('role', 'tab');
+        navLink.setAttribute('aria-controls', safeId);
+        navLink.setAttribute('aria-selected', idx === 0 ? 'true' : 'false');
+        navLink.textContent = ptm;
+
+        navLink.style.fontWeight = 'bold';
+        navLink.style.border = '1px solid #333';
+        navLink.style.marginRight = '6px';
+        navLink.style.marginBottom = '4px';
+        navLink.style.backgroundColor = idx === 0 ? ptmColor : '#d3d3d3';
+        navLink.style.color = idx === 0 ? '#ffffff' : '#000000';
+
+        navLink.addEventListener('shown.bs.tab', function () {
+            tabs.querySelectorAll('.nav-link').forEach(btn => {
+                const btnPtm = btn.textContent;
+                const btnColor = ptmColorMapping[btnPtm] || '#007bff';
+
+                if (btn.classList.contains('active')) {
+                    btn.style.backgroundColor = btnColor;
+                    btn.style.color = '#ffffff';
+                    btn.style.border = '1px solid #333';
+                } else {
+                    btn.style.backgroundColor = '#d3d3d3';
+                    btn.style.color = '#000000';
+                    btn.style.border = '1px solid #333';
+                }
+            });
+        });
+
+        navItem.appendChild(navLink);
+        tabs.appendChild(navItem);
+
+        const pane = document.createElement('div');
+        pane.className = `tab-pane fade${idx === 0 ? ' show active' : ''}`;
+        pane.id = safeId;
+        pane.setAttribute('role', 'tabpanel');
+        pane.setAttribute('aria-labelledby', `${safeId}-tab`);
+        pane.style.width = '100%';
+        pane.style.overflowX = 'hidden';
+
+        const tableWrapper = document.createElement('div');
+        tableWrapper.className = 'protein-info-container';
+        tableWrapper.style.width = '100%';
+        tableWrapper.style.maxWidth = '100%';
+        tableWrapper.style.overflowX = 'hidden';
+        tableWrapper.style.boxSizing = 'border-box';
+
+        const table = document.createElement('table');
+        table.className = 'table';
+        table.style.width = '100%';
+        table.style.tableLayout = 'fixed';
+        table.style.marginBottom = '0';
+
+        const thead = document.createElement('thead');
+        const headerRow = document.createElement('tr');
+
+        const thPosition = document.createElement('th');
+        thPosition.textContent = 'Position';
+
+        const thResidue = document.createElement('th');
+        thResidue.textContent = 'Residue';
+
+        const thLogSum = document.createElement('th');
+        thLogSum.textContent = 'LOGSUM';
+        thLogSum.style.cursor = 'pointer';
+
+        const thLogLogProduct = document.createElement('th');
+        thLogLogProduct.textContent = 'LOG LOG PRODUCT';
+        thLogLogProduct.style.cursor = 'pointer';
+
+        headerRow.appendChild(thPosition);
+        headerRow.appendChild(thResidue);
+        headerRow.appendChild(thLogSum);
+        headerRow.appendChild(thLogLogProduct);
+        thead.appendChild(headerRow);
+
+        [thPosition, thResidue, thLogSum, thLogLogProduct].forEach(th => {
+            th.style.backgroundColor = '#f7f7f7';
+            th.style.background = '#f7f7f7';
+        })
+
+        const tbody = document.createElement('tbody');
+
+        const rows = [...groupedScores[ptm]];
+        let sortColumn = 'logSumValue';
+        let sortDirection = 'desc';
+
+        function updateHeaderLabels() {
+            thLogSum.textContent = sortColumn === 'logSumValue'
+                ? `LOGSUM ${sortDirection === 'desc' ? '▼' : '▲'}`
+                : 'LOGSUM';
+
+            thLogLogProduct.textContent = sortColumn === 'logLogProductValue'
+                ? `LOG LOG PRODUCT ${sortDirection === 'desc' ? '▼' : '▲'}`
+                : 'LOG LOG PRODUCT';
+        }
+
+        function sortRows() {
+            rows.sort((a, b) => {
+                const primary = sortDirection === 'desc'
+                    ? (b[sortColumn] - a[sortColumn])
+                    : (a[sortColumn] - b[sortColumn]);
+
+                if (primary !== 0) return primary;
+                return a.position - b.position;
+            });
+        }
+
+        function renderBody() {
+            tbody.innerHTML = '';
+
+            rows.forEach(row => {
+                const tr = document.createElement('tr');
+                tr.style.backgroundColor = '#eaf4ff';
+
+                tr.innerHTML = `
+        <td style="word-wrap: break-word; overflow-wrap: break-word;">${row.position}</td>
+        <td style="word-wrap: break-word; overflow-wrap: break-word;">${row.residue}</td>
+        <td style="word-wrap: break-word; overflow-wrap: break-word;">${row.logSum}</td>
+        <td style="word-wrap: break-word; overflow-wrap: break-word;">${row.logLogProduct}</td>
+    `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        thLogSum.addEventListener('click', function () {
+            if (sortColumn === 'logSumValue') {
+                sortDirection = sortDirection === 'desc' ? 'asc' : 'desc';
+            } else {
+                sortColumn = 'logSumValue';
+                sortDirection = 'desc';
+            }
+            sortRows();
+            updateHeaderLabels();
+            renderBody();
+        });
+
+        thLogLogProduct.addEventListener('click', function () {
+            if (sortColumn === 'logLogProductValue') {
+                sortDirection = sortDirection === 'desc' ? 'asc' : 'desc';
+            } else {
+                sortColumn = 'logLogProductValue';
+                sortDirection = 'desc';
+            }
+            sortRows();
+            updateHeaderLabels();
+            renderBody();
+        });
+
+        sortRows();
+        updateHeaderLabels();
+        renderBody();
+
+        table.appendChild(thead);
+        table.appendChild(tbody);
+        tableWrapper.appendChild(table);
+        pane.appendChild(tableWrapper);
+        tabContent.appendChild(pane);
+    });
+
+    container.appendChild(tabs);
+    container.appendChild(tabContent);
+    container.style.display = 'block';
+}
+
 // Back to the other code
 
 const ptmColorMapping = {
@@ -208,45 +476,45 @@ async function exampleSearch(element) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  // Close suggestions when clicking outside
-  $(document).on("click", function (event) {
-    if (!$(event.target).closest(".input-group").length) {
-      $("#suggestions").hide();
-    }
-  });
-
-  // Enter key triggers search (when enabled)
-  $("#form_value").on("keydown", function (event) {
-    if (document.getElementById("form_submit")?.disabled) return;
-    if (event.key === "Enter") search();
-  });
-
-  // ✅ Run URL-based auto-search FIRST (no awaits)
-  try {
-    const urlParams = new URLSearchParams(window.location.search);
-    const searchId = urlParams.get("searchId");
-    if (searchId) {
-      console.log("Started searching");
-      const fv = document.getElementById("form_value");
-      if (fv) fv.value = searchId;
-      search(); // kick off immediately
-    }
-  } catch (e) {
-    // don’t block page load if URL parsing fails
-  }
-
-  // ✅ Load heavy PTM tables in the background (do NOT block auto-search)
-  fetch("/ptmkb/all_ptms_tables", { headers: { Accept: "application/json" } })
-    .then((r) => r.json())
-    .then((json) => {
-      tables = json; // keep your existing global variable
-    })
-    .catch(() => {
-      // optional: show a small warning somewhere if tables are required for UI
-      // toast("PTM tables failed to load (filters may be limited).");
+    // Close suggestions when clicking outside
+    $(document).on("click", function (event) {
+        if (!$(event.target).closest(".input-group").length) {
+            $("#suggestions").hide();
+        }
     });
+
+    // Enter key triggers search (when enabled)
+    $("#form_value").on("keydown", function (event) {
+        if (document.getElementById("form_submit")?.disabled) return;
+        if (event.key === "Enter") search();
+    });
+
+    // ✅ Run URL-based auto-search FIRST (no awaits)
+    try {
+        const urlParams = new URLSearchParams(window.location.search);
+        const searchId = urlParams.get("searchId");
+        if (searchId) {
+            console.log("Started searching");
+            const fv = document.getElementById("form_value");
+            if (fv) fv.value = searchId;
+            search(); // kick off immediately
+        }
+    } catch (e) {
+        // don’t block page load if URL parsing fails
+    }
+
+    // ✅ Load heavy PTM tables in the background (do NOT block auto-search)
+    fetch("/ptmkb/all_ptms_tables", { headers: { Accept: "application/json" } })
+        .then((r) => r.json())
+        .then((json) => {
+            tables = json; // keep your existing global variable
+        })
+        .catch(() => {
+            // optional: show a small warning somewhere if tables are required for UI
+            // toast("PTM tables failed to load (filters may be limited).");
+        });
 });
- 
+
 
 // Split the sequence like it is done in UniProt
 function splitSequence(sequence) {
@@ -274,13 +542,13 @@ async function getJPredInference(seq, acc, ptms) {
     document.getElementById('jpredPredictions').classList.add('lds-dual-ring');
     document.getElementById('jpredPredictions').style.alignContent = 'center';
 
-    fetch('/ptmkb/unrel/submitJpred',  {
+    fetch('/ptmkb/unrel/submitJpred', {
         method: "POST",
         headers: {
             "Accept": "application/json",
             "Content-Type": "application/json"
         },
-        body: JSON.stringify({ "sequence": seq  })
+        body: JSON.stringify({ "sequence": seq })
     }).then(res => {
         return res.json();
     }).then(obj => {
@@ -322,7 +590,7 @@ async function submitJob(jobid, acc, ptms) {
 
             // Make the fetch request with the signal to support aborting
             const resultResponseRaw = await fetch(`/ptmkb/unrel/getJpred?jobid=${jobid}`, { signal });
-            
+
             // If the request is aborted, throw an error and break out of the loop
             if (resultResponseRaw.status === 0) {
                 break;
@@ -353,7 +621,7 @@ function formatJpredResponse(response, acc, ptms) {
     // Parse the response as HTML
     let parser = new DOMParser();
     let parsedHtml = parser.parseFromString(response, 'text/html');
-    
+
     // Find the content inside the <code> tag
     let codeChunk = parsedHtml.querySelector('code').textContent;
 
@@ -365,7 +633,7 @@ function formatJpredResponse(response, acc, ptms) {
     lines.forEach(line => {
         if (line.trim() !== '') {
             let [key, value] = line.split(':').map(part => part.trim());
-            
+
             // Check if the key contains 'UniRef' or 'QUERY' for alignment
             if (key.includes('UniRef') || key.includes('QUERY')) {
                 formattedResponse.alignment[key] = value;
@@ -457,11 +725,11 @@ function generateHtmlForJPred(data, acc, ptms) {
             data.alignment[key].split('').forEach((char, idx) => {
                 const span = document.createElement('span');
                 span.textContent = char;
-                if (indices.includes(idx+1)) {
+                if (indices.includes(idx + 1)) {
                     span.classList.add('highlighted');
                     let uniquePtms = new Set();
                     ptms.forEach(ptm => {
-                        if (ptm[0] === idx+1) {
+                        if (ptm[0] === idx + 1) {
                             uniquePtms.add(ptm[1]);
                         }
                     });
@@ -471,7 +739,7 @@ function generateHtmlForJPred(data, acc, ptms) {
                     if (uniquePtms.length > 1) {
                         // Dynamically calculate the percentage for each color block based on the number of colors
                         const percentagePerColor = 100 / ptmColors.length;
-                        
+
                         // Create the gradient by mapping over ptmColors
                         const gradient = ptmColors
                             .map((color, idx) => {
@@ -480,7 +748,7 @@ function generateHtmlForJPred(data, acc, ptms) {
                                 return `${color} ${startPercentage}% ${endPercentage}%`; // Define the color block from start to end
                             })
                             .join(', ');
-                    
+
                         // Apply the generated linear gradient to the background
                         span.setAttribute('data-ptm', uniquePtms.join(';'));
                         span.style.background = `linear-gradient(to bottom, ${gradient})`;
@@ -494,27 +762,27 @@ function generateHtmlForJPred(data, acc, ptms) {
                             const tooltip = document.createElement("div");
                             tooltip.classList.add("custom-tooltip");
                             tooltip.textContent = uniquePtms.join(", ");  // Display all PTMs for this position
-        
+
                             // Append the tooltip to the body
                             document.body.appendChild(tooltip);
-        
+
                             // Position the tooltip near the character
                             const rect = e.target.getBoundingClientRect(); // Get the character's position
                             tooltip.style.position = "absolute";
                             tooltip.style.left = `${rect.left + window.scrollX}px`; // Adjust for any page scroll
                             tooltip.style.top = `${rect.top + window.scrollY - 30}px`; // Position above the character
                             tooltip.style.zIndex = 10; // Ensure it's above other content
-        
+
                             // Add the 'visible' class to the tooltip to show it
                             setTimeout(() => {
                                 tooltip.classList.add("visible");
                             }, 10); // Small delay for the transition to kick in
-        
+
                             // Store tooltip for later removal
                             e.target.tooltip = tooltip;
                         }
                     });
-    
+
                     // Add mouseleave event to remove the tooltip
                     span.addEventListener("mouseleave", (e) => {
                         const tooltip = e.target.tooltip;
@@ -535,7 +803,7 @@ function generateHtmlForJPred(data, acc, ptms) {
 
     const jpredAlignment = document.createElement('h5');
     const alignmentPopup = document.createElement('a');
-    alignmentPopup.addEventListener('click', function() {
+    alignmentPopup.addEventListener('click', function () {
         const newWindow = window.open('', '_blank', 'width=800, height=600');
         newWindow.document.write('<link rel="stylesheet" type="text/css" href="../static/styles.css">');
         newWindow.document.write('<body>' + alignmentBox.outerHTML + '</body>');
@@ -637,13 +905,13 @@ function generateHtmlForJPred(data, acc, ptms) {
                 let font = document.createElement('span');
                 font.textContent = char;
                 // let font = `<font>${char}</font>`
-                if (indices.includes(index+1)) {
+                if (indices.includes(index + 1)) {
                     font.classList.add('highlighted');
                     font.setAttribute('data-idx', index);
                     // Get PTMs from original data using indices
                     let uniquePtms = new Set();
                     ptms.forEach(ptm => {
-                        if (ptm[0] === index+1) {
+                        if (ptm[0] === index + 1) {
                             uniquePtms.add(ptm[1]);
                         }
                     });
@@ -653,7 +921,7 @@ function generateHtmlForJPred(data, acc, ptms) {
                     if (uniquePtms.length > 1) {
                         // Dynamically calculate the percentage for each color block based on the number of colors
                         const percentagePerColor = 100 / ptmColors.length;
-                        
+
                         // Create the gradient by mapping over ptmColors
                         const gradient = ptmColors
                             .map((color, idx) => {
@@ -662,7 +930,7 @@ function generateHtmlForJPred(data, acc, ptms) {
                                 return `${color} ${startPercentage}% ${endPercentage}%`; // Define the color block from start to end
                             })
                             .join(', ');
-                    
+
                         // Apply the generated linear gradient to the background
                         font.setAttribute('data-ptm', uniquePtms.join(';'));
                         font.style.background = `linear-gradient(to bottom, ${gradient})`;
@@ -677,27 +945,27 @@ function generateHtmlForJPred(data, acc, ptms) {
                             const tooltip = document.createElement("div");
                             tooltip.classList.add("custom-tooltip");
                             tooltip.textContent = uniquePtms.join(", ");  // Display all PTMs for this position
-        
+
                             // Append the tooltip to the body
                             document.body.appendChild(tooltip);
-        
+
                             // Position the tooltip near the character
                             const rect = e.target.getBoundingClientRect(); // Get the character's position
                             tooltip.style.position = "absolute";
                             tooltip.style.left = `${rect.left + window.scrollX}px`; // Adjust for any page scroll
                             tooltip.style.top = `${rect.top + window.scrollY - 30}px`; // Position above the character
                             tooltip.style.zIndex = 10; // Ensure it's above other content
-        
+
                             // Add the 'visible' class to the tooltip to show it
                             setTimeout(() => {
                                 tooltip.classList.add("visible");
                             }, 10); // Small delay for the transition to kick in
-        
+
                             // Store tooltip for later removal
                             e.target.tooltip = tooltip;
                         }
                     });
-        
+
                     // Add mouseleave event to remove the tooltip
                     font.addEventListener("mouseleave", (e) => {
                         const tooltip = e.target.tooltip;
@@ -713,7 +981,7 @@ function generateHtmlForJPred(data, acc, ptms) {
                         const divs = document.getElementById('jpredSequenceBox').querySelectorAll('div');
                         divs.forEach((div, outerIdx) => {
                             if (outerIdx !== 1) { // We will not mess with OrigSeq div
-                                const spans =  div.querySelectorAll('span');
+                                const spans = div.querySelectorAll('span');
                                 spans.forEach((span, innerIdx) => {
                                     if (innerIdx === idx) {
                                         span.classList.add('highlighted');
@@ -730,7 +998,7 @@ function generateHtmlForJPred(data, acc, ptms) {
                     });
 
                 }
-                
+
                 predictionSequenceDiv.appendChild(font);
             });
         } else if (key === 'Jnet' || key === 'jhmm' || key === 'jpssm') {
@@ -769,7 +1037,7 @@ function generateHtmlForJPred(data, acc, ptms) {
             data.prediction[key].split('').forEach((char, idx) => {
                 predictionSequenceDiv.innerHTML += `<span data-idx="${idx}">${char}</span>`;
             });
-            
+
         }
         predictionSequencesBox.appendChild(predictionSequenceDiv);
     });
@@ -806,7 +1074,7 @@ async function fetchData(ptm, char, table) {
         return await fetch(
             `/ptmkb/pos_matrix?ptm=${encodeURIComponent(ptm)}&residue=${encodeURIComponent(char)}&table=${encodeURIComponent(table)}`
         )
-        .then(res => res.json());
+            .then(res => res.json());
     } catch (err) {
         // console.error('Error:', err);
     }
@@ -837,11 +1105,11 @@ async function preparePTMDetails(localizedSequence, localizedSequenceInfo, ptmsD
         formattedChar.textContent = char;
         var information = [null, null];
         try {
-            if (typeof(localizedSequenceInfo[index]) === 'object') {
+            if (typeof (localizedSequenceInfo[index]) === 'object') {
                 information = localizedSequenceInfo[index];
             }
             var temp = information[0];
-        } catch(e) {information = [null, null];}
+        } catch (e) { information = [null, null]; }
         if (information[0] !== null) {
             var tempArr = JSON.parse(information[0]);
             var uniquePTMs = new Set(tempArr.map(arr => arr[1]));
@@ -860,7 +1128,7 @@ async function preparePTMDetails(localizedSequence, localizedSequenceInfo, ptmsD
             if (uniquePTMs.length > 1) {
                 // Dynamically calculate the percentage for each color block based on the number of colors
                 const percentagePerColor = 100 / ptmColors.length;
-            
+
                 // Create the gradient by mapping over ptmColors
                 const gradient = ptmColors
                     .map((color, idx) => {
@@ -869,7 +1137,7 @@ async function preparePTMDetails(localizedSequence, localizedSequenceInfo, ptmsD
                         return `${color} ${startPercentage}% ${endPercentage}%`; // Define the color block from start to end
                     })
                     .join(', ');
-            
+
                 // Apply the generated linear gradient to the background
                 formattedChar.style.background = `linear-gradient(to bottom, ${gradient})`;
                 formattedChar.style.backgroundSize = '100% 100%'; // Ensure the gradient covers the entire element
@@ -940,7 +1208,7 @@ async function preparePTMDetails(localizedSequence, localizedSequenceInfo, ptmsD
             const enzymesTable = document.createElement('table')
             enzymesTable.classList.add('table');
             var check = false;
-    
+
             enzymesDiv.classList.add('protein-info-container');
             centerEnzymes.forEach(enzyme => {
                 if (!check) {
@@ -949,7 +1217,7 @@ async function preparePTMDetails(localizedSequence, localizedSequenceInfo, ptmsD
                     const keyCell = document.createElement('td');
                     keyCell.classList.add('key');
                     keyCell.textContent = 'Modification Type';
-                    
+
                     const valueCell = document.createElement('td');
                     valueCell.classList.add('key');
                     valueCell.textContent = "Upstream Protein(s)";
@@ -971,7 +1239,7 @@ async function preparePTMDetails(localizedSequence, localizedSequenceInfo, ptmsD
                 keyCell.classList.add('value');
                 keyCell.setAttribute('style', 'text-align: center; font-weight: 700;');
                 keyCell.textContent = enzyme[0];
-                
+
                 const valueCell = document.createElement('td');
                 valueCell.classList.add('value');
                 valueCell.setAttribute('style', 'text-align: center; font-weight: 700;');
@@ -1030,7 +1298,7 @@ async function preparePTMDetails(localizedSequence, localizedSequenceInfo, ptmsD
         const keyCell = document.createElement('td');
         keyCell.classList.add('key');
         keyCell.textContent = 'PTM';
-        
+
         const valueCell = document.createElement('td');
         valueCell.classList.add('value');
         valueCell.innerHTML = `${ptm[1]} `;
@@ -1057,7 +1325,7 @@ async function preparePTMDetails(localizedSequence, localizedSequenceInfo, ptmsD
         const positionKeyCell = document.createElement('td');
         positionKeyCell.classList.add('key');
         positionKeyCell.textContent = 'Position';
-        
+
         const positionValueCell = document.createElement('td');
         positionValueCell.classList.add('value');
         positionValueCell.innerHTML = `${ptm[0]}`; // PTM Position
@@ -1104,7 +1372,7 @@ async function preparePTMDetails(localizedSequence, localizedSequenceInfo, ptmsD
             scoreKeyCell.appendChild(scoresLabel);
             const scoreValueCell = document.createElement('td');
             scoreValueCell.classList.add('value');
-            
+
             const relativeIndex = []
             for (let i = -10; i <= 10; i++) {
                 relativeIndex.push(i <= 0 ? i.toString() : `+${i}`);
@@ -1118,7 +1386,7 @@ async function preparePTMDetails(localizedSequence, localizedSequenceInfo, ptmsD
                     currScores.push(elem)
                 } else {
                     // Also this line of code to fix too...
-                    try{
+                    try {
                         const tempVal = table[relativeIndex[relIdx]][localizedSequence[relIdx]];
                         currScores.push(tempVal);
                     }
@@ -1130,9 +1398,9 @@ async function preparePTMDetails(localizedSequence, localizedSequenceInfo, ptmsD
 
             // Use the currScores to get actual scores
             var logSum = additiveCalculator(currScores);
-            logSum = typeof(logSum) === "number" ? logSum.toFixed(2) : logSum;
+            logSum = typeof (logSum) === "number" ? logSum.toFixed(2) : logSum;
             var logLogProduct = multiplicativeCalculator(currScores)['logLogProduct'];
-            logLogProduct = typeof(logLogProduct) === "number" ? logLogProduct.toFixed(2) : logLogProduct;
+            logLogProduct = typeof (logLogProduct) === "number" ? logLogProduct.toFixed(2) : logLogProduct;
 
             if ((logSum !== 'NIL' && logSum !== '-INF') || (logLogProduct !== 'NIL' && logLogProduct !== '-INF')) {
                 const scoresHelp = document.createElement('a');
@@ -1228,12 +1496,12 @@ async function preparePTMDetails(localizedSequence, localizedSequenceInfo, ptmsD
             var label = `${residuePosition} - ${atoms[0].resn} - ${listOfPTMs.join(', ')}`;
             afPdbViewer.addLabel(
                 label, {
-                    position: atoms[0],
-                    backgroundColor: 'gray',
-                    backgroundOpacity: 1.0,
-                    fontColor: 'white',
-                    fontSize: 12,
-                }
+                position: atoms[0],
+                backgroundColor: 'gray',
+                backgroundOpacity: 1.0,
+                fontColor: 'white',
+                fontSize: 12,
+            }
             );
             scrollIfNotInView(document.getElementById('pdbMajor'));
         });
@@ -1251,7 +1519,7 @@ async function preparePTMDetails(localizedSequence, localizedSequenceInfo, ptmsD
             rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
             rect.right <= (window.innerWidth || document.documentElement.clientWidth)
         );
-    
+
         if (!isInViewport) {
             element.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
@@ -1295,7 +1563,7 @@ async function displayPTMDetails(event) {
     // Add the current block's text (clicked block)
     const sequenceText = clickedBlock.querySelector('.sequence-text');
     const spans = sequenceText.querySelectorAll('span');
-    
+
     spans.forEach((span, index) => {
         totalTextInfo.push(
             [
@@ -1362,7 +1630,7 @@ function initializePTMClickListenersForProteinSequence(upid) {
 
 function initializePTMClickListenersForPTMSequence(upid) {
     const localSpans = document.querySelector('.localized-sequence').querySelectorAll('span');
-    document.querySelectorAll('.custom-tooltip').forEach(function(tooltip) {
+    document.querySelectorAll('.custom-tooltip').forEach(function (tooltip) {
         tooltip.remove();  // This removes the tooltip element from the DOM
     });
     localSpans.forEach((span) => {
@@ -1430,24 +1698,24 @@ function displayProteinSequence(sequence, modificationData, additionalUniprotInf
     // Create the table for displaying the key-value pairs
     const uniprotTable = document.createElement('table');
     uniprotTable.classList.add('table'); // Apply the table styles
-    
+
     // Loop through each key in the array and add it to the table
     ["length", "molWeight", "crc64", "md5", "lastUpdate"].forEach((key) => {
         const row = document.createElement('tr');
-    
+
         // Create the key cell
         const keyCell = document.createElement('td');
         keyCell.classList.add('key');
-        
+
         let toUseAsKey = ''
         if (key !== "molWeight" && key !== "length" && key !== "lastUpdate") {
             toUseAsKey = key.toUpperCase();
         } else {
             toUseAsKey = key.replace(/([a-z](?=[A-Z]))/g, '$1 ')
-            .replace(/^./, function(str){ return str.toUpperCase(); })
+                .replace(/^./, function (str) { return str.toUpperCase(); })
         }
         keyCell.textContent = toUseAsKey;
-    
+
         // Create the value cell
         const valueCell = document.createElement('td');
         valueCell.classList.add('value');
@@ -1458,18 +1726,18 @@ function displayProteinSequence(sequence, modificationData, additionalUniprotInf
             value = additionalUniprotInfo[key];
         }
         valueCell.textContent = value;
-    
+
         // Append the cells to the row
         row.appendChild(keyCell);
         row.appendChild(valueCell);
-    
+
         // Append the row to the table
         uniprotTable.appendChild(row);
     });
-    
+
     // Append the table to the uniprotSequence container
     document.getElementById('uniprotSequence').appendChild(uniprotTable);
-    
+
     const ptmDownloadBtn = document.createElement('button');
     ptmDownloadBtn.classList.add('additional-button');
     ptmDownloadBtn.textContent = `Download PTM data for ${acc} (JSON)`
@@ -1563,7 +1831,7 @@ function displayProteinSequence(sequence, modificationData, additionalUniprotInf
                             if (!grouped[modType]) {
                                 grouped[modType] = {
                                     index: entry[0],
-                                    ids: new Set() 
+                                    ids: new Set()
                                 };
                             }
                             ids.split(';').forEach(id => grouped[modType].ids.add(id));
@@ -1645,7 +1913,7 @@ function displayProteinSequence(sequence, modificationData, additionalUniprotInf
                                     currScores.push(elem)
                                 } else {
                                     // Fix this line of code please...
-                                    try{
+                                    try {
                                         const tempVal = table[relativeIndex[relIdx]][subsequence[relIdx]]
                                         currScores.push(tempVal);
                                     }
@@ -1657,9 +1925,9 @@ function displayProteinSequence(sequence, modificationData, additionalUniprotInf
 
                             // Use the currScores to get actual scores
                             var logSum = additiveCalculator(currScores);
-                            logSum = typeof(logSum) === "number" ? logSum.toFixed(2) : logSum;
+                            logSum = typeof (logSum) === "number" ? logSum.toFixed(2) : logSum;
                             var logLogProduct = multiplicativeCalculator(currScores)['logLogProduct'];
-                            logLogProduct = typeof(logLogProduct) === "number" ? logLogProduct.toFixed(2) : logLogProduct;
+                            logLogProduct = typeof (logLogProduct) === "number" ? logLogProduct.toFixed(2) : logLogProduct;
                             scores[ptm] = [logSum, logLogProduct];
                         } else {
                             scores[ptm] = ['NIL', 'NIL'];
@@ -1750,17 +2018,17 @@ function generatePTMHtmlTable() {
     let aminoAcids = ["A", "C", "D", "E", "F", "G", "H", "I", "K", "L", "M", "N", "P", "Q", "R", "S", "T", "V", "W", "Y"]
     sequencesArr.forEach(entry => {
         const { aa, ptm } = entry;
-    
+
         // If the PTM doesn't exist in the ptmCounts object, initialize it
         if (!ptmCounts[ptm]) {
             ptmCounts[ptm] = {};
         }
-    
+
         // If the amino acid doesn't exist for the current PTM, initialize it
         if (!ptmCounts[ptm][aa]) {
             ptmCounts[ptm][aa] = 0;
         }
-    
+
         // Increment the count for the amino acid under the given PTM
         ptmCounts[ptm][aa]++;
     });
@@ -1817,7 +2085,7 @@ function generatePTMHtmlTable() {
     const tbody = document.createElement('tbody');
     ptmKeys.forEach(ptm => {
         const row = document.createElement('tr');
-        
+
         // Create a cell for PTM Type
         const ptmCell = document.createElement('th');
         ptmCell.textContent = ptm;
@@ -1826,7 +2094,7 @@ function generatePTMHtmlTable() {
         ptmCell.style.border = '1px solid #ddd';
         ptmCell.style.backgroundColor = '#f4f4f4';
         row.appendChild(ptmCell);
-        
+
         // Loop through each amino acid and check if it exists in the current PTM data
         aminoAcids.forEach(aa => {
             const td = document.createElement('td');
@@ -1834,7 +2102,7 @@ function generatePTMHtmlTable() {
             td.style.textAlign = 'center';
             td.style.border = '1px solid #ddd';
             td.style.backgroundColor = '#f4f4f4';
-            
+
             if (ptmCounts[ptm][aa]) {
                 td.style.backgroundColor = 'rgb(218, 240, 255)';
                 td.style.fontWeight = 'regular';
@@ -1905,7 +2173,7 @@ function generatePTMHtmlTable() {
                         rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
                         rect.right <= (window.innerWidth || document.documentElement.clientWidth)
                     );
-                
+
                     if (!isInViewport) {
                         element.scrollIntoView({ behavior: 'smooth', block: 'start' });
                     }
@@ -1920,17 +2188,17 @@ function generatePTMHtmlTable() {
                 td.textContent = '-';
                 td.style.cursor = 'default';
             }
-            
+
             row.appendChild(td);
         });
-        
+
         tbody.appendChild(row);
     });
 
     table.appendChild(tbody);
     tableWrapper.appendChild(table);
     tableContainer.appendChild(tableWrapper);
-    
+
     return tableContainer
 }
 
@@ -1946,7 +2214,7 @@ function setupPtmFilterForViewer({
     getAtomForPos
 }) {
     const selectEl = document.getElementById(selectId);
-    if (!selectEl) return () => {};
+    if (!selectEl) return () => { };
 
     // Build: pos -> Set(types), type -> Set(pos)
     const posToTypes = new Map();
@@ -1987,7 +2255,7 @@ function setupPtmFilterForViewer({
     function bgColorForPos(pos, selectedType) {
         const allTypesHere = Array.from(posToTypes.get(pos) || []);
         // Your rule: black if residue has >= 2 PTMs overall
-        if (allTypesHere.length >= 2 && selectedType==="all") return "#000000";
+        if (allTypesHere.length >= 2 && selectedType === "all") return "#000000";
 
         // otherwise use the single PTM's color mapping
         const only = selectedType;
@@ -2078,31 +2346,31 @@ async function displayPDBStructures(uniprotAC, alphafoldPdbData, ptms) {
             "return_all_hits": true
         },
         "query": {
-          "type": "group",
-          "logical_operator": "and",
-          "nodes": [
-            {
-              "type": "terminal",
-              "service": "text",
-              "parameters": {
-                "operator": "exact_match",
-                "value": uniprotAC,
-                "attribute": "rcsb_polymer_entity_container_identifiers.reference_sequence_identifiers.database_accession"
-              }
-            },
-            {
-              "type": "terminal",
-              "service": "text",
-              "parameters": {
-                "operator": "exact_match",
-                "value": "UniProt",
-                "attribute": "rcsb_polymer_entity_container_identifiers.reference_sequence_identifiers.database_name"
-              }
-            }
-          ]
+            "type": "group",
+            "logical_operator": "and",
+            "nodes": [
+                {
+                    "type": "terminal",
+                    "service": "text",
+                    "parameters": {
+                        "operator": "exact_match",
+                        "value": uniprotAC,
+                        "attribute": "rcsb_polymer_entity_container_identifiers.reference_sequence_identifiers.database_accession"
+                    }
+                },
+                {
+                    "type": "terminal",
+                    "service": "text",
+                    "parameters": {
+                        "operator": "exact_match",
+                        "value": "UniProt",
+                        "attribute": "rcsb_polymer_entity_container_identifiers.reference_sequence_identifiers.database_name"
+                    }
+                }
+            ]
         },
         "return_type": "entry"
-      };
+    };
 
     if (alphafoldPdbData) {
         // First and foremost - get calculations
@@ -2129,18 +2397,18 @@ async function displayPDBStructures(uniprotAC, alphafoldPdbData, ptms) {
             link.download = `${uniprotAC}_af_pdb.json`;
             link.click();
         });
-        
+
         $3Dmol.createViewer("afPdbStructure", {
             defaultcolors: $3Dmol.rasmolElementColors,
             callback: (e) => {
                 afPdbViewer = e;
                 e.addModel(alphafoldPdbData, 'pdb', { vibrate: true });
-                e.setStyle( {}, { cartoon: { colorscheme: 'ssPyMol' } }); // Default style is 2
+                e.setStyle({}, { cartoon: { colorscheme: 'ssPyMol' } }); // Default style is 2
                 e.zoomTo();
                 document.getElementById('afPdbStructure').classList.remove('lds-dual-ring');
                 let labels = []
-                let clearAfPtmLabels = () => {};
-                        
+                let clearAfPtmLabels = () => { };
+
                 // Going to set another event listener here
                 document.getElementById('afClearLabels').addEventListener('click', () => {
                     labels.forEach(l => {
@@ -2151,24 +2419,24 @@ async function displayPDBStructures(uniprotAC, alphafoldPdbData, ptms) {
                     clearAfPtmLabels();
                     document.getElementById('afPtmFilter').value = '__none__';
                 });
-                        
+
                 // And another event listener here
                 document.getElementById('afShowDetails').addEventListener('click', () => {
                     if (document.getElementById('afShowDetails').getAttribute('data-type') === "3") {
-                        e.setStyle( {}, { stick: { radius: 0.15 } } );
+                        e.setStyle({}, { stick: { radius: 0.15 } });
                         e.render();
                         document.getElementById('afShowDetails').setAttribute('data-type', "1");
                     } else if (document.getElementById('afShowDetails').getAttribute('data-type') === "1") {
-                        e.setStyle( {}, { cartoon: { colorscheme: 'ssPyMol' } } );
+                        e.setStyle({}, { cartoon: { colorscheme: 'ssPyMol' } });
                         e.render();
                         document.getElementById('afShowDetails').setAttribute('data-type', "2");
                     } else {
-                        e.setStyle( { stick: { radius: 0.15 }, cartoon: { colorscheme: 'ssPyMol' } } );
+                        e.setStyle({ stick: { radius: 0.15 }, cartoon: { colorscheme: 'ssPyMol' } });
                         e.render();
                         document.getElementById('afShowDetails').setAttribute('data-type', "3");
                     }
                 });
-                        
+
                 // ... and another one...
                 document.getElementById('afCenter').addEventListener('click', () => {
                     e.zoomTo();
@@ -2184,12 +2452,12 @@ async function displayPDBStructures(uniprotAC, alphafoldPdbData, ptms) {
                         if (!atoms || atoms.length === 0) atoms = e.getAtomsFromSel({ resi: pos });
                         return (atoms && atoms.length) ? atoms[0] : null;
                     }
-                }) || (() => {});
+                }) || (() => { });
 
                 e.setClickable(
                     {},
                     true,
-                    function(atom, viewer, event, container) {
+                    function (atom, viewer, event, container) {
                         const labelIndices = labels.map((lab) => {
                             return lab.stylespec.position.resi;
                         });
@@ -2209,26 +2477,26 @@ async function displayPDBStructures(uniprotAC, alphafoldPdbData, ptms) {
                                 uniquePtms.forEach(ptm => {
                                     label += `${ptm}, `;
                                 });
-                                label = label.slice(0, label.length-2);
+                                label = label.slice(0, label.length - 2);
                                 label += ")";
                             }
 
                             // Use DSSP and Shrake-Rupley values
                             const idx = (atom.resi - 1);
-                            try{
+                            try {
                                 label += ` --- SASA: ${afCalculations['SASA'][idx].toFixed(3)}Å² - DSSP: ${afCalculations['simplified'][idx]}`;
-                            } catch (e) {}
+                            } catch (e) { }
                             if (afCalculations['detailed'][idx] !== ' ') {
                                 label += ` (${afCalculations['detailed'][idx]})`;
                             }
                             const labelObj = viewer.addLabel(
                                 label, {
-                                    position: atom,
-                                    backgroundColor: 'black',
-                                    backgroundOpacity: 1.0,
-                                    fontColor: 'white',
-                                    fontSize: 12,
-                                }
+                                position: atom,
+                                backgroundColor: 'black',
+                                backgroundOpacity: 1.0,
+                                fontColor: 'white',
+                                fontSize: 12,
+                            }
                             );
                             labels.push(
                                 labelObj
@@ -2285,14 +2553,14 @@ async function displayPDBStructures(uniprotAC, alphafoldPdbData, ptms) {
     let rcsbData = await fetch(
         encodeURI(`https://search.rcsb.org/rcsbsearch/v2/query?json=${JSON.stringify(rcsbJson)}`)
     )
-    .then((res) => {
-        if (res.status === 200) {
-            return res.json();
-        }
-        return null;
-    }).catch(error => {
-        // console.error(error);
-    });
+        .then((res) => {
+            if (res.status === 200) {
+                return res.json();
+            }
+            return null;
+        }).catch(error => {
+            // console.error(error);
+        });
 
     let response = getValue(rcsbData, 'result_set');
     var identifiers = []
@@ -2330,18 +2598,18 @@ async function displayPDBStructures(uniprotAC, alphafoldPdbData, ptms) {
                 link.download = `${uniprotAC}_rcsb_pdb_${id}.json`;
                 link.click();
             });
-            
+
             $3Dmol.createViewer("rcsbPdbStructure", {
                 defaultcolors: $3Dmol.rasmolElementColors,
                 callback: (e) => {
                     rcsbPdbViewer = e;
                     e.addModel(res, 'pdb');
-                    
+
                     // For indices and showing labels and stuff
                     var residues = {};
                     const atoms = e.getAtomsFromSel({});
                     var minIndex = null;
-                    atoms.forEach(function(atom, index) {
+                    atoms.forEach(function (atom, index) {
                         if (!residues[atom.resi] && atom.chain === 'A') {
                             if (minIndex === null) {
                                 minIndex = atom.resi;
@@ -2351,11 +2619,11 @@ async function displayPDBStructures(uniprotAC, alphafoldPdbData, ptms) {
                     });
                     residues = Object.values(residues);
 
-                    e.setStyle( {chain: 'A'}, { cartoon: { colorscheme: 'ssPyMol' } }); // Default style is 2
+                    e.setStyle({ chain: 'A' }, { cartoon: { colorscheme: 'ssPyMol' } }); // Default style is 2
                     e.zoomTo();
                     document.getElementById('rcsbPdbStructure').classList.remove('lds-dual-ring');
                     let labels = []
-                            
+
                     // Going to set another event listener here
                     document.getElementById('rcsbClearLabels').addEventListener('click', () => {
                         labels.forEach(l => {
@@ -2363,19 +2631,19 @@ async function displayPDBStructures(uniprotAC, alphafoldPdbData, ptms) {
                         });
                         labels.splice(0, labels.length);
                     });
-                            
+
                     // And another event listener here
                     document.getElementById('rcsbShowDetails').addEventListener('click', () => {
                         if (document.getElementById('rcsbShowDetails').getAttribute('data-type') === "3") {
-                            e.setStyle( {chain: 'A'}, { stick: { radius: 0.15 } } );
+                            e.setStyle({ chain: 'A' }, { stick: { radius: 0.15 } });
                             e.render();
                             document.getElementById('rcsbShowDetails').setAttribute('data-type', "1");
                         } else if (document.getElementById('rcsbShowDetails').getAttribute('data-type') === "1") {
-                            e.setStyle( {chain: 'A'}, { cartoon: { colorscheme: 'ssPyMol' } } );
+                            e.setStyle({ chain: 'A' }, { cartoon: { colorscheme: 'ssPyMol' } });
                             e.render();
                             document.getElementById('rcsbShowDetails').setAttribute('data-type', "2");
                         } else {
-                            e.setStyle( {chain: 'A'}, { stick: { radius: 0.15 }, cartoon: { colorscheme: 'ssPyMol' } } );
+                            e.setStyle({ chain: 'A' }, { stick: { radius: 0.15 }, cartoon: { colorscheme: 'ssPyMol' } });
                             e.render();
                             document.getElementById('rcsbShowDetails').setAttribute('data-type', "3");
                         }
@@ -2385,11 +2653,11 @@ async function displayPDBStructures(uniprotAC, alphafoldPdbData, ptms) {
                         e.zoomTo();
                         e.center();
                     });
-    
+
                     e.setClickable(
-                        {chain: 'A'},
+                        { chain: 'A' },
                         true,
-                        function(atom, viewer, event, container) {
+                        function (atom, viewer, event, container) {
                             // Map by residue ID and find one that isn't null
                             // That will be the basis for selection
                             var currResidues = residues.map((res) => {
@@ -2410,26 +2678,26 @@ async function displayPDBStructures(uniprotAC, alphafoldPdbData, ptms) {
                                     // If it doesn't, make one
                                     // At this point, Cognitive Complexity be damned
                                     var label = `${atom.resi} - ${atom.resn}`;
-        
+
                                     // Use DSSP and Shrake-Rupley values
                                     var idx = residues.map(res => {
                                         return res.resi;
                                     });
                                     idx = idx.indexOf(currRes.resi);
-                                    try{
+                                    try {
                                         label += ` --- SASA: ${rcsbCalculations['SASA'][idx].toFixed(3)}Å² - DSSP: ${rcsbCalculations['simplified'][idx]}`;
-                                    } catch (e) {}
+                                    } catch (e) { }
                                     if (rcsbCalculations['detailed'][idx] !== ' ') {
                                         label += ` (${rcsbCalculations['detailed'][idx]})`;
                                     }
                                     const labelObj = viewer.addLabel(
                                         label, {
-                                            position: atom,
-                                            backgroundColor: 'black',
-                                            backgroundOpacity: 1.0,
-                                            fontColor: 'white',
-                                            fontSize: 12,
-                                        }
+                                        position: atom,
+                                        backgroundColor: 'black',
+                                        backgroundOpacity: 1.0,
+                                        fontColor: 'white',
+                                        fontSize: 12,
+                                    }
                                     );
                                     labels.push(
                                         labelObj
@@ -2496,7 +2764,7 @@ async function displayPDBStructures(uniprotAC, alphafoldPdbData, ptms) {
             document.getElementById('pdbDropdownSelect').add(option);
         });
 
-        document.getElementById('pdbDropdownSelect').addEventListener('change', async function(event) {
+        document.getElementById('pdbDropdownSelect').addEventListener('change', async function (event) {
 
             if (currentRcsbPdbAbortController) {
                 currentRcsbPdbAbortController.abort();
@@ -2511,7 +2779,7 @@ async function displayPDBStructures(uniprotAC, alphafoldPdbData, ptms) {
             document.getElementById('rcsbPdbStructure').classList.add('lds-dual-ring');
             document.getElementById('rcsbPdbInfo').innerHTML = ``;
             const selectedValue = event.target.value;
-            
+
             rcsbData = await fetch(
                 encodeURI(`https://files.rcsb.org/download/${selectedValue}.pdb`), { signal }
             ).then(async (res) => {
@@ -2543,19 +2811,19 @@ async function displayPDBStructures(uniprotAC, alphafoldPdbData, ptms) {
                     link.download = `${uniprotAC}_rcsb_pdb_${selectedValue}.json`;
                     link.click();
                 });
-                
+
                 $3Dmol.createViewer("rcsbPdbStructure", {
                     defaultcolors: $3Dmol.rasmolElementColors,
                     callback: (e) => {
                         rcsbPdbViewer = e;
                         e.addModel(res, 'pdb');
-                        
+
                         // For indices and showing labels and stuff
                         var residues = {};
                         const atoms = e.getAtomsFromSel({});
                         var minIndex = null;
                         var counter = 0;
-                        atoms.forEach(function(atom) {
+                        atoms.forEach(function (atom) {
                             if (!residues[atom.resi] && atom.chain === 'A') {
                                 if (minIndex === null) {
                                     minIndex = atom.resi;
@@ -2564,12 +2832,12 @@ async function displayPDBStructures(uniprotAC, alphafoldPdbData, ptms) {
                             }
                         });
                         residues = Object.values(residues);
-    
-                        e.setStyle( {chain: 'A'}, { cartoon: { colorscheme: 'ssPyMol' } }); // Default style is 2
+
+                        e.setStyle({ chain: 'A' }, { cartoon: { colorscheme: 'ssPyMol' } }); // Default style is 2
                         e.zoomTo();
                         document.getElementById('rcsbPdbStructure').classList.remove('lds-dual-ring');
                         let labels = []
-                                
+
                         // Going to set another event listener here
                         document.getElementById('rcsbClearLabels').addEventListener('click', () => {
                             labels.forEach(l => {
@@ -2577,19 +2845,19 @@ async function displayPDBStructures(uniprotAC, alphafoldPdbData, ptms) {
                             });
                             labels.splice(0, labels.length);
                         });
-                                
+
                         // And another event listener here
                         document.getElementById('rcsbShowDetails').addEventListener('click', () => {
                             if (document.getElementById('rcsbShowDetails').getAttribute('data-type') === "3") {
-                                e.setStyle( {chain: 'A'}, { stick: { radius: 0.15 } } );
+                                e.setStyle({ chain: 'A' }, { stick: { radius: 0.15 } });
                                 e.render();
                                 document.getElementById('rcsbShowDetails').setAttribute('data-type', "1");
                             } else if (document.getElementById('rcsbShowDetails').getAttribute('data-type') === "1") {
-                                e.setStyle( {chain: 'A'}, { cartoon: { colorscheme: 'ssPyMol' } } );
+                                e.setStyle({ chain: 'A' }, { cartoon: { colorscheme: 'ssPyMol' } });
                                 e.render();
                                 document.getElementById('rcsbShowDetails').setAttribute('data-type', "2");
                             } else {
-                                e.setStyle( {chain: 'A'}, { stick: { radius: 0.15 }, cartoon: { colorscheme: 'ssPyMol' } } );
+                                e.setStyle({ chain: 'A' }, { stick: { radius: 0.15 }, cartoon: { colorscheme: 'ssPyMol' } });
                                 e.render();
                                 document.getElementById('rcsbShowDetails').setAttribute('data-type', "3");
                             }
@@ -2599,11 +2867,11 @@ async function displayPDBStructures(uniprotAC, alphafoldPdbData, ptms) {
                             e.zoomTo();
                             e.center();
                         });
-        
+
                         e.setClickable(
-                            {chain: 'A'},
+                            { chain: 'A' },
                             true,
-                            function(atom, viewer, event, container) {
+                            function (atom, viewer, event, container) {
                                 // Map by residue ID and find one that isn't null
                                 // That will be the basis for selection
                                 var currResidues = residues.map((res) => {
@@ -2624,26 +2892,26 @@ async function displayPDBStructures(uniprotAC, alphafoldPdbData, ptms) {
                                         // If it doesn't, make one
                                         // At this point, Cognitive Complexity be damned
                                         var label = `${atom.resi} - ${atom.resn}`;
-            
+
                                         // Use DSSP and Shrake-Rupley values
                                         var idx = residues.map(res => {
                                             return res.resi;
                                         });
                                         idx = idx.indexOf(currRes.resi);
-                                        try{
+                                        try {
                                             label += ` --- SASA: ${rcsbCalculations['SASA'][idx].toFixed(3)}Å² - DSSP: ${rcsbCalculations['simplified'][idx]}`;
-                                        } catch (e) {}
+                                        } catch (e) { }
                                         if (rcsbCalculations['detailed'][idx] !== ' ') {
                                             label += ` (${rcsbCalculations['detailed'][idx]})`;
                                         }
                                         const labelObj = viewer.addLabel(
                                             label, {
-                                                position: atom,
-                                                backgroundColor: 'black',
-                                                backgroundOpacity: 1.0,
-                                                fontColor: 'white',
-                                                fontSize: 12,
-                                            }
+                                            position: atom,
+                                            backgroundColor: 'black',
+                                            backgroundOpacity: 1.0,
+                                            fontColor: 'white',
+                                            fontSize: 12,
+                                        }
                                         );
                                         labels.push(
                                             labelObj
@@ -2692,7 +2960,7 @@ async function displayPDBStructures(uniprotAC, alphafoldPdbData, ptms) {
                     </table>
                 `;
                 document.getElementById('rcsbPdbInfo').appendChild(downloadButton);
-                
+
                 document.getElementById('rcsbProfile').style.display = 'block';
                 document.getElementById('rcsbHRef').innerHTML = `<a href="https://www.rcsb.org/structure/${selectedValue}" target="_blank">RCSB Verified Structure</a>`;
             }).catch(error => {
@@ -2703,8 +2971,8 @@ async function displayPDBStructures(uniprotAC, alphafoldPdbData, ptms) {
     } else {
         document.getElementById('rcsbHRef').innerHTML = `<h5>No RCSB Structure exists.</h5>`;
     }
-    try{document.getElementById('afPdbStructure').classList.remove('lds-dual-ring');} catch(e) {}
-    try{document.getElementById('rcsbPdbStructure').classList.remove('lds-dual-ring');} catch(e) {}
+    try { document.getElementById('afPdbStructure').classList.remove('lds-dual-ring'); } catch (e) { }
+    try { document.getElementById('rcsbPdbStructure').classList.remove('lds-dual-ring'); } catch (e) { }
 }
 
 function generateHtmlForPdbStructure(data, target, ptms) {
@@ -2762,12 +3030,12 @@ function generateHtmlForPdbStructure(data, target, ptms) {
             data[label].split('').forEach((char, idx) => {
                 const span = document.createElement('span');
                 span.textContent = char;
-                
+
                 if (indices.includes(idx + 1)) { // We found PTM
                     span.classList.add('highlighted');
                     let uniquePtms = new Set();
                     ptms.forEach(ptm => {
-                        if (ptm[0] === idx+1) {
+                        if (ptm[0] === idx + 1) {
                             uniquePtms.add(ptm[1]);
                         }
                     });
@@ -2777,7 +3045,7 @@ function generateHtmlForPdbStructure(data, target, ptms) {
                     if (uniquePtms.length > 1) {
                         // Dynamically calculate the percentage for each color block based on the number of colors
                         const percentagePerColor = 100 / ptmColors.length;
-                        
+
                         // Create the gradient by mapping over ptmColors
                         const gradient = ptmColors
                             .map((color, idx) => {
@@ -2786,7 +3054,7 @@ function generateHtmlForPdbStructure(data, target, ptms) {
                                 return `${color} ${startPercentage}% ${endPercentage}%`; // Define the color block from start to end
                             })
                             .join(', ');
-                    
+
                         // Apply the generated linear gradient to the background
                         span.setAttribute('data-ptm', uniquePtms.join(';'));
                         span.style.background = `linear-gradient(to bottom, ${gradient})`;
@@ -2800,27 +3068,27 @@ function generateHtmlForPdbStructure(data, target, ptms) {
                             const tooltip = document.createElement("div");
                             tooltip.classList.add("custom-tooltip");
                             tooltip.textContent = uniquePtms.join(", ");  // Display all PTMs for this position
-        
+
                             // Append the tooltip to the body
                             document.body.appendChild(tooltip);
-        
+
                             // Position the tooltip near the character
                             const rect = e.target.getBoundingClientRect(); // Get the character's position
                             tooltip.style.position = "absolute";
                             tooltip.style.left = `${rect.left + window.scrollX}px`; // Adjust for any page scroll
                             tooltip.style.top = `${rect.top + window.scrollY - 30}px`; // Position above the character
                             tooltip.style.zIndex = 10; // Ensure it's above other content
-        
+
                             // Add the 'visible' class to the tooltip to show it
                             setTimeout(() => {
                                 tooltip.classList.add("visible");
                             }, 10); // Small delay for the transition to kick in
-        
+
                             // Store tooltip for later removal
                             e.target.tooltip = tooltip;
                         }
                     });
-    
+
                     // Add mouseleave event to remove the tooltip
                     span.addEventListener("mouseleave", (e) => {
                         const tooltip = e.target.tooltip;
@@ -2855,11 +3123,11 @@ function updateStats(ptmData) {
     const numLits = [];
     // Count all string values from the third element (semicolon-separated - could also be strings)
     ptmData.forEach(ptm => {
-        if (typeof(ptm[2]) === "string") {
+        if (typeof (ptm[2]) === "string") {
             ptm[2].split(';').forEach(lit => {
                 numLits.push(lit);
             });
-        } else if (typeof(ptm[2]) == "number") {
+        } else if (typeof (ptm[2]) == "number") {
             numLits.push(Number(ptm[2]));
         }
     });
@@ -2874,28 +3142,28 @@ function updateStats(ptmData) {
 }
 
 function rgbToHex(rgbString) {
-  // Extract the numbers from the rgb string
-  const matches = rgbString.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/);
+    // Extract the numbers from the rgb string
+    const matches = rgbString.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/);
 
-  if (!matches) {
-    return null;
-  }
+    if (!matches) {
+        return null;
+    }
 
-  const r = parseInt(matches[1]);
-  const g = parseInt(matches[2]);
-  const b = parseInt(matches[3]);
+    const r = parseInt(matches[1]);
+    const g = parseInt(matches[2]);
+    const b = parseInt(matches[3]);
 
-  // Convert each component to a two-digit hex string
-  const toHex = (c) => {
-    const hex = c.toString(16);
-    return hex.length === 1 ? '0' + hex : hex; // Pad with leading zero if needed
-  };
+    // Convert each component to a two-digit hex string
+    const toHex = (c) => {
+        const hex = c.toString(16);
+        return hex.length === 1 ? '0' + hex : hex; // Pad with leading zero if needed
+    };
 
-  const hexR = toHex(r);
-  const hexG = toHex(g);
-  const hexB = toHex(b);
+    const hexR = toHex(r);
+    const hexG = toHex(g);
+    const hexB = toHex(b);
 
-  return `#${hexR}${hexG}${hexB}`.toUpperCase();
+    return `#${hexR}${hexG}${hexB}`.toUpperCase();
 }
 
 function colorPTMs() {
@@ -3114,7 +3382,7 @@ async function search() {
         document.getElementById('rcsbProfile').style.display = 'none';
         document.getElementById('proteinStatisticsContainer').style.display = 'none';
         document.getElementById('proteinInfoContainer').style.display = 'none';
-        try {document.getElementById('ptmTableSummary').remove();} catch(e) {} // Special case
+        try { document.getElementById('ptmTableSummary').remove(); } catch (e) { } // Special case
         document.getElementById('pdbMajor').style.display = 'none';
         document.getElementById('jpredMajor').style.display = 'none';
         document.getElementById('jpredPredictions').innerHTML = '';
@@ -3130,6 +3398,8 @@ async function search() {
         document.getElementById('iframeLoader').setAttribute('class', 'lds-dual-ring');
         document.getElementById('sequenceDisplayer').style.display = "none";
         document.getElementById('sequenceDisplayer').innerHTML = '';
+        document.getElementById('ptmScoreTabsContainer').innerHTML = '';
+        document.getElementById('ptmScoreTabsContainer').style.display = 'none';
         document.getElementById("tableHead").innerHTML = '';
         document.getElementById("tableBody").innerHTML = '';
         document.getElementById("xlabel").innerHTML = "";
@@ -3179,28 +3449,28 @@ async function search() {
                                     const keyCell = document.createElement('td');
                                     const valueCell = document.createElement('td');
                                     keyCell.textContent = key
-                                                            .replace(/([a-z](?=[A-Z]))/g, '$1 ')
-                                                            .replace(/^./, function(str){ return str.toUpperCase(); })
-                                                            .replace('Uni Prot', 'UniProt');
+                                        .replace(/([a-z](?=[A-Z]))/g, '$1 ')
+                                        .replace(/^./, function (str) { return str.toUpperCase(); })
+                                        .replace('Uni Prot', 'UniProt');
                                     keyCell.className = 'key';
                                     // Special case #1
                                     if (key === 'proteinFunction' || key === 'subcellularLocalizations') {
 
                                         function convertPubMedReferences(text) {
                                             const pubMedRegex = /PubMed:(\d+)/g; // /\(PubMed:(\d+)\)/g;
-                                    
+
                                             // First, replace the PubMed reference with an <a> tag, keeping parentheses
                                             let replacedText = text.replace(pubMedRegex, (match, id) => {
                                                 const url = `https://www.ncbi.nlm.nih.gov/pubmed/?term=${id}`;
                                                 return `<a href="${url}" target="_blank" rel="noopener noreferrer">PubMed:${id}</a>`;
                                             });
-                                    
+
                                             // Then, insert a <br> after a period that follows a closing parenthesis
                                             replacedText = replacedText.replace(/\)\. /g, ').<br><br>');
-                                    
+
                                             return replacedText;
                                         }
-                                    
+
                                         valueCell.innerHTML = convertPubMedReferences(value);
                                     } else if (key === 'uniProtID' || key === 'uniProtAC') {
                                         valueCell.innerHTML = `<a href="https://www.uniprot.org/uniprotkb/${value}">${value}</a>`;
@@ -3224,7 +3494,7 @@ async function search() {
                                     updatedPtmData.push(ptm);
                                 }
                             });
-                            
+
                             let pdbData = await fetchProteinStructure(json.uniProtAC);
                             displayPDBStructures(json.uniProtAC, pdbData, updatedPtmData);
                             populateCheckboxesFromResult(updatedPtmData)
@@ -3237,6 +3507,7 @@ async function search() {
                                 json.upstreamProteins,
                                 json.uniProtID
                             );
+                            renderPTMScoreTabs(json.proteinSequence, updatedPtmData);
                             updateStats(updatedPtmData)
                             getJPredInference(json.proteinSequence, json.uniProtAC, updatedPtmData);
 
@@ -3284,8 +3555,8 @@ async function search() {
 }
 
 function displayTable(data, ptm, site, mapping) {
-    
-    var colorMapping = (value) => {};
+
+    var colorMapping = (value) => { };
     if (mapping === 'freq') {
         colorMapping = (value) => {
             value = Math.min(Math.max(value, 0), 1);
@@ -3319,7 +3590,7 @@ function displayTable(data, ptm, site, mapping) {
 
     // const label_x = document.createElement("strong")
     // label_x.textContent = `${ptm} - Position Relative to Modification Site`
-    
+
     // xlabel.appendChild(label_x);
     const dataTable = document.createElement('table');
 
@@ -3347,7 +3618,7 @@ function displayTable(data, ptm, site, mapping) {
     introHeader.setAttribute("style", "border: 3px solid black;");
     introRow.appendChild(introHeader);
     tableHead.appendChild(introRow);
-    
+
     var site_index = 0;
 
     KEYS.forEach((key, index) => {
@@ -3361,10 +3632,10 @@ function displayTable(data, ptm, site, mapping) {
     })
 
     AA.forEach((aa, outer) => {
-        
+
         aaHeader = tableBody.querySelector(`#${aa}`);
 
-        KEYS.forEach((key, index)=> {
+        KEYS.forEach((key, index) => {
             const cell = document.createElement("td");
             cell.style.textAlign = 'center';
             const value = data[key][aa];
