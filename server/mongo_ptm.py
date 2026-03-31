@@ -47,7 +47,7 @@ async def search_identifier(_id: str) -> tuple[bool, dict[str, str]]:
             }
         )
     ]
-    found = True if results else False
+    found = True if [i for i in results if i is not None] else False
     return (found, results)
 
 async def get_all_proteins() -> list[str]:

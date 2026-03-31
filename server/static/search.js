@@ -3268,7 +3268,7 @@ async function search() {
                         document.getElementById('iframeLoader').setAttribute('class', '');
                     });
                 } else {
-                    document.getElementById('iframeData').textContent = "No protein found";
+                    document.getElementById('iframeData').textContent = "No protein found with that identifier";
                 }
             } else {
                 // console.error("Response not OK: ", response.statusText);
