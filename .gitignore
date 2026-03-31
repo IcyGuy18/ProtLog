@@ -11,5 +11,5 @@ data/*
 protlog/*
 data/dbptm/dbptm.json
 data/users/users.json
-server/ptmkb_dataset.zip
+server/ptmkb_dataset*
 temp.*
