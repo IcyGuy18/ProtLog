@@ -387,6 +387,149 @@ function renderPTMScoreTabs(sequence, modificationData) {
     container.style.display = 'block';
 }
 
+const __originalGetSitePTMScores = getSitePTMScores;
+getSitePTMScores = function (sequence, position, ptm) {
+    const baseRow = __originalGetSitePTMScores(sequence, position, ptm);
+    if (!baseRow || !tables || !tables[ptm]) return baseRow;
+
+    const residue = sequence[position - 1];
+    if (!residue || tables[ptm][residue] === undefined) return baseRow;
+
+    const relativeIndex = [];
+    for (let i = -10; i <= 10; i++) {
+        relativeIndex.push(i <= 0 ? i.toString() : `+${i}`);
+    }
+
+    const subsequence = getSubstring(sequence, position - 1);
+    const vector = getSubstringVector(subsequence);
+    const table = tables[ptm][residue]['log-e'];
+    const detailedScores = [];
+
+    vector.forEach((elem, relIdx) => {
+        const relPos = relativeIndex[relIdx];
+        const aa = subsequence[relIdx];
+
+        if (elem === '-inf') {
+            detailedScores.push({
+                relativePosition: relPos,
+                aminoAcid: aa,
+                score: '-inf'
+            });
+        } else {
+            let score = '-inf';
+            try {
+                score = table[relPos][aa];
+            } catch (e) {
+                score = '-inf';
+            }
+
+            detailedScores.push({
+                relativePosition: relPos,
+                aminoAcid: aa,
+                score: score
+            });
+        }
+    });
+
+    return {
+        ...baseRow,
+        ptm: ptm,
+        subsequence: subsequence,
+        scores: detailedScores
+    };
+};
+
+function downloadPTMScoreJSON(filename, payload) {
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+
+const __originalRenderPTMScoreTabs = renderPTMScoreTabs;
+renderPTMScoreTabs = function (sequence, modificationData) {
+    __originalRenderPTMScoreTabs(sequence, modificationData);
+
+    const container = document.getElementById('ptmScoreTabsContainer');
+    if (!container || container.style.display === 'none' || !sequence || !modificationData || modificationData.length === 0) {
+        return;
+    }
+
+    const groupedScores = {};
+    const seen = new Set();
+
+    modificationData.forEach(mod => {
+        const position = mod[0];
+        const ptm = mod[1];
+        const dedupeKey = `${ptm}::${position}`;
+
+        if (seen.has(dedupeKey)) return;
+        seen.add(dedupeKey);
+
+        const scoreRow = getSitePTMScores(sequence, position, ptm);
+        if (!scoreRow) return;
+
+        if (!groupedScores[ptm]) groupedScores[ptm] = [];
+        groupedScores[ptm].push(scoreRow);
+    });
+
+    const ptmTypes = Object.keys(groupedScores).sort();
+    const panes = container.querySelectorAll('.tab-pane');
+
+    ptmTypes.forEach((ptm, idx) => {
+        const pane = panes[idx];
+        if (!pane) return;
+
+        const buttonWrapper = document.createElement('div');
+        buttonWrapper.style.display = 'flex';
+        buttonWrapper.style.justifyContent = 'center';
+        buttonWrapper.style.marginTop = '12px';
+        buttonWrapper.style.marginBottom = '14px';
+
+        const downloadButton = document.createElement('button');
+        downloadButton.type = 'button';
+        downloadButton.className = 'additional-button';
+        downloadButton.textContent = `Download ${ptm} score data (JSON)`;
+
+        downloadButton.addEventListener('click', function () {
+            const proteinMeta = window.__currentPTMProteinMeta || {};
+            const payload = {
+                uniProtID: proteinMeta.uniProtID || null,
+                uniProtAC: proteinMeta.uniProtAC || null,
+                accessionNumber: proteinMeta.uniProtAC || null,
+                ptm: ptm,
+                generatedAt: new Date().toISOString(),
+                sequenceLength: sequence.length,
+                totalSites: groupedScores[ptm].length,
+                sites: groupedScores[ptm].map(row => ({
+                    position: row.position,
+                    residue: row.residue,
+                    ptm: row.ptm,
+                    subsequence: row.subsequence,
+                    logSum: row.logSum,
+                    logLogProduct: row.logLogProduct,
+                    scores: row.scores
+                }))
+            };
+
+            const proteinLabel = (proteinMeta.uniProtAC || proteinMeta.uniProtID || 'protein')
+                .toString()
+                .replace(/[^a-zA-Z0-9._-]+/g, '_');
+            const ptmLabel = ptm.toString().replace(/[^a-zA-Z0-9._-]+/g, '_');
+
+            downloadPTMScoreJSON(`${proteinLabel}_${ptmLabel}_ptm_scores.json`, payload);
+        });
+
+        buttonWrapper.appendChild(downloadButton);
+        pane.appendChild(buttonWrapper);
+    });
+};
+
 // Back to the other code
 
 const ptmColorMapping = {
@@ -3486,6 +3629,10 @@ async function search() {
                                 }
                             }
                             currentSequence = json.proteinSequence;
+                            window.__currentPTMProteinMeta = {
+                                uniProtID: json.uniProtID || null,
+                                uniProtAC: json.uniProtAC || data.result['Accession Number'] || null
+                            };
 
                             // Formatting purpose... because
                             let updatedPtmData = []
